@@ -1,0 +1,174 @@
+id: EU_AI_ACT_ANNEX_III
+name: EU AI Act — Annex III (High-Risk AI Systems)
+regulation_full_name: "Regulation (EU) 2024/1689 of the European Parliament and of the Council laying down harmonised rules on artificial intelligence (Artificial Intelligence Act)"
+adopted_date: "2024-08-01"
+official_journal: "OJ L 1689, 12 July 2024"
+source:
+  primary: https://eur-lex.europa.eu/eli/reg/2024/1689/oj
+  annex_iii: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689#anx_III
+license: "EU regulation — public, attribution requested"
+last_updated: "2026-05-25"
+status: |
+  v0.1 — Annex III 8 high-risk categories + key sub-points. Special focus on Point 5(b)
+  Credit scoring (Korean Loan Underwriting sample BPMN의 정합 영역).
+
+# =============================================================
+# Risk-Class Framework Context
+# =============================================================
+
+risk_classification_context:
+  unacceptable_risk: "Article 5 — prohibited practices (social scoring, manipulative AI, real-time biometric ID, etc.)"
+  high_risk: "Annex III — listed use cases (8 categories). Subject to conformity assessment, risk management, transparency, human oversight, accuracy/robustness."
+  limited_risk: "Article 50 — transparency obligations (chatbot disclosure, deepfake labelling)"
+  minimal_risk: "All other AI — voluntary codes of conduct"
+  obligations_for_high_risk: |
+    - Article 9: Risk management system
+    - Article 10: Data governance (datasets training/validation/test)
+    - Article 11-12: Technical documentation + record-keeping
+    - Article 13: Transparency to deployers
+    - Article 14: Human oversight
+    - Article 15: Accuracy, robustness, cybersecurity
+    - Article 16-21: Provider obligations + post-market monitoring + incident reporting
+    - Article 26-27: Deployer obligations
+    - Article 79-87: Penalties (up to 7% global turnover for prohibited; 3% for high-risk non-compliance)
+
+# =============================================================
+# Annex III — 8 High-Risk Categories
+# =============================================================
+
+high_risk_categories:
+
+  - point: 1
+    name: "Biometric identification and categorisation of natural persons"
+    sub_points:
+      - id: "1(a)"
+        name: "Remote biometric identification systems"
+      - id: "1(b)"
+        name: "AI for biometric categorisation by sensitive attributes"
+      - id: "1(c)"
+        name: "Emotion recognition systems (excluding medical/safety)"
+    fde_cell_anchors: ["loan_N2_general_failure", "loan_N2_security"]
+    korean_relevance: "한국 비대면 실명확인 (얼굴인증·생체) — KISA·금융보안원 가이드와 동시 정합 필요"
+
+  - point: 2
+    name: "Management and operation of critical infrastructure"
+    sub_points:
+      - id: "2(a)"
+        name: "Safety components of critical digital infrastructure, road traffic, water/gas/heating/electricity"
+    fde_cell_anchors: []
+    korean_relevance: "국가핵심시설 + 정보통신기반보호법 정합"
+
+  - point: 3
+    name: "Education and vocational training"
+    sub_points:
+      - id: "3(a)"
+        name: "Determining access/admission to educational/vocational institutions"
+      - id: "3(b)"
+        name: "Evaluating learning outcomes / steering learning process"
+      - id: "3(c)"
+        name: "Assessing appropriate level of education"
+      - id: "3(d)"
+        name: "Monitoring prohibited behaviours during tests"
+    fde_cell_anchors: []
+
+  - point: 4
+    name: "Employment, workers management, and access to self-employment"
+    sub_points:
+      - id: "4(a)"
+        name: "Recruitment / selection / advertising of vacancies / screening / evaluation of candidates"
+      - id: "4(b)"
+        name: "Decisions affecting work-related contract terms, promotion, termination, task allocation, performance/behaviour monitoring"
+    fde_cell_anchors: []
+
+  # ★ HIGH-PRIORITY FOR FDE AGENT — Korean Loan Underwriting BPMN 정합 영역
+  - point: 5
+    name: "Access to and enjoyment of essential private services and essential public services"
+    sub_points:
+      - id: "5(a)"
+        name: "Public assistance benefits / services — eligibility, granting, reduction, revocation, recovery"
+      - id: "5(b)"
+        name: "Evaluating creditworthiness of natural persons / establishing credit score (excluding fraud detection)"
+        ★_fde_priority: PRIMARY
+        fde_cell_anchors:
+          - loan_N4_general_failure
+          - loan_N7_general_failure
+          - loan_N9_general_failure
+        article_obligations:
+          - "Article 9 risk management — bias monitoring (ACS proxy discrimination)"
+          - "Article 10 data governance — training data representativeness (자영업자·청년 underrepresented)"
+          - "Article 13 transparency — applicants get meaningful information on logic"
+          - "Article 14 human oversight — appeal channel + reviewer authority"
+          - "Article 15 accuracy/robustness — disparate impact testing"
+          - "Article 26 deployer log retention — 6 months minimum"
+        korean_overlap:
+          - "공정대출법 (Fair Lending Act) — Article 9/15와 직접 동일 목적"
+          - "신용정보법 Article 36-2 자동 의사결정 거부권 — Article 14 정합"
+          - "K-PIPA Article 22-2 AI 자동 의사결정 권리 — Article 13 정합"
+        sales_wedge_note: |
+          한국 금융사가 EU 시장 진출 시 (또는 EU에서 한국 고객 서비스 시) Annex III Point 5(b)
+          high-risk classification 자동 적용. FDE Agent 진단 deliverable이 EU AI Act + 공정대출법
+          + 신용정보법 + K-PIPA 4-frame 동시 mapping을 제공 — Big 4 컨설팅 대비 차별화.
+      - id: "5(c)"
+        name: "Risk assessment and pricing in life and health insurance"
+      - id: "5(d)"
+        name: "Dispatch / prioritisation of emergency first response (police/fire/ambulance/healthcare triage)"
+
+  - point: 6
+    name: "Law enforcement"
+    sub_points:
+      - id: "6(a)"
+        name: "Risk assessment of natural persons (offending / re-offending / victim risk)"
+      - id: "6(b)"
+        name: "Polygraphs / similar tools"
+      - id: "6(c)"
+        name: "Evaluating reliability of evidence"
+      - id: "6(d)"
+        name: "Profiling of natural persons in detection / investigation / prosecution"
+      - id: "6(e)"
+        name: "Crime analytics for natural persons (e.g., predictive policing)"
+    fde_cell_anchors: []
+
+  - point: 7
+    name: "Migration, asylum, and border control management"
+    sub_points:
+      - id: "7(a)"
+        name: "Polygraphs / similar tools"
+      - id: "7(b)"
+        name: "Assessing risk including security/health/irregular migration"
+      - id: "7(c)"
+        name: "Examination of applications for asylum, visa, residence permits"
+      - id: "7(d)"
+        name: "Detecting / recognising / identifying natural persons (excluding travel document verification)"
+    fde_cell_anchors: []
+
+  - point: 8
+    name: "Administration of justice and democratic processes"
+    sub_points:
+      - id: "8(a)"
+        name: "Assisting judicial authority in researching/interpreting facts and law and applying the law to concrete facts"
+      - id: "8(b)"
+        name: "Influencing the outcome of an election / referendum / voting behaviour of natural persons"
+    fde_cell_anchors: ["N2_general_failure", "N3_general_failure", "N5a_general_failure"]   # N5b_attorney_review = sample BPMN node, not ontology-modelled
+    korean_relevance: "Legal Contract Review BPMN의 법률 의견 자동화는 8(a) 정합 영역 — 법무법인 도입 시 EU 클라이언트 자동 high-risk"
+
+# =============================================================
+# FDE Agent — Sales Wedge Summary
+# =============================================================
+
+fde_sales_wedge:
+  primary_anchor_point: "5(b) Creditworthiness evaluation / credit scoring"
+  primary_workflow: loan_underwriting_kr.bpmn  # scripts/data/sample-workflows/loan-underwriting-kr-v0.1.md
+  secondary_anchor_point: "8(a) Judicial assistance — legal_contract_review.bpmn"
+  unique_value_proposition: |
+    한국 금융사의 ACS·LLM 기반 신용평가 워크플로우는 EU AI Act Annex III Point 5(b) high-risk로
+    자동 분류됨 (EU 고객·진출 시). FDE Agent 진단은 단일 deliverable로:
+      1. EU AI Act Articles 9/10/13/14/15 compliance gap
+      2. 공정대출법·신용정보법·K-PIPA 4-frame 정합
+      3. 노드별 NIST RMF + OWASP + MITRE ATLAS 매핑
+    을 동시 제공. Big 4 컨설팅 (₩수억 + 6주) 대비 ₩수천만 + 2주.
+
+coverage_stats:
+  high_risk_categories: 8
+  total_sub_points: 25
+  fde_priority_anchor_node_count: 6
+  korean_regulatory_overlap_frames: 4  # EU AI Act + 공정대출법 + 신용정보법 + K-PIPA

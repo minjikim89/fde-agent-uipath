@@ -1,0 +1,16 @@
+# Core diagnosis engine — reproducible out-of-the-box (ontology-only / degraded mode).
+PyYAML>=6.0
+
+# --- Optional: full-corpus RAG (degraded:false) ---
+# Prepare the AIID Chroma corpus locally first (CC BY-SA 4.0, not redistributed).
+# chromadb>=0.5
+# sentence-transformers>=3.0
+# torch>=2.2
+
+# --- Optional: model-backed brains (selectable; Orchestrator-credential governed) ---
+# google-generativeai      # Gemini
+# anthropic                # Claude
+# openai                   # OpenAI
+
+# --- Optional: UiPath Coded Agent SDK + publish flow ---
+# uipath

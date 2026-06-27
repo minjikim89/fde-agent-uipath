@@ -1,0 +1,191 @@
+id: NIST_AI_RMF
+name: NIST Artificial Intelligence Risk Management Framework
+version: 1.0
+genai_profile_version: NIST AI 600-1 (2024)
+source:
+  primary: https://www.nist.gov/itl/ai-risk-management-framework
+  rmf_pdf: https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf
+  genai_profile: https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf
+license: U.S. Government Work (public domain, NIST attribution requested)
+last_updated: "2026-05-25"
+status: |
+  v0.1 — 4 core functions + canonical sub-categories + GenAI Profile cross-walk.
+  Drafted for FDE Agent ontology cross-mapping (NIST RMF Function ↔ FDE node-type).
+
+# =============================================================
+# 4 Core Functions (NIST AI 100-1)
+# =============================================================
+
+functions:
+
+  - id: GOVERN
+    name: Govern
+    purpose: |
+      Cultivate a culture of risk management within organizations designing, developing,
+      deploying, evaluating, or acquiring AI systems. Foundational across all other functions.
+    sub_categories:
+      - id: "GOVERN 1"
+        name: "Policies, Processes, Procedures, and Practices"
+        focus: "Legal/regulatory requirements; risk-tolerance/aging policies; transparency"
+      - id: "GOVERN 2"
+        name: "Accountability Structures"
+        focus: "Roles, responsibilities, training; AI risk culture; diverse expertise"
+      - id: "GOVERN 3"
+        name: "Workforce Diversity, Equity, Inclusion and Accessibility"
+        focus: "Multi-disciplinary teams; DEI consideration in AI risk decisions"
+      - id: "GOVERN 4"
+        name: "Organizational Teams"
+        focus: "Cross-functional cooperation; safety-first culture"
+      - id: "GOVERN 5"
+        name: "Engagement with Relevant AI Actors"
+        focus: "Supplier/vendor; users; affected communities"
+      - id: "GOVERN 6"
+        name: "Policies and Procedures for Third-Party AI"
+        focus: "Vendor risk; supply-chain transparency; data provenance"
+    fde_node_types:
+      - decision (의사결정)
+      - external_send (외부 통보)
+    typical_red_cells: ["loan_N7_general_failure", "loan_N9_general_failure"]
+
+  - id: MAP
+    name: Map
+    purpose: |
+      Establish context to frame risks related to an AI system. Document intended/unintended uses,
+      affected stakeholders, capabilities, and limitations.
+    sub_categories:
+      - id: "MAP 1"
+        name: "Context Establishment"
+        focus: "Mission, business objectives, regulatory framework; intended use vs misuse"
+      - id: "MAP 2"
+        name: "Categorization of the AI System"
+        focus: "Task type (classification/generation/RAG/decision); autonomy level; data sensitivity"
+      - id: "MAP 3"
+        name: "AI Capabilities, Usage Context, Goals"
+        focus: "Performance benchmarks; deployment scope; user trust calibration"
+      - id: "MAP 4"
+        name: "Risks and Benefits Mapped"
+        focus: "Likelihood × impact across populations; trade-offs"
+      - id: "MAP 5"
+        name: "Impacts on Individuals, Groups, Communities, and Society"
+        focus: "Disparate impact; vulnerable population effects; environmental"
+    fde_node_types:
+      - classification (분류)
+      - generation (생성)
+      - RAG (검색 증강)
+    typical_red_cells: ["N1_general_failure", "N2_general_failure", "loan_N4_general_failure"]
+
+  - id: MEASURE
+    name: Measure
+    purpose: |
+      Employ quantitative, qualitative, or mixed-method tools to analyze, assess, benchmark,
+      and monitor AI risk and related impacts.
+    sub_categories:
+      - id: "MEASURE 1"
+        name: "Methods and Metrics"
+        focus: "Validity, reliability, fairness metrics; test-set construction"
+      - id: "MEASURE 2"
+        name: "AI Systems Evaluated for Trustworthy Characteristics"
+        focus: "Bias, fairness, robustness, explainability evaluation"
+      - id: "MEASURE 3"
+        name: "Mechanisms for Tracking Identified AI Risks"
+        focus: "Continuous monitoring; drift detection; incident tracking"
+      - id: "MEASURE 4"
+        name: "Feedback Gathered and Assessed"
+        focus: "End-user feedback; impacted community input"
+    fde_node_types:
+      - human_review (휴먼 검수)
+      - handoff (노드 간 전이)
+    typical_red_cells: ["N5a_general_failure", "loan_N6_general_failure"]
+    handoff_metric_anchor: "axes.handoff.handoff_quantification_framework (IPS / Confidence Decay / LaaJ)"
+
+  - id: MANAGE
+    name: Manage
+    purpose: |
+      Allocate risk resources to mapped and measured risks on a regular basis. Includes risk
+      response, prioritization, and continuous improvement loops.
+    sub_categories:
+      - id: "MANAGE 1"
+        name: "AI Risks Prioritized, Responded To, and Managed"
+        focus: "Mitigation selection; resource allocation; documented decisions"
+      - id: "MANAGE 2"
+        name: "Strategies to Maximize AI Benefits and Minimize Negative Impacts"
+        focus: "Cost-benefit; deployment go/no-go; staged rollout"
+      - id: "MANAGE 3"
+        name: "AI Risks and Benefits from Third-Party Entities"
+        focus: "Vendor risk transfer; SLA enforcement; supplier monitoring"
+      - id: "MANAGE 4"
+        name: "Risk Treatment Activities Documented and Monitored"
+        focus: "Incident response; rollback; continuous improvement"
+    fde_node_types:
+      - tool_invocation (도구 호출)
+      - decision (의사결정)
+      - external_send (외부 통보)
+    typical_red_cells: ["loan_N7_general_failure", "loan_N9_general_failure", "N5a_general_failure"]
+
+# =============================================================
+# GenAI Profile Cross-Walk (NIST AI 600-1, 2024-07)
+# =============================================================
+# GenAI Profile augments AI RMF with 12 GenAI-specific risk categories.
+# Useful for diagnosing LLM-heavy nodes (generation, RAG).
+
+genai_profile_risks:
+  - id: GAI-1
+    name: "CBRN Information or Capabilities"
+  - id: GAI-2
+    name: "Confabulation (Hallucination)"
+    fde_cell_anchors: ["N2_general_failure", "N6_general_failure", "loan_N9_general_failure"]
+  - id: GAI-3
+    name: "Dangerous, Violent, or Hateful Content"
+  - id: GAI-4
+    name: "Data Privacy"
+    fde_cell_anchors: ["loan_N4_general_failure"]
+  - id: GAI-5
+    name: "Environmental Impacts"
+  - id: GAI-6
+    name: "Harmful Bias and Homogenization"
+    fde_cell_anchors: ["loan_N4_general_failure", "loan_N7_general_failure"]
+  - id: GAI-7
+    name: "Human-AI Configuration"
+    fde_cell_anchors: ["N5a_general_failure"]   # N5b_attorney_review is sample BPMN node but not ontology-cell-modelled
+  - id: GAI-8
+    name: "Information Integrity"
+    fde_cell_anchors: ["N3_general_failure", "loan_N6_general_failure"]
+  - id: GAI-9
+    name: "Information Security"
+  - id: GAI-10
+    name: "Intellectual Property"
+  - id: GAI-11
+    name: "Obscene, Degrading, and/or Abusive Content"
+  - id: GAI-12
+    name: "Value Chain and Component Integration"
+    fde_cell_anchors: ["loan_N3_general_failure"]
+
+# =============================================================
+# FDE Agent — Korean Financial Anchor (Sales Wedge)
+# =============================================================
+# Used by FDE Agent to position NIST AI RMF as a globally-accepted reference
+# alongside Korean regulator-specific frameworks.
+
+korean_financial_anchor:
+  - korean_regulator: "금융감독원 (FSS)"
+    rmf_alignment: ["GOVERN 1", "MAP 4", "MEASURE 3", "MANAGE 4"]
+    note: |
+      금감원 'AI 모범규준' (2021) + 자동화 의사결정 분쟁 처리 framework이 NIST RMF 4 functions와
+      구조적으로 대응. FSS 검사 시 NIST RMF 정합 demonstrable 자산을 보유한 금융사는 due diligence
+      유리. FDE Agent 진단 deliverable에 NIST RMF function tagging 강제.
+  - korean_regulator: "금융위원회 (FSC) — 신용정보법/공정대출법"
+    rmf_alignment: ["GOVERN 6", "MAP 5", "MEASURE 2"]
+    note: |
+      공정대출법 disparate impact 검증 → NIST MEASURE 2 fairness evaluation 정합.
+      신용정보법 Article 36-2 자동 의사결정 거부권 → GOVERN 1 정합.
+  - korean_regulator: "KoFIU (금융정보분석원)"
+    rmf_alignment: ["GOVERN 6", "MANAGE 3"]
+    note: |
+      AML pipeline의 vendor (KCB·NICE·NICEPay)에 대한 supply-chain risk 평가가 GOVERN 6 정합.
+      Real-time STR/CTR 보고 의무 → MANAGE 3 third-party monitoring 정합.
+
+coverage_stats:
+  functions: 4
+  total_sub_categories: 19
+  genai_profile_risks: 12
+  korean_anchors: 3

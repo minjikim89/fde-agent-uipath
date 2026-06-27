@@ -1,0 +1,5 @@
+{
+  "agents": {
+    "agent": "agent_entry.py:agent"
+  }
+}

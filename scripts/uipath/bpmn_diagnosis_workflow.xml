@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  FDE Agent — Pre-Deployment Diagnosis Workflow (BPMN 2.0)
+  =================================================================
+  Phase 2 UiPath AgentHack Track 2 artifact.
+  Hero Moment scene 정합 (scripts/output/hero-moment-scene-v0.1.md, 5 beats).
+  Maestro BPMN import 대상. UiPath Labs access 수령 후 Maestro Studio에 import.
+
+  9-step pipeline (Hero Moment scene 정합 보존):
+    Start
+    => Task: BPMN Parser (UiPath Document Understanding IDP)
+    => Exclusive Gateway: AI intervention nodes >= 1?
+    => Parallel Gateway (split)
+       * Task: Risk Diagnosis (general_failure)
+       * Task: Risk Diagnosis (security)
+       * Task: Risk Diagnosis (handoff)
+    => Parallel Gateway (join)
+    => Task: AIID RAG (Chroma 7,959 vectors)
+    => Task: Mitigation Recommend (Sub-Agent 5, Multi-Option)
+    => Exclusive Gateway: ConfDecay over_trust_gap > 0.2 OR final >= 4.5 OR runtime alert?
+       * Yes => User Task: Action Center HITL (Hero Moment trigger)
+       * No  => Service Task: Auto-approve
+       [Gateway_HITL_Join — utility OR-join gateway, NOT a pipeline step]
+    => Task: Heatmap + Report (D3.js + Mermaid)
+    => Task: RPA Email (audit trail)
+    => End
+
+  Multi-incoming flow ambiguity resolution (Heatmap_Render):
+    Camunda / UiPath Maestro tolerate implicit OR-join on serviceTask with
+    multiple incoming flows, but BPMN best practice (and renderer
+    determinism) requires an explicit converging gateway. We add
+    `Gateway_HITL_Join` (exclusiveGateway) as a *utility merge* — it
+    converges two mutually exclusive branches (default Flow_HITL_No vs
+    conditional Flow_HITL_Yes) and is therefore not counted as a new
+    pipeline step (the 9-step Hero Moment scene narrative is preserved).
+
+  Compatibility verified against OMG BPMN 2.0 schema (bpmn.io / Camunda Modeler).
+-->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Definitions_FDE_Diagnosis"
+                  targetNamespace="https://fde-agent.io/bpmn"
+                  exporter="FDE Agent Phase 2"
+                  exporterVersion="0.1.0">
+
+  <bpmn:process id="Process_FDE_Diagnosis" name="FDE Agent Pre-Deployment Diagnosis" isExecutable="true">
+
+    <!-- ===== Flow Objects ===== -->
+
+    <bpmn:startEvent id="StartEvent_Upload" name="Workflow Diagram Uploaded">
+      <bpmn:outgoing>Flow_Start_to_Parse</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:serviceTask id="Task_Parse" name="BPMN Parser (UiPath Document Understanding IDP)">
+      <bpmn:documentation>
+        Inputs: BPMN XML / Mermaid text / image (PNG, PDF, Visio export).
+        UiPath Document Understanding extracts node inventory + edge topology.
+        Coded Agent (Python SDK) calls Claude for type classification.
+        Output: TopologicalGraph (nodes[], edges[], ai_intervention_mode per node).
+      </bpmn:documentation>
+      <bpmn:incoming>Flow_Start_to_Parse</bpmn:incoming>
+      <bpmn:outgoing>Flow_Parse_to_AIGate</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:exclusiveGateway id="Gateway_AI_Intervention" name="AI 개입 노드 ≥ 1?" default="Flow_AI_None">
+      <bpmn:incoming>Flow_Parse_to_AIGate</bpmn:incoming>
+      <bpmn:outgoing>Flow_AI_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_AI_None</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:endEvent id="EndEvent_NoDiagnosis" name="No Diagnosis Needed">
+      <bpmn:incoming>Flow_AI_None</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:parallelGateway id="Gateway_Diagnosis_Split" name="Parallel Diagnosis">
+      <bpmn:incoming>Flow_AI_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_Split_to_General</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Split_to_Security</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Split_to_Handoff</bpmn:outgoing>
+    </bpmn:parallelGateway>
+
+    <bpmn:serviceTask id="Task_RiskDiag_General" name="Risk Diagnosis — general_failure">
+      <bpmn:documentation>
+        Sub-Agent 2 axis 1. Mapping ontology v0.4 lookup (cells filtered by axis=general_failure).
+        Hallucination / edge-case fragility / drift / compliance risk attributes (8 sub-attributes).
+        Brain: Claude (UiPath stack primary).
+      </bpmn:documentation>
+      <bpmn:incoming>Flow_Split_to_General</bpmn:incoming>
+      <bpmn:outgoing>Flow_General_to_Join</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_RiskDiag_Security" name="Risk Diagnosis — security">
+      <bpmn:documentation>
+        Sub-Agent 2 axis 2 + Sub-Agent 3 Standards Mapping merge.
+        OWASP LLM Top 10 v2025 + MITRE ATLAS v5.6.0 + NIST AI RMF + EU AI Act Annex III.
+        Brain: Claude. Knowledge: scripts/data/{owasp,mitre-atlas,nist-ai-rmf,eu-ai-act-annex-iii}.yaml
+      </bpmn:documentation>
+      <bpmn:incoming>Flow_Split_to_Security</bpmn:incoming>
+      <bpmn:outgoing>Flow_Security_to_Join</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_RiskDiag_Handoff" name="Risk Diagnosis — handoff (★ 본인 IP)">
+      <bpmn:documentation>
+        Sub-Agent 2 axis 3 — Handoff Quantification Framework moat.
+        Runtime metrics: IPS (Intent Preservation Score), Confidence Decay, LLM-as-a-Judge alignment.
+        Human override gap + context-loss heuristics.
+        Brain: Claude + scripts/metrics/{ips,confdecay,laaj}.py compute hooks.
+      </bpmn:documentation>
+      <bpmn:incoming>Flow_Split_to_Handoff</bpmn:incoming>
+      <bpmn:outgoing>Flow_Handoff_to_Join</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:parallelGateway id="Gateway_Diagnosis_Join" name="Join Risk Vectors">
+      <bpmn:incoming>Flow_General_to_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_Security_to_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_Handoff_to_Join</bpmn:incoming>
+      <bpmn:outgoing>Flow_Join_to_RAG</bpmn:outgoing>
+    </bpmn:parallelGateway>
+
+    <bpmn:serviceTask id="Task_AIID_RAG" name="AIID RAG (Chroma 7,959 vectors)">
+      <bpmn:documentation>
+        Sub-Agent 4. BGE-M3 embedding + Chroma vector DB.
+        Per high-risk node retrieve 3~5 similar incidents (incidents + reports).
+        Hybrid mode (Phase 1+): GraphRAG cross-check over the 8,287-node / 12,317-edge structural graph.
+      </bpmn:documentation>
+      <bpmn:incoming>Flow_Join_to_RAG</bpmn:incoming>
+      <bpmn:outgoing>Flow_RAG_to_Mitigation</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_Mitigation" name="Mitigation Recommend (Multi-Option)">
+      <bpmn:documentation>
+        Sub-Agent 5. Per RED node × 3 options (Must Fix / Recommend / Optional) +
+        5-dim trade-off matrix (Risk Δ / Cost / Speed Δ / Op복잡도 / Impl effort) +
+        Cumulative Scenario 3종 (Minimum / Balanced / Maximum Safety).
+        Knowledge: MIT Mitigation Taxonomy (831 항목) + OWASP prevention + 산업 best practice.
+      </bpmn:documentation>
+      <bpmn:incoming>Flow_RAG_to_Mitigation</bpmn:incoming>
+      <bpmn:outgoing>Flow_Mitigation_to_HITLGate</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!--
+      ★ Hero Moment trigger gateway (scene Beat c — Routing).
+      Condition: ConfDecay over_trust_alert OR IPS context_decay_alert OR LaaJ low_score
+                 OR aggregator final_score >= 4.5
+                 OR any YELLOW cell with runtime alert.
+      Evaluates per-handoff metric panel + per-node aggregated final score.
+    -->
+    <bpmn:exclusiveGateway id="Gateway_HITL_Required"
+                            name="ConfDecay over_trust_gap &gt; 0.2 OR final &#8805; 4.5 OR runtime alert?"
+                            default="Flow_HITL_No">
+      <bpmn:incoming>Flow_Mitigation_to_HITLGate</bpmn:incoming>
+      <bpmn:outgoing>Flow_HITL_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_HITL_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!--
+      ★ Hero Moment User Task (scene Beat d~e — Dossier + Resolution).
+      Action Center renders hitl_mockup.html template:
+        - RED node dossier (failure mode + AIID citation + standard mapping)
+        - Multi-Option mitigation table (3 options × 5-dim trade-off)
+        - K-PIPA Article 22-2 (AI 거부권) text 명시
+        - Approve / Modify buttons → BPMN re-deploy (Loop B-Symbolic)
+    -->
+    <bpmn:userTask id="Task_ActionCenter_HITL" name="Action Center HITL (Consultant Review)">
+      <bpmn:documentation>
+        Hero Moment scene Beat d~e 시각화.
+        Form: hitl_mockup.html (3-column Multi-Option + K-PIPA §22-2 disclosure).
+        Approver role: consultant / domain SME (legal: 변호사, loan: 심사역 / 컴플라이언스 담당자).
+        Audit trail: approver_id + applied_options + timestamp → EU AI Act Annex III evidence.
+      </bpmn:documentation>
+      <bpmn:incoming>Flow_HITL_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_HITL_to_Join</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Task_Auto_Approve" name="Auto-approve (All Green)">
+      <bpmn:documentation>
+        No RED node, no runtime alert. Skip HITL — minor risk only.
+        Still logged to audit trail (for completeness).
+      </bpmn:documentation>
+      <bpmn:incoming>Flow_HITL_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_Auto_to_Join</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!--
+      Explicit OR-join (exclusiveGateway) for the HITL / Auto-approve branches.
+      Resolves multi-incoming flow ambiguity on Task_Heatmap_Render — both
+      branches are mutually exclusive (default Flow_HITL_No vs conditional
+      Flow_HITL_Yes), so exclusiveGateway converging semantics match the
+      execution model exactly.
+    -->
+    <bpmn:exclusiveGateway id="Gateway_HITL_Join" name="Resume">
+      <bpmn:incoming>Flow_HITL_to_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_Auto_to_Join</bpmn:incoming>
+      <bpmn:outgoing>Flow_Join_to_Render</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:serviceTask id="Task_Heatmap_Render" name="Heatmap + Report 생성">
+      <bpmn:documentation>
+        scripts/heatmap/render.py + scripts/output/executive_summary.py.
+        Outputs: {sample}-heatmap-v0.1.html (D3.js + Mermaid CDN, dossier popup)
+                 + executive-summary-v0.1.md (CDO/CIO 1-page).
+        Side-by-side comparison HTML if mitigation applied (Before / After diff).
+      </bpmn:documentation>
+      <bpmn:incoming>Flow_Join_to_Render</bpmn:incoming>
+      <bpmn:outgoing>Flow_Render_to_Email</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_RPA_Email" name="RPA: Email Report (audit trail)">
+      <bpmn:documentation>
+        UiPath RPA send-email step. Recipient: client CDO/CIO + 컴플라이언스 담당자.
+        Attachments: heatmap.html, executive-summary.md, side-by-side-diff.html.
+        Audit trail: 금감원 검사 / EU AI Act Annex III evidence 영구 보존 (UiPath Action Center log).
+      </bpmn:documentation>
+      <bpmn:incoming>Flow_Render_to_Email</bpmn:incoming>
+      <bpmn:outgoing>Flow_Email_to_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="EndEvent_Complete" name="Pre-Flight Check Complete">
+      <bpmn:incoming>Flow_Email_to_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- ===== Sequence Flows ===== -->
+
+    <bpmn:sequenceFlow id="Flow_Start_to_Parse"     sourceRef="StartEvent_Upload"        targetRef="Task_Parse" />
+    <bpmn:sequenceFlow id="Flow_Parse_to_AIGate"    sourceRef="Task_Parse"               targetRef="Gateway_AI_Intervention" />
+
+    <bpmn:sequenceFlow id="Flow_AI_Yes" name="Yes" sourceRef="Gateway_AI_Intervention" targetRef="Gateway_Diagnosis_Split">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${graph.ai_intervention_nodes &gt;= 1}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_AI_None" name="No"  sourceRef="Gateway_AI_Intervention" targetRef="EndEvent_NoDiagnosis" />
+
+    <bpmn:sequenceFlow id="Flow_Split_to_General"   sourceRef="Gateway_Diagnosis_Split"  targetRef="Task_RiskDiag_General" />
+    <bpmn:sequenceFlow id="Flow_Split_to_Security"  sourceRef="Gateway_Diagnosis_Split"  targetRef="Task_RiskDiag_Security" />
+    <bpmn:sequenceFlow id="Flow_Split_to_Handoff"   sourceRef="Gateway_Diagnosis_Split"  targetRef="Task_RiskDiag_Handoff" />
+    <bpmn:sequenceFlow id="Flow_General_to_Join"    sourceRef="Task_RiskDiag_General"    targetRef="Gateway_Diagnosis_Join" />
+    <bpmn:sequenceFlow id="Flow_Security_to_Join"   sourceRef="Task_RiskDiag_Security"   targetRef="Gateway_Diagnosis_Join" />
+    <bpmn:sequenceFlow id="Flow_Handoff_to_Join"    sourceRef="Task_RiskDiag_Handoff"    targetRef="Gateway_Diagnosis_Join" />
+    <bpmn:sequenceFlow id="Flow_Join_to_RAG"        sourceRef="Gateway_Diagnosis_Join"   targetRef="Task_AIID_RAG" />
+    <bpmn:sequenceFlow id="Flow_RAG_to_Mitigation"  sourceRef="Task_AIID_RAG"            targetRef="Task_Mitigation" />
+    <bpmn:sequenceFlow id="Flow_Mitigation_to_HITLGate" sourceRef="Task_Mitigation"      targetRef="Gateway_HITL_Required" />
+
+    <bpmn:sequenceFlow id="Flow_HITL_Yes" name="HITL"
+                       sourceRef="Gateway_HITL_Required" targetRef="Task_ActionCenter_HITL">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${
+        confdecay.over_trust_gap &gt; 0.2 ||
+        ips.score &lt; 0.5 ||
+        laaj.alignment_score &lt; 0.6 ||
+        aggregator.max_final_score &gt;= 4.5 ||
+        runtime_alerts &gt;= 1
+      }</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_HITL_No"  name="All Green"      sourceRef="Gateway_HITL_Required" targetRef="Task_Auto_Approve" />
+
+    <bpmn:sequenceFlow id="Flow_HITL_to_Join"       sourceRef="Task_ActionCenter_HITL"   targetRef="Gateway_HITL_Join" />
+    <bpmn:sequenceFlow id="Flow_Auto_to_Join"       sourceRef="Task_Auto_Approve"        targetRef="Gateway_HITL_Join" />
+    <bpmn:sequenceFlow id="Flow_Join_to_Render"     sourceRef="Gateway_HITL_Join"        targetRef="Task_Heatmap_Render" />
+    <bpmn:sequenceFlow id="Flow_Render_to_Email"    sourceRef="Task_Heatmap_Render"      targetRef="Task_RPA_Email" />
+    <bpmn:sequenceFlow id="Flow_Email_to_End"       sourceRef="Task_RPA_Email"           targetRef="EndEvent_Complete" />
+
+  </bpmn:process>
+
+  <!-- ===== BPMN Diagram Interchange (visual layout) ===== -->
+  <bpmndi:BPMNDiagram id="BPMNDiagram_FDE">
+    <bpmndi:BPMNPlane id="BPMNPlane_FDE" bpmnElement="Process_FDE_Diagnosis">
+
+      <!-- Row 1 (y=200): linear backbone -->
+      <bpmndi:BPMNShape id="Shape_Start" bpmnElement="StartEvent_Upload">
+        <dc:Bounds x="80" y="218" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="55" y="261" width="86" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_Parse" bpmnElement="Task_Parse">
+        <dc:Bounds x="170" y="196" width="140" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_AIGate" bpmnElement="Gateway_AI_Intervention" isMarkerVisible="true">
+        <dc:Bounds x="355" y="211" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="335" y="180" width="90" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_EndNoDiag" bpmnElement="EndEvent_NoDiagnosis">
+        <dc:Bounds x="362" y="380" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="340" y="423" width="80" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_Split" bpmnElement="Gateway_Diagnosis_Split">
+        <dc:Bounds x="455" y="211" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="440" y="180" width="80" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Row 2 (y=80, y=196, y=312): 3 parallel diagnosis tasks -->
+      <bpmndi:BPMNShape id="Shape_RiskGeneral" bpmnElement="Task_RiskDiag_General">
+        <dc:Bounds x="555" y="56" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_RiskSecurity" bpmnElement="Task_RiskDiag_Security">
+        <dc:Bounds x="555" y="196" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_RiskHandoff" bpmnElement="Task_RiskDiag_Handoff">
+        <dc:Bounds x="555" y="336" width="160" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_Join" bpmnElement="Gateway_Diagnosis_Join">
+        <dc:Bounds x="765" y="211" width="50" height="50" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_RAG" bpmnElement="Task_AIID_RAG">
+        <dc:Bounds x="865" y="196" width="160" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_Mitigation" bpmnElement="Task_Mitigation">
+        <dc:Bounds x="1075" y="196" width="160" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_HITLGate" bpmnElement="Gateway_HITL_Required" isMarkerVisible="true">
+        <dc:Bounds x="1285" y="211" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1255" y="180" width="120" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Row 3 (y=56 HITL, y=336 Auto): branching from HITL gate -->
+      <bpmndi:BPMNShape id="Shape_HITL" bpmnElement="Task_ActionCenter_HITL">
+        <dc:Bounds x="1385" y="56" width="180" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_AutoApprove" bpmnElement="Task_Auto_Approve">
+        <dc:Bounds x="1385" y="336" width="180" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- Row 4 (y=196): explicit HITL join + Render + Email + End (shifted +100px to make room for join gateway) -->
+      <bpmndi:BPMNShape id="Shape_HITLJoin" bpmnElement="Gateway_HITL_Join" isMarkerVisible="true">
+        <dc:Bounds x="1610" y="211" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1612" y="268" width="46" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Render" bpmnElement="Task_Heatmap_Render">
+        <dc:Bounds x="1735" y="196" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Email" bpmnElement="Task_RPA_Email">
+        <dc:Bounds x="1945" y="196" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EndComplete" bpmnElement="EndEvent_Complete">
+        <dc:Bounds x="2155" y="218" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="2125" y="261" width="98" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- ===== Edges ===== -->
+      <bpmndi:BPMNEdge id="Edge_Start_Parse" bpmnElement="Flow_Start_to_Parse">
+        <di:waypoint x="116" y="236" /><di:waypoint x="170" y="236" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Parse_AIGate" bpmnElement="Flow_Parse_to_AIGate">
+        <di:waypoint x="310" y="236" /><di:waypoint x="355" y="236" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_AI_Yes" bpmnElement="Flow_AI_Yes">
+        <di:waypoint x="405" y="236" /><di:waypoint x="455" y="236" />
+        <bpmndi:BPMNLabel><dc:Bounds x="420" y="218" width="20" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_AI_None" bpmnElement="Flow_AI_None">
+        <di:waypoint x="380" y="261" /><di:waypoint x="380" y="380" />
+        <bpmndi:BPMNLabel><dc:Bounds x="388" y="310" width="20" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Edge_Split_General" bpmnElement="Flow_Split_to_General">
+        <di:waypoint x="480" y="211" /><di:waypoint x="480" y="96" /><di:waypoint x="555" y="96" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Split_Security" bpmnElement="Flow_Split_to_Security">
+        <di:waypoint x="505" y="236" /><di:waypoint x="555" y="236" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Split_Handoff" bpmnElement="Flow_Split_to_Handoff">
+        <di:waypoint x="480" y="261" /><di:waypoint x="480" y="376" /><di:waypoint x="555" y="376" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_General_Join" bpmnElement="Flow_General_to_Join">
+        <di:waypoint x="715" y="96" /><di:waypoint x="790" y="96" /><di:waypoint x="790" y="211" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Security_Join" bpmnElement="Flow_Security_to_Join">
+        <di:waypoint x="715" y="236" /><di:waypoint x="765" y="236" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Handoff_Join" bpmnElement="Flow_Handoff_to_Join">
+        <di:waypoint x="715" y="376" /><di:waypoint x="790" y="376" /><di:waypoint x="790" y="261" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Join_RAG" bpmnElement="Flow_Join_to_RAG">
+        <di:waypoint x="815" y="236" /><di:waypoint x="865" y="236" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_RAG_Mitigation" bpmnElement="Flow_RAG_to_Mitigation">
+        <di:waypoint x="1025" y="236" /><di:waypoint x="1075" y="236" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Mitigation_HITLGate" bpmnElement="Flow_Mitigation_to_HITLGate">
+        <di:waypoint x="1235" y="236" /><di:waypoint x="1285" y="236" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_HITL_Yes" bpmnElement="Flow_HITL_Yes">
+        <di:waypoint x="1310" y="211" /><di:waypoint x="1310" y="106" /><di:waypoint x="1385" y="106" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1320" y="140" width="60" height="40" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_HITL_No" bpmnElement="Flow_HITL_No">
+        <di:waypoint x="1310" y="261" /><di:waypoint x="1310" y="376" /><di:waypoint x="1385" y="376" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1320" y="310" width="60" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_HITL_Join" bpmnElement="Flow_HITL_to_Join">
+        <di:waypoint x="1565" y="106" /><di:waypoint x="1635" y="106" /><di:waypoint x="1635" y="211" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Auto_Join" bpmnElement="Flow_Auto_to_Join">
+        <di:waypoint x="1565" y="376" /><di:waypoint x="1635" y="376" /><di:waypoint x="1635" y="261" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Join_Render" bpmnElement="Flow_Join_to_Render">
+        <di:waypoint x="1660" y="236" /><di:waypoint x="1735" y="236" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Render_Email" bpmnElement="Flow_Render_to_Email">
+        <di:waypoint x="1895" y="236" /><di:waypoint x="1945" y="236" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Email_End" bpmnElement="Flow_Email_to_End">
+        <di:waypoint x="2105" y="236" /><di:waypoint x="2155" y="236" />
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</bpmn:definitions>

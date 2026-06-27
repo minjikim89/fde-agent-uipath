@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+.env.*
+.venv/
+venv/
+
+# generated diagnosis outputs
+scripts/output/
+
+# AIID corpus (CC BY-SA 4.0, not redistributed)
+scripts/data/chroma/
+scripts/data/*.tar.bz2
+
+# OS
+.DS_Store

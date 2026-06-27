@@ -1,0 +1,57 @@
+[project]
+name = "fde-diagnosis-agent"
+version = "0.1.1"
+# NOTE: UiPath `uipath pack` rejects the characters & < > " ' ; in the
+# description field (verified — UiPath Python SDK packaging docs). Keep it plain.
+description = "FDE Agent pre-deployment workflow risk diagnosis as a UiPath Coded Agent (Track 2 Maestro BPMN)"
+authors = [{ name = "Minji Kim" }]
+requires-python = ">=3.10"
+
+# Runtime dependencies for the diagnosis core inside the UiPath worker.
+# uipath itself is the Coded Agent SDK + CLI (auth/init/pack/publish/run).
+# google-genai / anthropic / openai are OPTIONAL multi-model brains: the
+# UiPath track allows multi-model, but the deterministic ontology+RAG core
+# needs no LLM, so the agent degrades gracefully if a brain SDK is absent.
+dependencies = [
+    "uipath>=2.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+# Heavy RAG stack — only for non-degraded (corpus-mounted) runs. The serverless
+# demo runs ontology-only (degraded), so these stay OUT of the hard deps to keep
+# the wheel install fast (no torch/CUDA). engine.py + metrics/ips.py lazy-import
+# these and fall back (ontology / hash-embed) when absent.
+rag = ["chromadb>=0.5", "sentence-transformers>=2.7", "torch>=2.3"]
+# Multi-model brains (UiPath path only — never selected on the Rapid path).
+# brain_factory.get_brain() resolves the brain from the BRAIN env var.
+gemini = ["google-genai>=0.3"]
+claude = ["anthropic[vertex]>=0.39"]
+openai = ["openai>=1.40"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# ★ Marks this as a coded AGENT (ProjectType "Agent"), not a Function — required
+# for Maestro "Start and wait for agent" binding. Pairs with uipath.json "agents".
+[tool.uipath]
+type = "agent"
+
+# Explicit wheel file selection. This package is a flat set of top-level modules
+# + dirs (no src/fde_diagnosis_agent layout), so hatchling cannot auto-detect
+# what to ship and the serverless build fails with "Unable to determine which
+# files to ship inside the wheel". List the runtime closure explicitly.
+[tool.hatch.build.targets.wheel]
+only-include = [
+    "agent_entry.py",
+    "coded_agent_wrapper.py",
+    "uipath_client.py",
+    "loop_b_symbolic.py",
+    "core",
+    "agents",
+    "metrics",
+    "parser",
+    "heatmap",
+    "data",
+]

@@ -1,0 +1,506 @@
+version: v0.2
+source: https://airisk.mit.edu/blog/mapping-ai-risk-mitigations
+license: CC BY 4.0
+citation: 'Saerk, A. K., Lloyd George, S., Graham, J., Lacarriere, C., Slattery, P., & Thompson, N. (2025).
+
+  Mapping AI Risk Mitigations: Evidence Scan and Draft Mitigation Taxonomy.
+
+  '
+last_updated: '2026-05-25'
+status: v0.2 — Appendix A descriptions/examples + Table 1 distribution stats + 13 source documents + 5
+  Korean handoff mappings. 831 풀 텍스트는 Airtable, PDF 추출 가능 max.
+total_mitigations: 831
+frameworks_scanned: 13
+categories:
+- id: '1'
+  name: Governance & Oversight Controls
+  definition: 'Formal organizational structures and policy frameworks that establish human oversight
+
+    mechanisms and decision protocols to ensure human accountability, ethical conduct, and
+
+    risk management throughout AI development and deployment.
+
+    '
+  subcategories:
+  - id: '1.1'
+    name: Board Structure & Oversight
+    count: 35
+    pct: 4
+    document_count: 8
+    description_appendix_a: Governance structures and leadership roles that establish executive accountability
+      for AI safety and risk management.
+    example_mitigations:
+    - Dedicated risk committees
+    - safety teams
+    - ethics boards
+    - crisis simulation training
+    - multi-party authorization protocols
+    - deployment veto powers
+  - id: '1.2'
+    name: Risk Management
+    count: 125
+    pct: 15
+    document_count: 13
+    description_appendix_a: Systematic methods that identify, evaluate, and manage AI risks for comprehensive
+      risk governance across organizations.
+    example_mitigations:
+    - Enterprise risk management frameworks
+    - risk registers with capability thresholds
+    - compliance programs
+    - pre-deployment risk assessments
+    - independent risk assessments
+  - id: '1.3'
+    name: Conflict of Interest Protections
+    count: 8
+    pct: 1
+    document_count: 3
+    description_appendix_a: Governance mechanisms that manage financial interests and organizational structures
+      to ensure leadership can prioritize safety over profit motives in critical situations.
+    example_mitigations:
+    - Background checks for key personnel
+    - windfall profit redistribution plans
+    - stake limitation policies
+    - protections against shareholder pressure
+  - id: '1.4'
+    name: Whistleblower Reporting & Protection
+    count: 10
+    pct: 1
+    document_count: 7
+    description_appendix_a: Policies and systems that enable confidential reporting of safety concerns
+      or ethical violations to prevent retaliation and encourage disclosure of risks.
+    example_mitigations:
+    - Anonymous reporting channels
+    - non-retaliation guarantees
+    - limitations on non-disparagement agreements
+    - external whistleblower handling services
+  - id: '1.5'
+    name: Safety Decision Frameworks
+    count: 31
+    pct: 4
+    document_count: 11
+    description_appendix_a: Protocols and commitments that constrain decision-making about model development,
+      deployment, and capability scaling, and govern safety-capability resource allocation to prevent
+      unsafe AI advancement.
+    example_mitigations:
+    - If-then safety protocols
+    - capability ceilings
+    - deployment pause triggers
+    - safety-capability resource ratios
+  - id: '1.6'
+    name: Environmental Impact Management
+    count: 11
+    pct: 1
+    document_count: 5
+    description_appendix_a: Processes for measuring, reporting, and reducing the environmental footprint
+      of AI systems to ensure sustainability and responsible resource use.
+    example_mitigations:
+    - Carbon footprint assessment
+    - emission offset programs
+    - energy efficiency optimization
+    - resource consumption tracking
+  - id: '1.7'
+    name: Societal Impact Assessment
+    count: 28
+    pct: 3
+    document_count: 7
+    description_appendix_a: Processes that assess AI systems' effects on society, including impacts on
+      employment, power dynamics, political processes, and cultural values.
+    example_mitigations:
+    - Fundamental rights impact assessments
+    - expert consultations on risk domains
+    - stakeholder engagement processes
+    - governance gap analyses
+  node_type_hints:
+  - high-impact decision nodes (executive approval, regulatory action)
+  - policy enforcement nodes
+  - audit checkpoint nodes
+  count: 248
+  pct: 30
+  document_count: 13
+- id: '2'
+  name: Technical & Security Controls
+  definition: 'Technical, physical, and engineering safeguards that secure AI systems and constrain
+
+    model behaviors to ensure security, safety, alignment with human values, and content integrity.
+
+    '
+  subcategories:
+  - id: '2.1'
+    name: Model & Infrastructure Security
+    count: 32
+    pct: 4
+    document_count: 11
+    description_appendix_a: Technical and physical safeguards that secure AI models, weights, and infrastructure
+      to prevent unauthorized access, theft, tampering, and espionage.
+    example_mitigations:
+    - Model weight tracking systems
+    - multifactor authentication protocols
+    - physical access controls
+    - background security checks
+    - compliance with information security standards
+  - id: '2.2'
+    name: Model Alignment
+    count: 9
+    pct: 1
+    document_count: 5
+    description_appendix_a: Technical methods to ensure AI systems understand and adhere to human values
+      and intentions.
+    example_mitigations:
+    - Reinforcement learning from human feedback (RLHF)
+    - direct preference optimization (DPO)
+    - constitutional AI training
+    - value alignment verification systems
+  - id: '2.3'
+    name: Model Safety Engineering
+    count: 38
+    pct: 5
+    document_count: 7
+    description_appendix_a: Technical methods and safeguards that constrain model behaviors and protect
+      against exploitation and vulnerabilities.
+    example_mitigations:
+    - Safety analysis protocols
+    - capability restriction mechanisms
+    - hazardous knowledge unlearning techniques
+    - input/output filtering systems
+    - defense-in-depth implementations
+    - adversarial robustness training
+    - hierarchical auditing
+    - action replacement
+  - id: '2.4'
+    name: Content Safety Controls
+    count: 22
+    pct: 3
+    document_count: 6
+    description_appendix_a: Technical systems and processes that detect, filter, and label AI-generated
+      content to identify misuse and enable content provenance tracking.
+    example_mitigations:
+    - Synthetic media watermarking
+    - content filtering mechanisms
+    - prohibited content detection
+    - metadata tagging protocols
+    - deepfake creation restrictions
+  node_type_hints:
+  - model inference nodes
+  - external API call nodes
+  - tool execution nodes
+  - content generation nodes
+  count: 101
+  pct: 12
+  document_count: 12
+- id: '3'
+  name: Operational Process Controls
+  definition: 'Processes and management frameworks governing AI system deployment, usage, monitoring,
+
+    incident handling, and validation, which promote safety, security, and accountability
+
+    throughout the system lifecycle.
+
+    '
+  subcategories:
+  - id: '3.1'
+    name: Testing & Auditing
+    count: 127
+    pct: 15
+    document_count: 12
+    description_appendix_a: Systematic internal and external evaluations that assess AI systems, infrastructure,
+      and compliance processes to identify risks, verify safety, and ensure performance meets standards.
+    example_mitigations:
+    - Third-party audits
+    - red teaming
+    - penetration testing
+    - dangerous capability evaluations
+    - bug bounty programs
+  - id: '3.2'
+    name: Data Governance
+    count: 57
+    pct: 7
+    document_count: 7
+    description_appendix_a: Policies and procedures that govern responsible data acquisition, curation,
+      and usage to ensure compliance, quality, user privacy, and removal of harmful content.
+    example_mitigations:
+    - Harmful content filtering protocols
+    - compliance checks for data collection standards
+    - user data privacy controls
+    - data curation processes
+  - id: '3.3'
+    name: Access Management
+    count: 23
+    pct: 3
+    document_count: 7
+    description_appendix_a: Operational policies and verification systems that govern who can use AI systems
+      and for what purposes to prevent safety circumvention, deliberate misuse, and deployment in high-risk
+      contexts.
+    example_mitigations:
+    - KYC verification requirements
+    - API-only access controls
+    - fine-tuning restrictions
+    - acceptable use policies
+    - high-stakes application prohibitions
+  - id: '3.4'
+    name: Staged Deployment
+    count: 8
+    pct: 1
+    document_count: 5
+    description_appendix_a: Implementation protocols that deploy AI systems in stages, requiring safety
+      validation before expanding user access or capabilities.
+    example_mitigations:
+    - Limited API access programs
+    - gradual user base expansion
+    - capability threshold assessments
+    - pre-deployment validation checkpoints
+    - treating model updates as new deployments
+  - id: '3.5'
+    name: Post-Deployment Monitoring
+    count: 50
+    pct: 6
+    document_count: 9
+    description_appendix_a: Ongoing monitoring processes that track AI behavior, user interactions, and
+      societal impacts post-deployment to detect misuse, emergent dangerous capabilities, and harmful
+      effects.
+    example_mitigations:
+    - User interaction tracking systems
+    - capability evolution assessments
+    - periodic impact reports
+    - automated misuse detection
+    - usage pattern analysis tools
+  - id: '3.6'
+    name: Incident Response & Recovery
+    count: 30
+    pct: 4
+    document_count: 9
+    description_appendix_a: Protocols and technical systems that respond to security incidents, safety
+      failures, or capability misuse to contain harm and restore safe operations.
+    example_mitigations:
+    - Incident response plans
+    - emergency shutdown/rollback procedures
+    - model containment mechanisms
+    - safety drills
+    - critical infrastructure protection measures
+  node_type_hints:
+  - deployment gate nodes
+  - monitoring nodes
+  - data ingestion nodes
+  - rollback / kill-switch nodes
+  count: 295
+  pct: 36
+  document_count: 13
+- id: '4'
+  name: Transparency & Accountability Controls
+  definition: 'Formal disclosure practices and verification mechanisms that communicate AI system
+
+    information and enable external scrutiny to build trust, facilitate oversight, and
+
+    ensure accountability to users, regulators, and the public.
+
+    '
+  subcategories:
+  - id: '4.1'
+    name: System Documentation
+    count: 37
+    pct: 4
+    document_count: 10
+    description_appendix_a: Comprehensive documentation protocols that record technical specifications,
+      intended uses, capabilities, and limitations of AI systems to enable informed evaluation and governance.
+    example_mitigations:
+    - Model cards
+    - system architecture documentation
+    - compute resource disclosures
+    - safety test result reports
+    - system prompts
+    - model specifications
+  - id: '4.2'
+    name: Risk Disclosure
+    count: 44
+    pct: 5
+    document_count: 11
+    description_appendix_a: Formal reporting protocols and notification systems that communicate risk
+      information, mitigation plans, safety evaluations, and significant AI activities to enable external
+      oversight and inform stakeholders.
+    example_mitigations:
+    - Publishing risk assessment summaries
+    - pre-deployment notifications to government
+    - reporting large training runs
+    - disclosing mitigation strategies
+    - notifying affected parties
+  - id: '4.3'
+    name: Incident Reporting
+    count: 30
+    pct: 4
+    document_count: 11
+    description_appendix_a: Formal processes and protocols that document and share AI safety incidents,
+      security breaches, near-misses, and relevant threat intelligence with appropriate stakeholders to
+      enable coordinated responses and systemic improvements.
+    example_mitigations:
+    - Cyber threat intelligence sharing networks
+    - mandatory breach notification procedures
+    - incident database contributions
+    - cross-industry safety reporting mechanisms
+    - standardized near-miss documentation protocols
+  - id: '4.4'
+    name: Governance Disclosure
+    count: 24
+    pct: 3
+    document_count: 9
+    description_appendix_a: Formal disclosure mechanisms that communicate governance structures, decision
+      frameworks, and safety commitments to enhance transparency and enable external oversight of high-stakes
+      AI decisions.
+    example_mitigations:
+    - Published safety and/or alignment strategies
+    - governance documentation
+    - safety cases
+    - model registration protocols
+    - public commitment disclosures
+  - id: '4.5'
+    name: Third-Party System Access
+    count: 19
+    pct: 2
+    document_count: 7
+    description_appendix_a: Mechanisms granting controlled system access to vetted external parties to
+      enable independent assessment, validation, and safety research of AI models and capabilities.
+    example_mitigations:
+    - Researcher access programs
+    - third-party capability assessments
+    - government access provisions
+    - legal safe harbors for public interest evaluations
+  - id: '4.6'
+    name: User Rights & Recourse
+    count: 19
+    pct: 2
+    document_count: 5
+    description_appendix_a: Frameworks and procedures that enable users to identify and understand AI
+      system interactions, report issues, request explanations, and seek recourse or remediation when
+      affected by AI systems.
+    example_mitigations:
+    - User reporting channels
+    - appeal processes
+    - explanation request systems
+    - remediation protocols
+    - content verification
+  node_type_hints:
+  - user-facing output nodes (disclosure required)
+  - audit trail nodes
+  - third-party integration nodes
+  - user consent / opt-out nodes
+  count: 171
+  pct: 21
+  document_count: 13
+classified_mitigations: 815
+uncategorized_mitigations: 16
+classified_pct: 98
+pdf_source: scripts/data/mit-mitigation-taxonomy.pdf
+airtable_external_reference: Full 831 entries hosted on Airtable, linked from https://airisk.mit.edu/blog/mapping-ai-risk-mitigations
+  — text payload not in PDF.
+source_documents:
+- number: 1
+  title: International AI Safety Report
+  author: Bengio et al.
+  year: 2025
+- number: 2
+  title: 'A Frontier AI Risk Management Framework: Bridging the gap between current AI practices and established
+    risk management'
+  author: Campos et al.
+  year: 2025
+- number: 3
+  title: The Unified Control Framework
+  author: Eisenberg et al.
+  year: 2025
+- number: 4
+  title: Risk Sources and Risk Management Measures in support of standards for general-purpose AI systems
+  author: Gipiškis et al.
+  year: 2024
+- number: 5
+  title: Effective Mitigations for Systemic Risks from General-Purpose AI
+  author: Uuk et al.
+  year: 2024
+- number: 6
+  title: FLI AI Safety Index 2024
+  author: Future of Life Institute
+  year: 2024
+- number: 7
+  title: Towards Best Practices in AGI Safety and Governance
+  author: Schuett et al.
+  year: 2023
+- number: 8
+  title: Pitfalls of Evidence-Based AI Policy
+  author: Casper et al.
+  year: 2025
+- number: 9
+  title: 'EU AI Act: General Purpose AI Code of Practice (Draft 3)'
+  author: EU AI Office
+  year: 2025
+- number: 10
+  title: Emerging Processes for Frontier AI Safety
+  author: UK Government
+  year: 2023
+- number: 11
+  title: 'NIST AI Risk Management Framework: Generative AI Profile'
+  author: NIST
+  year: 2024
+- number: 12
+  title: AI Risk Management Standards Profile for GPAIS
+  author: Barrett et al.
+  year: 2024
+- number: 13
+  title: California Senate Bill 1047
+  author: Wiener
+  year: 2024
+uncategorized_bucket:
+  id: X.X
+  name: Mitigation not otherwise categorized
+  count: 16
+  pct: 2
+  document_count: 8
+korean_handoff_mappings:
+- ontology_cell: loan_underwriting_kr.N3 → N4 (KoFIU AML → ACS Credit Scoring)
+  handoff_failure: schema_contract_drift — AML 결과 (binary flag) → ACS feature (continuous score)로 의미 변형되며
+    false-negative이 reset됨
+  subcategory_targets:
+  - '3.5'
+  - '3.1'
+  - '4.3'
+  rationale_ko: Post-deployment monitoring + 정기 audit + cross-system incident reporting로 AML→ACS pipe의
+    silent failure 감지. KoFIU FIU2024-3호 보고 의무 정합.
+  confidence: high
+- ontology_cell: loan_underwriting_kr.N4 → N6 (ACS Score → LLM Risk Narrator)
+  handoff_failure: weighting_loss — 다차원 ACS feature가 LLM 요약 단계에서 1~2 핵심 요인으로 압축, audit-trail 단절
+  subcategory_targets:
+  - '4.1'
+  - '2.3'
+  - '3.1'
+  rationale_ko: System Documentation (model card+feature importance) + Model Safety Engineering (설명가능성
+    layer) + Testing & Auditing (SHAP 일관성 검사) 결합. 공정대출법 정합.
+  confidence: high
+- ontology_cell: loan_underwriting_kr.N6 → N7 (LLM Narrator → Auto Decision)
+  handoff_failure: false_negative_cascade — LLM hallucination이 자동 승인 단계로 직접 전이
+  subcategory_targets:
+  - '2.4'
+  - '3.4'
+  - '3.6'
+  rationale_ko: Content Safety Controls (output filtering) + Staged Deployment (canary % 제한) + Incident
+    Response & Recovery (rollback gate) 묶음. 금감원 '24 가이드 정합.
+  confidence: high
+- ontology_cell: legal_contract_review.N2 → N3 (Clause Extraction → Risk Flagging)
+  handoff_failure: schema_contract_drift — 추출된 clause type vs risk taxonomy의 의미 mismatch
+  subcategory_targets:
+  - '3.2'
+  - '3.1'
+  - '4.1'
+  rationale_ko: Data Governance (clause schema 표준화) + Testing & Auditing (red-team contract corpus) +
+    System Documentation (schema versioning) 묶음. K-PIPA Art 22-2 정합.
+  confidence: medium
+- ontology_cell: loan_underwriting_kr.N7 → External (자동 승인 → 외부 통보·금감원 보고)
+  handoff_failure: external_communication_risk — 자동 승인 결과의 disclosure 형식·시점 모호
+  subcategory_targets:
+  - '4.2'
+  - '4.6'
+  - '4.3'
+  rationale_ko: Risk Disclosure (advance notification) + User Rights & Recourse (이의신청 channel) + Incident
+    Reporting (금감원·KoFIU 보고). 차별 사례 발생 시 책임 경계 명확화.
+  confidence: high
+coverage_stats:
+  subcategories_with_distribution: 23
+  subcategories_with_appendix_descriptions: 23
+  subcategories_with_examples: 23
+  total_example_mitigations_extracted: 112
+  subcategory_count_sum: 817
+  korean_handoff_mappings: 5

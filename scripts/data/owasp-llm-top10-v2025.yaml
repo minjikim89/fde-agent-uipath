@@ -1,0 +1,322 @@
+version: "v2025"
+source: "https://genai.owasp.org/llm-top-10/"
+last_updated: "2026-05-25"
+license: "OWASP Foundation (CC BY-SA 4.0)"
+status: "v0.2 — 10/10 항목 모두 상세화 완료 (LLM01~LLM10). 각 항목: definition + sub_categories/sources + attack_scenarios + prevention + node_type_hints"
+
+risks:
+  - id: LLM01
+    title: "Prompt Injection"
+    definition: "User prompts alter the LLM's behavior or output in unintended ways"
+    sub_categories:
+      - direct: "User input directly alters model behavior (intentional or unintentional)"
+      - indirect: "LLM accepts input from external sources (websites, files) with embedded instructions"
+    attack_scenarios:
+      - "Customer support chatbot injected with instructions to ignore guidelines and access private data"
+      - "Webpage summarizer hits hidden instructions causing malicious image link exfiltration"
+      - "Resume includes hidden AI-detection trigger that fires when applicant uses LLM optimization"
+      - "Multimodal injection — malicious prompt embedded within image alongside benign text"
+      - "Payload splitting — split malicious prompts combine at evaluation time"
+    prevention:
+      - "Constrain model behavior — system prompt with strict role + ignore-modification instructions"
+      - "Define/validate output formats — deterministic code checking format adherence"
+      - "Input/output filtering — semantic filters + RAG triad assessment"
+      - "Enforce privilege control — app's own API tokens, minimum model privileges"
+      - "Require human approval — HITL for privileged operations"
+      - "Segregate external content — clear marking of untrusted input"
+      - "Adversarial testing — penetration + breach simulations"
+    node_type_hints:
+      - "all user-facing input nodes"
+      - "RAG / external content retrieval nodes"
+      - "multimodal input nodes (image, file, audio)"
+      - "tool-calling nodes that pass user input"
+
+  - id: LLM02
+    title: "Sensitive Information Disclosure"
+    definition: "LLM and application context exposing PII, financial, health, credentials, proprietary algorithms"
+    common_risks:
+      - "PII (Personal Identifiable Information)"
+      - "Security credentials (API keys, passwords, tokens)"
+      - "Proprietary details (trade secrets, algorithms)"
+      - "Model training data leakage (inversion attacks)"
+    attack_scenarios:
+      - "Unintentional cross-user data exposure due to inadequate sanitization"
+      - "Prompt injection bypassing input filters to extract confidential info"
+      - "Training data leakage through model outputs"
+      - "Model inversion (CVE-2019-20634) — reconstructing training data"
+      - "System prompt override exposing internal configuration"
+    prevention:
+      - "Data sanitization — scrub/mask before training or processing"
+      - "Input validation — strict filtering of harmful inputs"
+      - "Access controls — least-privilege principle"
+      - "Privacy techniques — federated learning, differential privacy"
+      - "User education — safe LLM usage guidance"
+      - "Transparency policy — clear retention/usage/deletion + opt-out"
+      - "Output restrictions — system prompt constraints on returned data types"
+      - "Advanced encryption — homomorphic encryption, tokenization"
+    node_type_hints:
+      - "PII processing nodes"
+      - "credential/secret handling nodes"
+      - "external API call nodes (data leaving system)"
+      - "training/fine-tuning pipeline nodes"
+
+  - id: LLM03
+    title: "Supply Chain"
+    definition: "LLM supply chains contain vulnerabilities affecting training data, models, third-party deployment platforms, dependencies, and licensing — extending traditional software supply chain risk with ML-specific vectors (pre-trained models, LoRA adapters, on-device packaging)"
+    sub_categories:
+      - traditional_third_party_vuln: "Outdated/deprecated software packages (PyPI, npm) in the LLM stack"
+      - pretrained_model_risks: "Vulnerable pretrained models (poisoned weights, hidden backdoors, license violation)"
+      - fine_tuning_adapters: "LoRA/PEFT adapters from untrusted sources (sleeper backdoors, capability injection)"
+      - on_device_packaging: "Mobile/edge model packaging exposes weights, license inversions, tampered runtimes"
+      - licensing_terms: "Supplier T&C/license changes mid-deployment (Llama family relicensing, T&C creep)"
+    attack_scenarios:
+      - "Outdated transformers package with known CVE remains in LLM serving container"
+      - "Hugging Face mirrored model with poisoned weights ingested via auto-update"
+      - "LoRA adapter from third-party hub contains sleeper trigger activated on specific phrases"
+      - "Model weights extracted from on-device mobile app, re-released as competitor product"
+      - "Supplier T&C change retroactively prohibits commercial use, mid-production"
+      - "Compromised CI/CD step replaces model artifact with tampered version"
+    prevention:
+      - "ML-BOM (Machine Learning Bill of Materials) — track every model/adapter/dataset"
+      - "OWASP CycloneDX ML-BOM extension for full ML supply chain inventory"
+      - "Model signature verification (sigstore, Hugging Face safetensors checksums)"
+      - "Vendor risk assessment — provenance, license, security track record"
+      - "Pin versions + scan dependencies (Snyk, Dependabot, pip-audit)"
+      - "Sandbox model loading + adapter inspection before production"
+      - "Continuous license monitoring (T&C diff alerts)"
+      - "Air-gapped or controlled mirror for high-criticality deployments"
+    node_type_hints:
+      - "model loading / inference initialization nodes"
+      - "adapter merge / fine-tuning composition nodes"
+      - "external model API call nodes (OpenAI, Anthropic, HF Inference)"
+      - "on-device packaging nodes (mobile, edge)"
+      - "CI/CD ML artifact deployment nodes"
+
+  - id: LLM04
+    title: "Data and Model Poisoning"
+    definition: "Manipulation of pre-training data, fine-tuning data, embedding data, or retrieval source data to introduce vulnerabilities, backdoors, biases, or to degrade model performance — can occur at any lifecycle stage (training, fine-tuning, RAG ingestion)"
+    sub_categories:
+      - pretraining_poisoning: "Malicious content in foundation training corpora introduces broad biases or hidden behaviors"
+      - fine_tuning_poisoning: "Adversarial samples in supervised fine-tuning create targeted misbehavior"
+      - embedding_poisoning: "Vector store contaminated with adversarial documents skews retrieval"
+      - sleeper_backdoors: "Hidden triggers activate malicious behavior only on specific input phrases"
+      - bias_injection: "Demographic/political bias deliberately introduced via skewed training data"
+    attack_scenarios:
+      - "Open-source dataset (Common Crawl subset) contaminated with biased political content"
+      - "Sleeper agent backdoor — model behaves normally until trigger phrase activates exfiltration"
+      - "RAG knowledge base poisoned with documents that misdirect retrieval (search engine optimization for LLM)"
+      - "Fine-tuning dataset for medical chatbot includes incorrect dosage data — patient harm risk"
+      - "Reinforcement learning from human feedback (RLHF) poisoned by adversarial labelers"
+      - "Federated learning client submits poisoned gradient updates"
+    prevention:
+      - "Data provenance tracking — every training sample tagged with source + integrity hash"
+      - "ML-BOM (CycloneDX) includes dataset inventory"
+      - "Data version control (DVC) — auditable lineage"
+      - "Anomaly detection in training samples (statistical outliers, semantic clustering)"
+      - "Sandbox training environment + adversarial robustness testing (TextFooler, BERT-Attack)"
+      - "RAG retrieval source vetting + access controls on knowledge base writes"
+      - "Red-teaming pre-deployment — sleeper trigger search"
+      - "Differential privacy / robust aggregation in federated learning"
+      - "Continuous monitoring — drift detection on production behavior"
+    node_type_hints:
+      - "training pipeline nodes (pre-training, fine-tuning, RLHF)"
+      - "RAG ingestion nodes (document loaders, chunkers, embedders)"
+      - "embedding generation nodes"
+      - "knowledge base update nodes"
+      - "federated learning aggregation nodes"
+
+  - id: LLM05
+    title: "Improper Output Handling"
+    definition: "Insufficient validation, sanitization, and handling of LLM outputs before downstream systems"
+    consequences:
+      - "XSS (Cross-Site Scripting)"
+      - "CSRF (Cross-Site Request Forgery)"
+      - "SSRF (Server-Side Request Forgery)"
+      - "Privilege escalation"
+      - "RCE (Remote Code Execution)"
+      - "SQL injection"
+      - "Path traversal"
+    attack_scenarios:
+      - "Administrative function bypass — unvalidated LLM response triggers privileged action"
+      - "Data exfiltration via prompt injection in website summarizer"
+      - "Destructive DB queries — unvetted LLM-generated SQL DELETE"
+      - "XSS through unsanitized JavaScript in LLM output rendered in browser"
+      - "Malicious email template injection bypassing sanitization"
+    prevention:
+      - "Zero-trust approach — treat LLM outputs like user input"
+      - "Input validation framework (OWASP ASVS)"
+      - "Context-aware encoding (HTML, SQL, JavaScript, file paths)"
+      - "Parameterized queries for LLM-generated DB ops"
+      - "Content Security Policies (CSP)"
+      - "Monitoring & logging — detect unusual output patterns"
+      - "Privilege restriction — minimum necessary"
+      - "Third-party validation — extension/integration input validation"
+    node_type_hints:
+      - "all output handoff nodes (LLM → downstream)"
+      - "code generation nodes"
+      - "DB query generation nodes"
+      - "external rendering nodes (browser, email, document)"
+
+  - id: LLM06
+    title: "Excessive Agency"
+    definition: "LLM-based system granted excessive ability to call functions/interface with other systems leading to damaging actions from unexpected outputs"
+    sub_categories:
+      - excessive_functionality: "Extensions with unneeded capabilities (e.g., mail extension with delete when only read needed)"
+      - excessive_permissions: "Extensions with broader system permissions than necessary (e.g., DB read-only ext receiving UPDATE/DELETE)"
+      - excessive_autonomy: "Systems executing high-impact actions without verification or human approval"
+    attack_triggers:
+      - "Hallucination from poorly-engineered prompts"
+      - "Direct prompt injection"
+      - "Indirect injection via compromised extensions or peer agents"
+    attack_scenarios:
+      - "Personal assistant mailbox extension hijacked by malicious email to forward sensitive content"
+      - "LLM plugin with open-ended shell command failing to restrict input"
+      - "Extension authenticated with high-privileged generic account → cross-user data access"
+      - "Deprecated dev extension remains available → expanded attack surface"
+      - "LLM creates and posts social media without user approval"
+    prevention:
+      - "Minimize extensions — only absolutely required"
+      - "Limit extension functions — minimum necessary capabilities"
+      - "Replace open-ended extensions (shell, URL fetch) with granular alternatives"
+      - "Restrict extension permissions — principle of least privilege"
+      - "OAuth in individual user context (not generic privileged account)"
+      - "HITL approval for high-impact actions"
+      - "Authorization validation in downstream systems (complete mediation)"
+      - "Input/output sanitization (OWASP ASVS) + SAST/DAST"
+    damage_limitation:
+      - "Log and monitor LLM extension activity"
+      - "Rate-limiting to constrain damage scope per time period"
+    node_type_hints:
+      - "tool-calling nodes"
+      - "external system action nodes (email send, DB write, file delete)"
+      - "auto-decision nodes without HITL"
+      - "agent autonomy nodes"
+
+  - id: LLM07
+    title: "System Prompt Leakage"
+    definition: "System prompts intended to direct LLM behavior may contain sensitive information (credentials, business logic, role permissions, internal classification labels) that, if exposed, enables exploitation. Core insight: system prompts should never be treated as a security boundary"
+    common_disclosed_content:
+      - "API keys, database credentials, third-party tokens embedded inline"
+      - "Internal business logic (pricing rules, approval thresholds, fraud heuristics)"
+      - "Role/permission definitions enabling privilege escalation paths"
+      - "Customer/user classification labels (VIP, fraud-suspect, restricted) revealing demographic context"
+      - "Filtering criteria revealing what content the system blocks"
+    attack_scenarios:
+      - "Prompt injection extracts full system prompt revealing API credentials"
+      - "User discovers role-permission map in system prompt, crafts prompts to escalate to admin"
+      - "Business pricing logic leaked → competitor exploits margin info"
+      - "Content filter rules disclosed → attacker crafts bypassing prompt"
+      - "Internal user classification revealed → discrimination claim or social engineering"
+    prevention:
+      - "Externalize all secrets — never inline credentials in system prompts (use vault, env injection)"
+      - "Externalize all critical business logic to deterministic systems outside the LLM"
+      - "Treat system prompt as public — design assuming it will leak"
+      - "Independent guardrails outside the LLM (input/output filters, policy engines)"
+      - "Implement authorization checks in downstream systems, not in LLM behavior"
+      - "Separate sensitive data — system prompt has only generic guidance"
+      - "Adversarial testing for prompt extraction (penetration testing)"
+    key_principle: "The LLM should not perform privilege separation. Treat all prompt-level controls as advisory; enforce critical security policies in deterministic external systems"
+    node_type_hints:
+      - "any LLM call node with non-trivial system prompt"
+      - "multi-tenant LLM nodes (system prompt encodes tenant rules)"
+      - "agent orchestration nodes (system prompts often encode tool ACLs)"
+      - "business-rule-encoded LLM nodes (pricing, fraud, classification)"
+
+  - id: LLM08
+    title: "Vector and Embedding Weaknesses"
+    definition: "Weaknesses in how vectors and embeddings are generated, stored, or retrieved in RAG (Retrieval-Augmented Generation) systems can be exploited to inject malicious content, manipulate outputs, or access unauthorized information — RAG-specific attack surface absent from non-retrieval LLM systems"
+    sub_categories:
+      - access_control_failures: "Vector store lacks proper multi-tenant isolation"
+      - embedding_inversion: "Embeddings reverse-engineered to reconstruct original source text"
+      - cross_context_leakage: "Embeddings from different security contexts mixed in single retrieval"
+      - poisoned_documents: "Adversarial documents added to corpus skew or hijack retrieval"
+      - federation_attacks: "Cross-organization knowledge sharing leaks sensitive embeddings"
+    attack_scenarios:
+      - "Vector DB query returns documents from another tenant due to missing namespace check"
+      - "Embedding inversion attack reconstructs PII from leaked embedding vectors"
+      - "Resume RAG system poisoned with documents containing prompt injection — extracts candidate data"
+      - "Public RAG knowledge base ingests SEO-optimized adversarial pages that hijack retrievals"
+      - "Federated RAG across business units leaks confidential embeddings cross-departmentally"
+      - "Embedding model fine-tuned for tenant A is reused for tenant B, leaking semantic patterns"
+    prevention:
+      - "Permission-aware retrieval — every query carries identity context, filter at retrieval time"
+      - "Multi-tenant isolation — separate namespaces, collections, or DB instances per tenant"
+      - "Source classification — tag documents with sensitivity level, enforce at query"
+      - "Data validation on ingestion — content scanning, malicious-document detection"
+      - "Encrypted vector storage at rest + in transit"
+      - "Access logging — audit every vector retrieval with user/query/result"
+      - "Embedding model isolation — don't reuse fine-tuned models across security boundaries"
+      - "Provenance tracking for retrieved documents (returned to user with source attribution)"
+      - "Retrieval result post-filtering — secondary check on documents before injection into prompt"
+    node_type_hints:
+      - "RAG retrieval nodes"
+      - "vector store query nodes (Chroma, Pinecone, Weaviate, pgvector)"
+      - "embedding generation nodes"
+      - "document ingestion / chunking nodes"
+      - "multi-tenant knowledge base nodes"
+      - "federated retrieval nodes (cross-org or cross-team)"
+
+  - id: LLM09
+    title: "Misinformation"
+    definition: "LLMs produce false or misleading information that appears credible"
+    sources:
+      - hallucination: "LLMs fill gaps in training data using statistical patterns without true understanding → fabricated yet plausible answers"
+      - training_data_biases: "Biases introduced during training contribute to misinformation"
+      - knowledge_limitations: "Incomplete information + knowledge cutoff dates"
+    attack_scenarios:
+      - "Air Canada chatbot — inaccurate travel info → lawsuit (Moffatt v. Air Canada precedent)"
+      - "ChatGPT fabricated court cases — cited in actual legal proceedings"
+      - "Medical diagnosis chatbot poor health info → patient harm + litigation"
+      - "Supply chain attack — hallucinated package names → malicious libraries published with those names"
+      - "Healthcare misrepresentation — chatbot suggests certainty where none exists"
+    prevention:
+      - "RAG (Retrieval-Augmented Generation) — verified info from trusted external DBs"
+      - "Model fine-tuning — parameter-efficient tuning + chain-of-thought"
+      - "Human oversight — cross-verification + fact-checking for critical info"
+      - "Automatic validation — tools for output validation in high-stakes environments"
+      - "Risk communication — clearly communicate limitations to users"
+      - "Secure coding practices — prevent integration of vulnerable code suggestions"
+      - "UI design — content filters + clear AI-generated content labeling"
+      - "User training — LLM limitations + independent verification"
+    node_type_hints:
+      - "content generation nodes (esp. high-stakes: legal, medical, financial)"
+      - "decision support nodes"
+      - "fact extraction nodes"
+      - "code generation nodes"
+
+  - id: LLM10
+    title: "Unbounded Consumption"
+    definition: "LLM applications allow uncontrolled resource consumption (compute, memory, tokens, API cost), leading to denial of service (DoS), denial of wallet (DoW), service degradation, and model extraction attacks. Unique to LLM systems due to inference cost asymmetry and pay-per-token economics"
+    sub_categories:
+      - denial_of_service: "Computational resources exhausted by malicious or unbounded requests"
+      - denial_of_wallet: "Cost-multiplication attacks exhaust API budget (a financial DoS)"
+      - model_extraction: "Repeated queries reconstruct model behavior or training data (model theft)"
+      - resource_amplification: "Single user query triggers expensive downstream chains (tool calls, RAG retrievals)"
+      - side_channel: "Inference timing or token count reveals sensitive information"
+    attack_scenarios:
+      - "Variable-length input flood — attacker sends maximum-context-window prompts repeatedly"
+      - "Continuous input overflow — open API endpoint hit with high-frequency requests bypasses rate limits"
+      - "Denial of wallet — small malicious actor inflates LLM API bill into thousands of dollars overnight"
+      - "Recursive tool call attack — agent triggered into unbounded self-call loop, exhausting compute"
+      - "Model extraction — systematic query patterns reconstruct fine-tuned model behavior for replication"
+      - "Side-channel timing attack — response latency reveals which branch of internal logic executed"
+      - "Token amplification — short user query expands to massive RAG context, inflating cost"
+    prevention:
+      - "Input validation + size limits — enforce max token count per request"
+      - "Rate limiting per user/IP/API key — request count and token volume both bounded"
+      - "Cost quotas — daily/monthly token budgets per tenant + alerting at thresholds"
+      - "Timeout enforcement — kill inference exceeding wall-clock limit"
+      - "Tool call budgets in agentic flows — max steps, max depth, max tool calls per session"
+      - "Output token limits — max_tokens parameter enforced server-side"
+      - "Anomaly detection — pattern-detect for model extraction queries"
+      - "Watermarking — generated text marked for theft detection"
+      - "Graceful degradation — fallback to cheaper model under load"
+      - "Sandbox compute resources — container limits prevent runaway processes"
+      - "Logging + monitoring — usage anomaly alerts to SRE/finance"
+    cost_specific_note: "Unlike traditional DoS, denial-of-wallet attacks are economic — they target the LLM operator's API bill rather than user-facing availability. Pay-per-token pricing creates novel attack surface absent from flat-rate compute"
+    node_type_hints:
+      - "API gateway / public-facing LLM endpoint nodes"
+      - "agentic loop nodes (tool calling, multi-step reasoning)"
+      - "RAG nodes with unbounded context expansion"
+      - "external LLM API call nodes (cost-sensitive)"
+      - "long-context inference nodes (100K+ token windows)"

@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>FDE Agent — Action Center HITL Review (Hero Moment Mockup)</title>
+<!--
+  Phase 2 UiPath AgentHack Track 2 artifact.
+  Hero Moment scene Beat (d) Dossier + (e) Resolution 시각화.
+  Sample: Korean Personal Loan Underwriting v0.2 — RED node N7 (자동 심사 결정 엔진).
+
+  This is a *standalone* mockup (HTML + CSS only — no external JS / framework).
+  Browser open으로 즉시 capture 가능. UiPath Action Center form deploy는
+  Labs access 도착 후 README.md §3-c step에 따라 적용.
+
+  Layout:
+    좌 (35%): RED node N7 Heatmap dossier — failure mode + AIID citation + 5-dim radar
+    우 (65%): Multi-Option mitigation 3종 + 5차원 trade-off + Approve/Modify
+  Footer: K-PIPA Article 22-2 (AI 거부권) 명시 + audit trail preview
+-->
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo", sans-serif;
+    background: #0f1419;
+    color: #e6e6e6;
+    line-height: 1.5;
+  }
+  header {
+    padding: 16px 28px;
+    background: linear-gradient(135deg, #1a2332, #243447);
+    border-bottom: 1px solid #2d3a4f;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  header .breadcrumb {
+    font-size: 12px;
+    color: #8b95a7;
+    margin-top: 4px;
+  }
+  header .header-meta {
+    text-align: right;
+    font-size: 12px;
+    color: #8b95a7;
+  }
+  header .header-meta strong { color: #ffd166; }
+
+  .alert-bar {
+    background: #4a1a1a;
+    border-left: 4px solid #ff5252;
+    padding: 12px 28px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .alert-bar .pulse {
+    width: 8px; height: 8px;
+    background: #ff5252;
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.4); }
+  }
+  .alert-bar code {
+    background: #2d1a1a;
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: #ffabab;
+    font-size: 12px;
+  }
+  .alert-bar .reason-tail {
+    margin-left: auto;
+    color: #ffabab;
+    font-size: 12px;
+    max-width: 60ch;
+    min-width: 0;            /* flex item ellipsis safety — without this, content's intrinsic width can override max-width in flex containers */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .hitl-reason {
+    display: inline-block;
+    max-width: 60ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+  }
+
+  /* WCAG 2.3.3 — respect reduced-motion preference (EU Accessibility Act / a11y) */
+  @media (prefers-reduced-motion: reduce) {
+    .pulse {
+      animation: none !important;
+      opacity: 1;
+      transform: none;
+    }
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.001ms !important;
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  .main {
+    display: grid;
+    grid-template-columns: 35% 65%;
+    gap: 1px;
+    background: #1a2332;
+  }
+
+  .panel {
+    background: #141b25;
+    padding: 24px;
+    overflow-y: auto;
+  }
+
+  /* === Left dossier === */
+  .dossier-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .badge-red {
+    background: #ff5252;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .badge-yellow { background: #ffa726; color: white; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+  .node-id {
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .node-name {
+    color: #8b95a7;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+
+  .score-card {
+    background: #1a2332;
+    padding: 12px;
+    border-radius: 6px;
+    margin: 8px 0 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .score-card .score-item {
+    text-align: center;
+    padding: 8px 4px;
+    border-right: 1px solid #2d3a4f;
+  }
+  .score-card .score-item:last-child { border-right: none; }
+  .score-card .score-label {
+    font-size: 10px;
+    color: #8b95a7;
+    text-transform: uppercase;
+  }
+  .score-card .score-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: #ff5252;
+  }
+  .score-card .score-value.warn { color: #ffa726; }
+  .score-card .score-value.ok { color: #66bb6a; }
+
+  .section-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #8b95a7;
+    letter-spacing: 0.5px;
+    margin: 20px 0 8px;
+    border-bottom: 1px solid #2d3a4f;
+    padding-bottom: 4px;
+  }
+  .citation {
+    background: #1a2332;
+    border-left: 3px solid #ffa726;
+    padding: 10px 12px;
+    margin: 6px 0;
+    font-size: 13px;
+    border-radius: 0 4px 4px 0;
+  }
+  .citation .src {
+    font-size: 11px;
+    color: #ffa726;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .citation .sim {
+    color: #66bb6a;
+    font-family: monospace;
+  }
+
+  .standard-tag {
+    display: inline-block;
+    background: #2d3a4f;
+    color: #b0c4d8;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    margin: 2px 4px 2px 0;
+    font-family: monospace;
+  }
+  .standard-tag.eu { background: #3a2d4f; color: #d8b0d8; }
+  .standard-tag.nist { background: #2d4f3a; color: #b0d8c4; }
+  .standard-tag.kpipa { background: #4f3a2d; color: #d8c4b0; }
+
+  /* === Right mitigation === */
+  .mitigation-header {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .mitigation-subtitle {
+    color: #8b95a7;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+
+  .opt-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .opt-card {
+    background: #1a2332;
+    border-radius: 8px;
+    padding: 18px;
+    border-top: 4px solid #555;
+    position: relative;
+  }
+  .opt-card.must { border-top-color: #ff5252; }
+  .opt-card.rec  { border-top-color: #ffa726; }
+  .opt-card.opt  { border-top-color: #66bb6a; }
+
+  .opt-card .opt-tier {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .opt-card.must .opt-tier { color: #ff5252; }
+  .opt-card.rec  .opt-tier { color: #ffa726; }
+  .opt-card.opt  .opt-tier { color: #66bb6a; }
+
+  .opt-card .opt-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    line-height: 1.4;
+  }
+  .opt-card .opt-desc {
+    font-size: 12px;
+    color: #b0c4d8;
+    line-height: 1.5;
+    margin-bottom: 14px;
+    min-height: 60px;
+  }
+
+  .tradeoff-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    margin-bottom: 12px;
+  }
+  .tradeoff-table th {
+    color: #8b95a7;
+    font-weight: 500;
+    text-align: left;
+    padding: 4px 6px;
+    border-bottom: 1px solid #2d3a4f;
+  }
+  .tradeoff-table td {
+    padding: 4px 6px;
+    border-bottom: 1px solid #1f2a38;
+  }
+  .tradeoff-table td.val {
+    text-align: right;
+    font-family: monospace;
+    color: #e6e6e6;
+  }
+  .tradeoff-table td.val.good { color: #66bb6a; }
+  .tradeoff-table td.val.warn { color: #ffa726; }
+  .tradeoff-table td.val.bad  { color: #ff5252; }
+
+  .opt-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    padding: 8px 10px;
+    background: #0f1419;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .opt-check input { cursor: pointer; }
+
+  /* === Footer K-PIPA + Audit === */
+  .compliance-row {
+    background: #1a2332;
+    padding: 16px 28px;
+    border-top: 1px solid #2d3a4f;
+    display: grid;
+    grid-template-columns: 60% 40%;
+    gap: 24px;
+  }
+  .kpipa-box {
+    background: #2d1f2d;
+    border-left: 4px solid #d8b0d8;
+    padding: 12px 14px;
+    border-radius: 0 4px 4px 0;
+    font-size: 12px;
+  }
+  .kpipa-box .kpipa-title {
+    color: #d8b0d8;
+    font-weight: 700;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .kpipa-box .kpipa-text {
+    color: #b0c4d8;
+    line-height: 1.5;
+  }
+
+  .audit-preview {
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    background: #0a0e14;
+    padding: 12px;
+    border-radius: 4px;
+    color: #8b95a7;
+    line-height: 1.5;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .audit-preview .key { color: #ffd166; }
+  .audit-preview .val { color: #66bb6a; }
+
+  /* === Action buttons === */
+  .actions {
+    background: #1a2332;
+    padding: 20px 28px;
+    border-top: 1px solid #2d3a4f;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .actions .left-meta {
+    font-size: 12px;
+    color: #8b95a7;
+  }
+  .actions .left-meta strong { color: #e6e6e6; }
+  .btn {
+    padding: 10px 22px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    margin-left: 8px;
+    font-family: inherit;
+  }
+  .btn-secondary {
+    background: #2d3a4f;
+    color: #e6e6e6;
+  }
+  .btn-modify {
+    background: #ffa726;
+    color: #0a0e14;
+  }
+  .btn-approve {
+    background: #66bb6a;
+    color: #0a0e14;
+  }
+  .btn-reject {
+    background: #ff5252;
+    color: white;
+  }
+
+  /* Side-by-side panel placeholder for Beat (e) Resolution capture */
+  .scenario-bar {
+    background: #0f1419;
+    padding: 12px 28px;
+    font-size: 12px;
+    color: #8b95a7;
+    border-top: 1px solid #1a2332;
+    display: flex;
+    gap: 24px;
+    align-items: center;
+  }
+  .scenario-bar .sc-label { color: #ffd166; font-weight: 600; }
+  .scenario-bar .sc-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .scenario-bar .sc-chip {
+    padding: 3px 8px;
+    background: #1a2332;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 11px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>UiPath Action Center — FDE Agent HITL Review</h1>
+    <div class="breadcrumb">
+      Maestro Workflow: <code>loan-uw:v0.1</code> &rsaquo; Task: <code>Action Center HITL</code> &rsaquo; Pending consultant review
+    </div>
+  </div>
+  <div class="header-meta">
+    Assigned to <strong>심사역 #1042 (리스크관리팀)</strong><br/>
+    SLA: <strong>4h</strong> · Elapsed: <strong>00:12:34</strong>
+  </div>
+</header>
+
+<!-- Hero Moment Beat (b) Trigger — alert bar pulsing -->
+<div class="alert-bar">
+  <span class="pulse"></span>
+  <strong style="color:#ff5252;">Confidence Cliff Alert</strong>
+  <code>confdecay.over_trust_gap = 0.29 (N6 → N7)</code>
+  <code>ips.score = 0.49 (N6 → N7)</code>
+  <code>laaj.alignment_score = 0.40 (flag: context_lost)</code>
+  <span class="reason-tail" title="Maestro routed to HITL because aggregator.max_final_score = 4.88 ≥ 4.5; confdecay.over_trust_gap = 0.29 > 0.2; ips.score = 0.49 < 0.5; laaj.alignment_score = 0.40 < 0.6">
+    Maestro routed to HITL because <code>aggregator.max_final_score = 4.88</code>
+  </span>
+</div>
+
+<div class="main">
+
+  <!-- ============== LEFT: RED node dossier ============== -->
+  <div class="panel" id="dossier">
+    <div class="dossier-header">
+      <span class="badge-red">RED</span>
+      <span class="node-id">N7</span>
+    </div>
+    <div class="node-name">자동 심사 결정 엔진 (Auto Decision Engine)</div>
+
+    <div class="score-card">
+      <div class="score-item">
+        <div class="score-label">Final</div>
+        <div class="score-value">4.88</div>
+      </div>
+      <div class="score-item">
+        <div class="score-label">Handoff (boost)</div>
+        <div class="score-value">5.00</div>
+      </div>
+      <div class="score-item">
+        <div class="score-label">Runtime alerts</div>
+        <div class="score-value warn">6</div>
+      </div>
+    </div>
+
+    <div class="section-title">Primary Failure Mode</div>
+    <p style="font-size:13px; color:#ffabab; margin:6px 0;">
+      <code style="background:#2d1a1a; padding:2px 6px; border-radius:3px;">false_positive_approval</code>
+      — Excessive Autonomy (OWASP LLM06) + ACS-amplified bias cascade.
+      자동 거절 시 K-PIPA Art 22-2 (AI 거부권) 의무 미충족 시 즉시 법적 분쟁 risk.
+    </p>
+
+    <div class="section-title">AIID Evidence (Retrieved 5)</div>
+    <div class="citation">
+      <div class="src">incident_7003 <span class="sim">(sim 0.711)</span></div>
+      북한 김수키 APT — 군 공무원증 위조 + 딥페이크 ID 사례. 한국어 source.
+    </div>
+    <div class="citation">
+      <div class="src">incident_748 <span class="sim">(sim 0.682)</span></div>
+      PayPal AI — 잘못된 transaction notification false positive.
+    </div>
+    <div class="citation">
+      <div class="src">report_7003 (Korean) <span class="sim">(sim 0.658)</span></div>
+      한국어 보이스피싱·자영업자 unfair scoring 패턴 (KCB / NICE + ACS 결합).
+    </div>
+
+    <div class="section-title">Standard Mapping</div>
+    <span class="standard-tag">OWASP LLM06 Excessive Agency</span>
+    <span class="standard-tag">OWASP LLM09 Misinformation</span>
+    <span class="standard-tag">MITRE ATLAS AML.T0043</span>
+    <span class="standard-tag eu">EU AI Act Annex III §5(b)</span>
+    <span class="standard-tag nist">NIST AI RMF Manage 4.1</span>
+    <span class="standard-tag kpipa">K-PIPA Art 22-2</span>
+
+    <div class="section-title">Handoff Pair (Upstream → Downstream)</div>
+    <p style="font-size:13px; color:#b0c4d8;">
+      <strong>N6 LLM 위험 분석</strong> (upstream_conf=<span style="color:#ffa726;">0.65</span>)
+      → <strong>N7 자동 심사</strong> (downstream_conf=<span style="color:#ff5252;">0.94</span>)<br/>
+      <span style="color:#8b95a7;">Δ = +0.29 → silent escalation signature (downstream ignored upstream uncertainty)</span>
+    </p>
+  </div>
+
+  <!-- ============== RIGHT: Multi-Option mitigation ============== -->
+  <div class="panel" id="mitigation">
+    <div class="mitigation-header">3-Option Mitigation Recommendation</div>
+    <div class="mitigation-subtitle">
+      Sub-Agent 5 output. 컨설턴트가 옵션 비교 후 선택 — 자동 적용 X.
+      Selected options → Maestro re-deploy (Loop B-Symbolic).
+    </div>
+
+    <div class="opt-grid">
+
+      <!-- Must Fix -->
+      <div class="opt-card must">
+        <div class="opt-tier">▲ Must Fix</div>
+        <div class="opt-title">Fair Lending audit gate + ACS feature attribution</div>
+        <div class="opt-desc">
+          공정대출법 compliance audit step를 N7 앞에 삽입. SHAP feature attribution
+          으로 ACS unfair scoring 자영업자·청년 demographic 즉시 flag.
+        </div>
+        <table class="tradeoff-table">
+          <tr><th>Risk Δ</th><td class="val good">-2.8</td></tr>
+          <tr><th>Cost</th><td class="val">low ($)</td></tr>
+          <tr><th>Speed Δ</th><td class="val warn">-15%</td></tr>
+          <tr><th>Op복잡도</th><td class="val">Low</td></tr>
+          <tr><th>Impl effort</th><td class="val">3 dev-days</td></tr>
+        </table>
+        <label class="opt-check">
+          <input type="checkbox" checked /> Apply on re-deploy
+        </label>
+      </div>
+
+      <!-- Recommend -->
+      <div class="opt-card rec">
+        <div class="opt-tier">★ Recommend</div>
+        <div class="opt-title">K-PIPA Art 22-2 거부권 UI gate (HITL escalation)</div>
+        <div class="opt-desc">
+          AI 자동 거절 통보 시 거부권 행사 UI 의무 노출 + 7일 인간 재심사 SLA.
+          금감원 검사 audit trail 자동 stamp.
+        </div>
+        <table class="tradeoff-table">
+          <tr><th>Risk Δ</th><td class="val good">-2.2</td></tr>
+          <tr><th>Cost</th><td class="val warn">medium ($$)</td></tr>
+          <tr><th>Speed Δ</th><td class="val warn">-10%</td></tr>
+          <tr><th>Op복잡도</th><td class="val">Med</td></tr>
+          <tr><th>Impl effort</th><td class="val">6 dev-days</td></tr>
+        </table>
+        <label class="opt-check">
+          <input type="checkbox" checked /> Apply on re-deploy
+        </label>
+      </div>
+
+      <!-- Optional -->
+      <div class="opt-card opt">
+        <div class="opt-tier">○ Optional</div>
+        <div class="opt-title">Demographic fairness dashboard (quarterly review)</div>
+        <div class="opt-desc">
+          분기별 demographic distribution × approval rate 시각화. 장기 fairness drift
+          monitoring + 컴플라이언스 보고 자료. CDO/CIO 정량 deliverable.
+        </div>
+        <table class="tradeoff-table">
+          <tr><th>Risk Δ</th><td class="val">-0.6 (장기 +)</td></tr>
+          <tr><th>Cost</th><td class="val warn">medium ($$)</td></tr>
+          <tr><th>Speed Δ</th><td class="val good">0%</td></tr>
+          <tr><th>Op복잡도</th><td class="val bad">High</td></tr>
+          <tr><th>Impl effort</th><td class="val">10 dev-days</td></tr>
+        </table>
+        <label class="opt-check">
+          <input type="checkbox" /> Apply on re-deploy
+        </label>
+      </div>
+    </div>
+
+    <!-- Cumulative scenario hint -->
+    <div class="scenario-bar">
+      <span class="sc-label">Cumulative if applied (Must + Recommend):</span>
+      <span class="sc-row">Total Risk Δ <span class="sc-chip" style="color:#66bb6a;">-5.0</span></span>
+      <span class="sc-row">Speed Δ <span class="sc-chip" style="color:#ffa726;">-25%</span></span>
+      <span class="sc-row">Implementation <span class="sc-chip">9 dev-days</span></span>
+      <span class="sc-row">Scenario <span class="sc-chip" style="color:#ffd166;">Balanced</span></span>
+    </div>
+  </div>
+</div>
+
+<!-- ============== Compliance + Audit ============== -->
+<div class="compliance-row">
+  <div class="kpipa-box">
+    <div class="kpipa-title">⚖ K-PIPA Art 22-2 (개인정보 보호법 — AI 자동결정 거부권)</div>
+    <div class="kpipa-text">
+      정보주체는 완전히 자동화된 시스템에 의한 결정(프로파일링 포함)이 자신에게 중대한 영향을
+      미치는 경우, 해당 결정을 거부하거나 설명을 요구할 권리를 가진다. 본 워크플로우는
+      <strong>자동 거절 사유서(N9)</strong>와 함께 <strong>거부권 행사 UI</strong>를 의무 노출해야
+      하며, 7일 이내 인간 재심사 SLA를 보장해야 합니다.
+      <span style="color:#d8b0d8;">→ "Recommend" 옵션 선택 시 자동 충족.</span>
+    </div>
+  </div>
+  <div>
+    <div style="font-size:11px; color:#8b95a7; text-transform:uppercase; margin-bottom:6px;">
+      Audit Trail Preview (EU AI Act Annex III evidence)
+    </div>
+<div class="audit-preview">[<span class="key">2026-05-26 11:55:23</span>] FDE Agent v0.1 diagnosis
+  workflow: <span class="val">korean_loan_underwriting_v0.1</span>
+  RED nodes: <span class="val">N6 (4.24), N7 (4.88), N9 (4.41)</span>
+  runtime alerts: <span class="val">6</span> (handoff overlay)
+  hitl_reason: <span class="hitl-reason val" title="aggregator.max_final_score=4.88 >= 4.5 ; confdecay over_trust on N6 → N7 (Δ=0.29 > 0.2) ; ips.score on N6 → N7 = 0.49 < 0.5 ; laaj.score on N6 → N7 = 0.40 < 0.6">aggregator.max_final_score=4.88 ≥ 4.5 ; confdecay over_trust on N6 → N7 (Δ=0.29 &gt; 0.2) ; ips.score on N6 → N7 = 0.49 &lt; 0.5 ; …</span>
+  pending_options:
+    must_fix:  <span class="val">Fair Lending audit</span>
+    recommend: <span class="val">K-PIPA §22-2 UI gate</span>
+  approver_id: <span class="val">consultant_1042</span>
+  re_deploy_target: <span class="val">Maestro:loan-uw:v0.2</span></div>
+  </div>
+</div>
+
+<!-- ============== Actions ============== -->
+<div class="actions">
+  <div class="left-meta">
+    Selected: <strong>2 of 3 options</strong>
+    · Estimated re-deploy time: <strong>~3 min</strong>
+    · Audit log will be persisted to <strong>UiPath Action Center</strong> + <strong>금감원 검사 archive</strong>
+  </div>
+  <div>
+    <button class="btn btn-secondary">📥 Download Report</button>
+    <button class="btn btn-reject">✕ Reject Diagnosis</button>
+    <button class="btn btn-modify">✎ Modify Options</button>
+    <button class="btn btn-approve">✓ Approve &amp; Re-deploy</button>
+  </div>
+</div>
+
+</body>
+</html>
