@@ -5,13 +5,13 @@ FDE Agent — Shared Core I/O Contracts
 ★ Single source of truth for the diagnosis-core input/output schema that BOTH
 orchestration layers import unchanged:
 
-  - ADK / Rapid path  (Gemini-only, Cloud Run)  → wraps core tools as ADK FunctionTools
+  - ADK / Rapid path  (external, Cloud Run)  → wraps core tools as ADK FunctionTools
   - CrewAI / UiPath path (multi-model, Coded Agent) → wraps core tools as CrewAI @tool
 
 The contract is **brain-agnostic** on purpose. The deterministic diagnosis core
 (ontology + RAG + 3-axis scoring) carries no model choice; the LLM brain is
 selected by the orchestration layer (`brain_factory.get_brain(policy=...)`). This
-is what structurally keeps non-Gemini brains out of the Rapid path while letting
+is what structurally separates the Rapid-path brain policy from the UiPath path while letting
 the SAME tools run under both stacks.
 
 Shapes are plain dataclasses with `.to_dict()` so the result is JSON-safe for

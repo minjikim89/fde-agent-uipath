@@ -21,7 +21,7 @@ Input payload schema:
         "sample_name":     "legal" | "loan", # for bundled samples
         "sample_source":   "legal" | "korean_loan" | null,  # ontology cell filter
         "backend":         "direct" | "crewai" | "langgraph",  # orchestration style (default direct)
-        "brain":           "claude" | "gemini" | "openai" | "vertex_claude" | null,
+        "brain":           "claude" | "openai" | null,
                            # multi-model brain for the executive narrative
                            # (UiPath track = multi-model). null → BRAIN env / auto.
         "hitl": {                            # Action Center auto-submit (optional)
@@ -73,16 +73,14 @@ Agent Builder, or local CLI). It is registered as the Coded Agent entry point in
 
     { "functions": { "main": "coded_agent_wrapper.py:run" } }
 
-★ Multi-model brain (UiPath track allows Claude / Gemini / OpenAI / Vertex-Claude
-— do NOT Gemini-only-restrict this path; that constraint is Rapid-only). The
+★ Multi-model brain (UiPath track allows Claude / OpenAI, selectable via the
+BRAIN env var). The
 deterministic ontology+RAG diagnosis core needs NO LLM, so the brain is applied
 ONLY at the orchestration layer for the executive-summary narrative and degrades
 gracefully when absent. Select via the `BRAIN` env var (resolved by
 scripts/agents/brain_factory.get_brain):
     BRAIN=claude         → ClaudeBrain (local claude -p; dev only)
-    BRAIN=vertex_claude  → VertexClaudeBrain (deploy; AnthropicVertex + ADC)
     BRAIN=openai         → OpenAIBrain (deploy; $200 credit)
-    BRAIN=gemini         → VertexGeminiBrain (Vertex AI + ADC)
     (unset/auto)         → auto-detect; falls back to a deterministic stub
 
 UiPath publish path — VERIFIED against the official UiPath Python SDK CLI
@@ -169,7 +167,7 @@ except ImportError:
 # ONLY at the orchestration layer (executive-summary narrative). The diagnosis
 # core itself is brain-agnostic. brain_factory is read-only reference here — we
 # do not modify it. NOTE: do NOT set FDE_RAPID on this path; the UiPath track is
-# explicitly multi-model (Claude/Gemini/OpenAI), unlike the Gemini-only Rapid path.
+# explicitly multi-model (Claude/OpenAI), selectable via the BRAIN env var.
 try:
     from agents.brain_factory import get_brain  # noqa: E402
     BRAIN_FACTORY_AVAILABLE = True
@@ -231,7 +229,7 @@ def _existing_report_paths(sample_name: str | None) -> dict:
 
 
 # --------------------------------------------------------------------------
-# Multi-model brain (UiPath path — Claude / Gemini / OpenAI / Vertex-Claude)
+# Multi-model brain (UiPath path — Claude / OpenAI)
 # --------------------------------------------------------------------------
 
 def _resolve_brain(requested: str | None):
@@ -239,7 +237,7 @@ def _resolve_brain(requested: str | None):
 
     Returns (brain_or_None, healthcheck_dict). Never raises — on any failure
     (factory absent, unknown selector, SDK missing) returns (None, {...}) so the
-    deterministic diagnosis core still runs. The Rapid Gemini-only guard lives in
+    deterministic diagnosis core still runs. The Rapid-path brain policy lives in
     brain_factory; this UiPath path does NOT set FDE_RAPID, so Claude/OpenAI are
     legal selectors here.
     """
@@ -424,7 +422,7 @@ def submit_to_action_center(
 
 def _main_cli() -> int:
     sample = sys.argv[1] if len(sys.argv) > 1 else "legal"
-    # Optional 2nd arg = brain selector (claude/gemini/openai/vertex_claude).
+    # Optional 2nd arg = brain selector (claude/openai).
     brain_sel = sys.argv[2] if len(sys.argv) > 2 else None
     payload = {"workflow_format": "markdown_sample", "sample_name": sample}
     if brain_sel:

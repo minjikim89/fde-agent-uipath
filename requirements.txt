@@ -7,8 +7,7 @@ PyYAML>=6.0
 # sentence-transformers>=3.0
 # torch>=2.2
 
-# --- Optional: model-backed brains (selectable; Orchestrator-credential governed) ---
-# google-generativeai      # Gemini
+# --- Optional: model-backed brains (selectable via the BRAIN config) ---
 # anthropic                # Claude
 # openai                   # OpenAI
 

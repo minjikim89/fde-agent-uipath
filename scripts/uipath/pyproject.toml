@@ -9,7 +9,7 @@ requires-python = ">=3.10"
 
 # Runtime dependencies for the diagnosis core inside the UiPath worker.
 # uipath itself is the Coded Agent SDK + CLI (auth/init/pack/publish/run).
-# google-genai / anthropic / openai are OPTIONAL multi-model brains: the
+# anthropic / openai are OPTIONAL multi-model brains: the
 # UiPath track allows multi-model, but the deterministic ontology+RAG core
 # needs no LLM, so the agent degrades gracefully if a brain SDK is absent.
 dependencies = [
@@ -25,8 +25,7 @@ dependencies = [
 rag = ["chromadb>=0.5", "sentence-transformers>=2.7", "torch>=2.3"]
 # Multi-model brains (UiPath path only — never selected on the Rapid path).
 # brain_factory.get_brain() resolves the brain from the BRAIN env var.
-gemini = ["google-genai>=0.3"]
-claude = ["anthropic[vertex]>=0.39"]
+claude = ["anthropic>=0.39"]
 openai = ["openai>=1.40"]
 
 [build-system]

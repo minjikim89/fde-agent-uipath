@@ -5,17 +5,17 @@ FDE Agent — Real CrewAI Wiring (UiPath path, multi-model)
 Turns the crew_poc.py skeleton (ROLE_SPECS + TASK_GRAPH) into a runnable CrewAI
 Crew whose 5 agents call the SHARED diagnosis core (`core.tools`) through real
 CrewAI tools. This is the UiPath-path orchestrator (multi-model allowed); the
-Rapid path uses ADK + Gemini-only over the same core tools.
+Rapid path uses ADK over the same core tools.
 
 ★ Runs in the Python 3.12 `scripts/.venv-crewai` venv — CrewAI requires
 `>=3.10,<3.14` and cannot install in the main 3.14 venv. All `crewai` imports
 are inside functions so this module still imports cleanly under 3.14 (for lint /
 the crew_poc.py delegation probe).
 
-Brain policy: the LLM is built from env (CREW_MODEL, default Vertex Gemini). For
-the UiPath path you may set CREW_MODEL to a Vertex Model Garden Claude or OpenAI
+Brain policy: the LLM is built from env (CREW_MODEL, default OpenAI). For
+the UiPath path you may set CREW_MODEL to a Claude or OpenAI
 model — multi-model is allowed here. The Rapid path must NOT use this module
-with a non-Gemini model.
+with any litellm-supported model.
 
 Tools (each wraps a pure core.tools function — same I/O contract as the ADK path):
     parse_workflow      → core.tools.parse_workflow
@@ -111,12 +111,11 @@ def build_llm():
     """CrewAI LLM via litellm. CREW_MODEL selects the provider/model.
 
     UiPath path (multi-model): e.g.
-        vertex_ai/gemini-2.5-flash       (default)
-        vertex_ai/claude-sonnet-4-5      (Vertex Model Garden Claude)
-        gpt-4o                           (OpenAI, $200 credit)
+        gpt-4o-mini                      (OpenAI, default)
+        gpt-4o                           (OpenAI)
     """
     from crewai import LLM
-    model = os.environ.get("CREW_MODEL", "vertex_ai/gemini-2.5-flash")
+    model = os.environ.get("CREW_MODEL", "gpt-4o-mini")
     return LLM(model=model)
 
 
@@ -137,7 +136,7 @@ def build_crew(llm=None):
     """Assemble the real CrewAI Crew from ROLE_SPECS + TASK_GRAPH.
 
     Returns the Crew object. Does NOT kick off — call .kickoff(inputs=...) with a
-    live LLM (Vertex/OpenAI creds present). Building is creds-free (smoke test)."""
+    live LLM (provider creds present). Building is creds-free (smoke test)."""
     from crewai import Agent, Task, Crew, Process
 
     llm = llm or build_llm()
@@ -206,7 +205,7 @@ def smoke_test() -> dict:
 
 
 def kickoff(workflow_markdown: str, sample_source: str = "") -> Any:
-    """Run the crew end-to-end. Requires a live LLM (Vertex/OpenAI creds)."""
+    """Run the crew end-to-end. Requires a live LLM (provider creds)."""
     crew = build_crew()
     return crew.kickoff(inputs={"workflow_markdown": workflow_markdown, "sample_source": sample_source})
 

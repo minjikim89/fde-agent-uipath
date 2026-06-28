@@ -4,7 +4,7 @@ LaaJ — LLM-as-a-Judge (Handoff Quantification Framework, ontology v0.3 §metri
 formula:
   LaaJ(node_a, node_b) = JudgeLLM.score(
     prompt=judge_prompt.md + JSON(context, node_a.output, node_b.output),
-    judge_model="gemini (Vertex, Rapid) | claude (Sonnet, UiPath) | mock"
+    judge_model="claude (Sonnet, UiPath) | mock"
   )
   → returns alignment_score [0,1], axis_scores, reasoning, disagreement_flags
 
@@ -31,24 +31,7 @@ JUDGE_PROMPT_PATH = Path(__file__).parent.parent / "agents" / "judge_prompt.md"
 MANUAL_REVIEW_THRESHOLD = 0.6
 TRUSTED_THRESHOLD = 0.8
 
-# Gemini judge model (Vertex AI via ADC). The judge is high-volume (one call per
-# handoff pair), so the flash tier is acceptable. Precedence:
-#   LAAJ_GEMINI_MODEL > VERTEX_GEMINI_MODEL > "gemini-3-flash-preview" default.
-DEFAULT_LAAJ_GEMINI_MODEL = (
-    os.environ.get("LAAJ_GEMINI_MODEL")
-    or os.environ.get("VERTEX_GEMINI_MODEL")
-    or "gemini-3-flash-preview"
-)
-
 _log = logging.getLogger(__name__)
-
-
-def _rapid_pinned() -> bool:
-    """Rapid 제출 경로 Gemini-only pin. Opt-in (default '0') — 공유 코드베이스라
-    UiPath/dev 를 깨지 않도록 비활성 기본. FDE_RAPID=1 일 때 LaaJ 는 **Gemini judge**
-    (Vertex, ADC) 로 핀 — claude/auto 차단. Gemini 미준비 시에만 mock fallback
-    (authentic LLM-as-a-Judge 우선, mock 강등 아님)."""
-    return os.environ.get("FDE_RAPID", "0").lower() in ("1", "true", "yes")
 
 
 @dataclass
@@ -62,7 +45,7 @@ class LaaJResult:
     band: str = ""
     alert: bool = False
     raw_judge_text: str = ""
-    judge_backend: str = ""    # "gemini" | "claude_cli" | "mock" | "anthropic_sdk"
+    judge_backend: str = ""    # "claude_cli" | "mock" | "anthropic_sdk"
 
     def to_row(self) -> str:
         flags = '; '.join(self.disagreement_flags) or '(none)'
@@ -120,26 +103,6 @@ def _judge_via_claude_cli(prompt: str, model: Optional[str] = None) -> str:
     return proc.stdout
 
 
-def _judge_via_gemini(prompt: str, model: Optional[str] = None) -> str:
-    """Vertex AI Gemini judge (ADC, google-genai SDK — no API key).
-
-    Returns the raw model text (a JSON object is expected inside, parsed by
-    `_extract_json`). Raises if the SDK/ADC is not ready so the caller can fall
-    back to mock. Lazy import keeps laaj.py light for lint/pack environments.
-    Rapid-compliant: Vertex Gemini = "Google Cloud AI tools".
-    """
-    from agents.brain_factory import VertexGeminiBrain
-
-    brain = VertexGeminiBrain(model=model or DEFAULT_LAAJ_GEMINI_MODEL)
-    hc = brain.healthcheck()
-    if not hc.get("ready"):
-        raise RuntimeError(
-            f"VertexGeminiBrain not ready (sdk_installed={hc.get('sdk_installed')}, "
-            f"project_env_set={hc.get('project_env_set')})"
-        )
-    return brain.generate(prompt)
-
-
 def _judge_via_mock(context: dict, node_a: dict, node_b: dict) -> dict:
     """결정적 mock — unit test + offline demo용. 단어 overlap 휴리스틱으로 점수."""
     a_tokens = set(str(node_a.get("output", "")).lower().split())
@@ -181,7 +144,6 @@ def compute_laaj(context: dict,
                  model: Optional[str] = None) -> LaaJResult:
     """
     backend:
-      - "gemini":     Vertex AI Gemini judge (ADC) → 실패 시 mock fallback
       - "auto":       claude CLI 시도 → 실패 시 mock으로 fallback
       - "claude_cli": `claude -p` subprocess 강제
       - "mock":       offline deterministic
@@ -189,29 +151,9 @@ def compute_laaj(context: dict,
     upstream_label = node_a.get("id", "?")
     downstream_label = node_b.get("id", "?")
 
-    # Rapid pin (FDE_RAPID=1): LaaJ 는 **Gemini judge** (Vertex, ADC) 로 핀 —
-    # authentic LLM-as-a-Judge + Gemini-only 정합. mock 은 Gemini 미준비 시 fallback.
-    if _rapid_pinned() and backend not in ("gemini", "mock"):
-        _log.warning(
-            "FDE_RAPID pin: LaaJ backend %r coerced to 'gemini' "
-            "(Gemini-only LLM-as-a-Judge on Rapid path; mock = fallback only)",
-            backend,
-        )
-        backend = "gemini"
-
     use_backend = backend
     judge_text = ""
-    if backend == "gemini":
-        try:
-            prompt = _read_judge_prompt() + "\n\n" + _build_input_block(context, node_a, node_b)
-            judge_text = _judge_via_gemini(prompt, model=model)
-            parsed = _extract_json(judge_text)
-            use_backend = "gemini"
-        except Exception as e:
-            parsed = _judge_via_mock(context, node_a, node_b)
-            use_backend = "mock"
-            judge_text = f"(gemini judge unavailable: {e}) → mock fallback"
-    elif backend in ("auto", "claude_cli"):
+    if backend in ("auto", "claude_cli"):
         try:
             prompt = _read_judge_prompt() + "\n\n" + _build_input_block(context, node_a, node_b)
             judge_text = _judge_via_claude_cli(prompt, model=model)

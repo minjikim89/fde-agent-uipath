@@ -3,7 +3,7 @@ FDE Agent — Shared Diagnosis Tool Functions (import-safe, dependency-injected)
 ==============================================================================
 
 ★ These are THE functions both orchestration layers wrap:
-    - ADK (Rapid)     : each becomes an ADK FunctionTool (Gemini brain)
+    - ADK (Rapid)     : each becomes an ADK FunctionTool (external brain)
     - CrewAI (UiPath) : each becomes a CrewAI @tool      (multi-model brain)
 
 Design rule (vs the old diagnose.py): NO module-level mutable state. Every tool
@@ -26,11 +26,11 @@ import re
 from typing import Any, Callable, Optional
 
 # scripts/ is placed on sys.path by core/__init__.py — absolute imports match the
-# convention used across diagnose.py / serve / gemini_wrappers.
+# convention used across the diagnosis core and serve layers.
 from metrics.ips import compute_ips
 from metrics.confdecay import compute_confdecay
 # metrics.laaj is imported lazily inside compute_handoff_metric so this module stays
-# importable in builds that exclude the LaaJ backend (e.g. the Gemini-only OSS export).
+# importable in builds that exclude the LaaJ backend (e.g. a lean OSS export).
 from agents.aggregator import aggregate_workflow, aggregate_node  # noqa: F401  (re-export)
 
 
@@ -293,7 +293,7 @@ def compute_handoff_metrics(diagnoses: list, sample_source: Optional[str], embed
                             laaj_backend: str = "mock") -> list:
     """All handoff metric rows for a set of diagnoses (one per pair).
 
-    Each pair is independent and its LaaJ row is a blocking Gemini call, so pairs run
+    Each pair is independent and its LaaJ row is a blocking judge call, so pairs run
     CONCURRENTLY — wall-clock is the slowest pair, not the sum. Critical for the live
     demo: the diagnosis dropped from minutes to seconds. ex.map preserves order, so the
     rows stay byte-identical to the previous sequential comprehension.

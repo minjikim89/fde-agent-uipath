@@ -10,7 +10,7 @@ deterministic Coded FUNCTION in `coded_agent_wrapper.py:run`. UiPath's model:
 
 Maestro's Service Task "Start and wait for agent" only binds AGENTS, so we
 expose the diagnosis as an agent: the deterministic ontology+RAG engine runs the
-diagnosis, and the multi-model brain (Claude / Gemini / OpenAI, resolved by
+diagnosis, and the multi-model brain (Claude / OpenAI, resolved by
 brain_factory) writes the executive narrative — that LLM step is the agent's
 reasoning surface. The deterministic core is reused verbatim via `run()`; this
 file only adapts it to the typed dataclass Input/Output the agent runtime wants.
@@ -42,7 +42,7 @@ class Input:
     workflow_content: str = ""
     workflow_format: str = "markdown_sample"   # markdown_sample|markdown_inline|bpmn_xml|mermaid
     sample_source: Optional[str] = None        # "legal" | "korean_loan"
-    brain: Optional[str] = None                # claude|gemini|openai|vertex_claude (null -> BRAIN env)
+    brain: Optional[str] = None                # claude|openai (null -> BRAIN env)
 
 
 @dataclass

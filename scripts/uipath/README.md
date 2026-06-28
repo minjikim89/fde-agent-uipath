@@ -14,7 +14,7 @@
 | File | Role | UiPath account needed? |
 |---|---|---|
 | `bpmn_diagnosis_workflow.xml` / `.bpmn` | BPMN 2.0 — 9-step pipeline + explicit OR-join + BPMN DI layout. Import target for Maestro Studio | No (validate with xmllint + a bpmn.io validator) |
-| `coded_agent_wrapper.py` | The UiPath Coded Agent wrapping the shared `core.DiagnosisEngine`. `run(input_payload) -> dict` standard entry point + multi-backend dispatch + **multi-model brain selection** (Claude / Gemini / OpenAI / Vertex-Claude via `brain_factory`) + **escalated-node HITL hook** + `submit_to_action_center()` helper | No (`python3 coded_agent_wrapper.py legal [brain]` runs as a sanity check) |
+| `coded_agent_wrapper.py` | The UiPath Coded Agent wrapping the shared `core.DiagnosisEngine`. `run(input_payload) -> dict` standard entry point + multi-backend dispatch + **multi-model brain selection** (Claude / OpenAI via `brain_factory`) + **escalated-node HITL hook** + `submit_to_action_center()` helper | No (`python3 coded_agent_wrapper.py legal [brain]` runs as a sanity check) |
 | `uipath.json` | Coded Agent **entry-point manifest** — `{ "functions": { "main": "coded_agent_wrapper.py:run" } }`. Read by `uipath init` | Yes (at publish) |
 | `pyproject.toml` | Project metadata + deps. `description` must avoid `& < > " ' ;`; `authors` is required (packaging constraint) | Yes (at pack) |
 | `loop_b_symbolic.py` | Loop B-Symbolic mitigation patch — stamps `fde:applied_options` + `<fde:mitigation>` into the BPMN XML (comment-preserving, UTC audit timestamp) | No (`python3 loop_b_symbolic.py --self-test`) |
@@ -274,7 +274,6 @@ Capture notes:
 3) Register LLM provider keys in the Secret Manager (never in plaintext):
    In UiPath Orchestrator → Tenant → Credentials:
      - ANTHROPIC_API_KEY (Claude primary brain)
-     - GEMINI_API_KEY    (optional, Sub-Agent 6 peer reviewer)
    These are injected into the Coded Agent runtime as env vars — never hard-coded.
 
 4) Coded Agent runtime dependencies (only for the full-corpus path):
@@ -372,5 +371,5 @@ Capture notes:
   helper added.
 - **v0.4 (Coded Agent publish + multi-model brain + HITL hook)**: new `uipath.json`
   (entry-point manifest) and `pyproject.toml`; `coded_agent_wrapper.py` gains multi-model
-  brain selection (Claude / Gemini / OpenAI / Vertex-Claude via `brain_factory`),
+  brain selection (Claude / OpenAI via `brain_factory`),
   escalated-node HITL hook, and the corrected `uipath init` flow.

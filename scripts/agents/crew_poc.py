@@ -4,7 +4,7 @@ CrewAI 5-Role Wrap PoC (블로커 #5 결론 적용).
 블로커 #5 보고서 (`_research/2026-05-25-crewai-phoenix-trace.md`)의 결정 그대로:
   - Process.sequential primary, async_execution=True로 implicit parallel
   - 5 fixed role: BPMN Parser / Risk Diagnoser / Standards Mapper / AIID Retriever / Mitigation Recommender
-  - (선택) Sub-Agent 6 Peer Reviewer (Claude via AnthropicVertex) — Phase 1 진입 후 통합
+  - (선택) Sub-Agent 6 Peer Reviewer (Claude) — Phase 1 진입 후 통합
   - Phoenix instrumentation: `phoenix.otel.register(auto_instrument=True)` 한 줄
   - 본 PoC는 environment-agnostic skeleton — crewai/phoenix 미설치 시 graceful 단축
 
@@ -56,7 +56,7 @@ ROLE_SPECS = [
         "backstory": "수백 건의 enterprise workflow를 정규화해 본 process engineer. "
                      "도식·문서·SOP에서 명시 안 된 handoff까지 추적.",
         "tools":     ["parse_bpmn_md"],
-        "llm_role":  "primary_gemini",     # Rapid Agent: Gemini 3 brain
+        "llm_role":  "primary_llm",     # Rapid Agent: primary LLM
         "outputs":   ["nodes: list[Node]", "edges: list[Edge]"],
     },
     {
@@ -65,7 +65,7 @@ ROLE_SPECS = [
         "backstory": "AI 시스템 사고 사례 1,400+건을 분석한 risk analyst. "
                      "공개 데이터 없는 handoff·예외처리 휴리스틱 영역까지 식별.",
         "tools":     ["ontology_lookup", "ips", "confdecay", "laaj"],
-        "llm_role":  "primary_gemini",
+        "llm_role":  "primary_llm",
         "outputs":   ["per-node cells_by_axis", "handoff_metrics (IPS/CD/LaaJ)"],
     },
     {
@@ -73,7 +73,7 @@ ROLE_SPECS = [
         "goal": "각 노드 risk를 OWASP LLM Top 10 v2025 + MITRE ATLAS v5.6.0 매핑.",
         "backstory": "보안 표준 큐레이터. LLM06 Excessive Agency와 AML.T0043 같은 매핑이 자동.",
         "tools":     ["owasp_lookup", "mitre_lookup"],
-        "llm_role":  "primary_gemini",
+        "llm_role":  "primary_llm",
         "outputs":   ["per-node standards mapping (LLM01~LLM10, AML.T*, NIST AI RMF)"],
     },
     {
@@ -82,7 +82,7 @@ ROLE_SPECS = [
         "backstory": "incident 7,959 vectors(1,480 + 6,479 reports)를 BGE-M3로 검색. "
                      "Air Canada / Klarna 류 레퍼런스를 자동 인용.",
         "tools":     ["chroma_search"],
-        "llm_role":  "primary_gemini",
+        "llm_role":  "primary_llm",
         "outputs":   ["per high-risk node 3~5 incidents w/ similarity + title + date"],
     },
     {
@@ -91,7 +91,7 @@ ROLE_SPECS = [
                 "MIT Mitigation Taxonomy(831) + OWASP prevention + 본인 IP 룰셋.",
         "backstory": "McKinsey 식 multi-scenario consulting 톤 — 단일 fix 강요 X, 옵션 + trade-off.",
         "tools":     ["mit_taxonomy"],
-        "llm_role":  "primary_gemini",
+        "llm_role":  "primary_llm",
         "outputs":   ["per-node mitigation_options {must_fix, recommend, optional} + trade-off matrix"],
     },
 ]
@@ -124,7 +124,7 @@ tracer_provider = register(
 # auto_instrument=True → 설치된 OpenInference instrumentor 자동 enable:
 #   - openinference-instrumentation-crewai
 #   - openinference-instrumentation-litellm   (CrewAI ≥0.63 LiteLLM 경유)
-#   - openinference-instrumentation-vertexai  (Gemini 호출)
+#   - (optional tracing instrumentation)
 #   - openinference-instrumentation-anthropic (Sub-Agent 6 Claude peer reviewer)
 """
 
@@ -139,7 +139,7 @@ class StubAgent:
     goal: str
     backstory: str
     tools: list = field(default_factory=list)
-    llm_role: str = "primary_gemini"
+    llm_role: str = "primary_llm"
 
     def execute(self, task_name: str, inputs: dict) -> dict:
         # Stub LLM: 입력을 그대로 echo + role tag
@@ -201,11 +201,10 @@ def real_crew_build():
     try:
         from crewai import Agent, Task, Crew, Process
         try:
-            from langchain_google_vertexai import ChatVertexAI
-            project = os.environ.get("GCP_PROJECT_ID", "MY_PROJECT_ID")
-            gemini = ChatVertexAI(model_name="gemini-2.5-pro", project=project)
+            import litellm  # noqa: F401  # provider-agnostic LLM router
+            llm_ready = True
         except ImportError:
-            gemini = None
+            llm_ready = False
 
         try:
             from phoenix.otel import register
@@ -215,7 +214,7 @@ def real_crew_build():
             phoenix_status = "not_installed"
 
         # 실제 빌드는 Phase 1 진입 후 — 본 함수는 prerequisites checker
-        return {"crewai": True, "gemini": gemini is not None, "phoenix": phoenix_status}
+        return {"crewai": True, "llm": llm_ready, "phoenix": phoenix_status}
     except ImportError as e:
         return {"crewai": False, "missing": str(e)}
 
@@ -227,7 +226,7 @@ def real_crew_build():
 def check_dependencies() -> dict:
     status = {}
     for mod in ["crewai", "phoenix", "openinference.instrumentation.crewai",
-                "langchain_google_vertexai", "anthropic"]:
+                "anthropic"]:
         try:
             __import__(mod)
             status[mod] = "installed"

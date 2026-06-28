@@ -5,7 +5,7 @@ FDE Agent — Shared Diagnosis Core
 The brain-agnostic diagnosis engine (ontology + RAG + 3-axis scoring) shared by
 both hackathon submission paths:
 
-    ADK (Rapid, Gemini-only)  ─┐
+    ADK (Rapid path)          ─┐
                                ├─→  from core import DiagnosisEngine, tools
     CrewAI (UiPath, multi-model)─┘
 

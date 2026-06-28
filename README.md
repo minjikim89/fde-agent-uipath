@@ -39,8 +39,8 @@ hypothetical: the loan flow runs unmodified on the same engine as the legal flow
 
 UiPath is the **execution, orchestration, and governance layer**. The shipped
 demo runs a **deterministic in-process diagnosis engine** inside a governed UiPath
-Coded Agent; multi-model brains (Claude, Gemini) are **available and governed via
-Orchestrator credentials** rather than baked in. The CrewAI 5-role crew is the
+Coded Agent; multi-model brains (Claude, OpenAI) are **selectable via the BRAIN
+config**, not invoked in the shipped demo. The CrewAI 5-role crew is the
 **designed multi-agent architecture** (PoC: `scripts/agents/crew_poc.py`), a
 selectable backend, not the path the demo dispatches at runtime (see §4). Whatever
 backend a deployment selects, UiPath supplies the secret injection, the
@@ -67,7 +67,7 @@ orchestration boundary, and the human-in-the-loop gate around it.
                 │   │        shipped path: deterministic in-process engine.              │ │
                 │   │        Designed backend (selectable): CrewAI 5-role crew +         │ │
                 │   │        multi-model brains via Orchestrator creds (Claude /         │ │
-                │   │        Gemini) · metrics: IPS / ConfDecay / LaaJ                    │ │
+                │   │        OpenAI) · metrics: IPS / ConfDecay / LaaJ                    │ │
                 │   └────────────────────────────────────────────────────────────────────┘ │
                 │       │  returns: hitl_required (bool), max_final_score, diagnoses[]      │
                 │       ▼                                                                  │
@@ -132,9 +132,6 @@ The coded layer is the Python Coded Agent and its internals.
     PoC; the runtime `coded_agent_wrapper.py:run()` never dispatches it. When a
     deployment opts in, it runs **inside the governed UiPath layer** (external
     frameworks under UiPath governance are explicitly rewarded by the rules).
-  - Multi-model peer review (`scripts/agents/sub_agent_6_peer_review.py`;
-    `BRAIN_PEER` ∈ `claude` / `vertex` / `gemini` / `mock`), available and governed
-    via Orchestrator credentials.
   - Handoff metrics (`scripts/metrics/`: IPS / ConfDecay / LaaJ).
   - Orchestrator client + Coded Agent entry (`scripts/uipath/uipath_client.py`,
     `coded_agent_wrapper.py`).
@@ -233,61 +230,46 @@ the gateway boolean for the demo.
 ## 7. Built with **Claude Code** via *UiPath for Coding Agents* (Platform Usage bonus, +2)
 
 > Per the AgentHack rules, solutions that use coding agents via *UiPath for Coding
-> Agents* (Claude Code, Codex, Cursor, Gemini CLI) earn **+2 Platform Usage points**
+> Agents* (Claude Code, Codex, Cursor, and others) earn **+2 Platform Usage points**
 > when the usage is documented with **verifiable evidence** (which agent, how it
-> contributed, and a prompt log / screenshot / dedicated README section). This is
-> that dedicated section, and the evidence is **self-sufficient in this repo**: it
-> stands on committed history and shipped integration code, independent of the demo
-> video.
+> contributed, and a prompt log / screenshot / dedicated README section). This is that
+> dedicated section; the evidence is **self-contained in this repo** (the shipped
+> integration code plus this section) and does not depend on the demo video.
 
 **Which coding agent.** **Claude Code** (Anthropic's CLI), the primary engineering
-agent across the entire build, integrated with UiPath via the *UiPath for Coding
-Agents* workflow (`@uipath/cli`).
+agent across the build, integrated with UiPath via the *UiPath for Coding Agents*
+workflow (`@uipath/cli`).
 
-**How it contributed: a reproducible, lane-based protocol.** The project was built
-by Claude Code running a documented **6-lane parallel-agent protocol**. This is not
-an after-the-fact claim; the protocol is codified and its artifacts are in version
-control:
+**How it contributed.** Claude Code authored and refactored the UiPath integration
+that ships in this repo:
 
-- **The protocol is codified, not improvised.** A `CLAUDE.md` lane protocol governed
-  every wave: §(c) "Lane distribution + File-Scope separation rules" defines how Claude Code lanes
-  (codenamed 🅐–🅕 / alpha–zeta) split file scope, stay self-contained, and report
-  back to a reconcile session in a fixed format (§(e)). Negative rules distilled from
-  earlier reconcile conflicts (broad-except → ImportError specificity, score clamps,
-  dead-code removal, `</script>` escape fix) are recorded there too. (`CLAUDE.md` is
-  an internal working doc, not shipped in this public repo; the *result*, namely the
-  lane-prefixed commits and the `scripts/uipath/` code, is fully checkable here.)
-- **Lane-prefixed conventional commits.** Each Claude Code lane commits with a
-  conventional-commit lane prefix (`feat(adk):`, `feat(observability):`,
-  `feat(rapid):`, `fix(graphrag):`, `docs(submission):`, …) and a
-  `Co-Authored-By: Claude` trailer, so authorship is auditable from this repo's
-  `git log` directly.
-- **It authored the UiPath integration layer (the primary, self-contained evidence).**
-  Claude Code wrote and refactored the diagnosis core plus the entire
-  `scripts/uipath/` integration that ships in this repo: `uipath_client.py` (stdlib
-  HTTP client, token cache, **Cloudflare-1010 User-Agent workaround** discovered and
-  grounded against UiPath's docs), `coded_agent_wrapper.py`, `loop_b_symbolic.py`,
-  `healthcheck.py`, and the BPMN 2.0 XML. That code is inspectable here; the +2 stands
-  on it without depending on the demo video.
-- **It drove the Coded Agent lifecycle.** The `uipath` CLI flow
-  (`auth → init → pack → publish`) is documented and was executed via Claude Code;
-  see `scripts/uipath/README.md` §3-b.
-- **It performed the cross-document reconciliation** that hardened this submission:
-  claim verification, MITRE ATLAS version correction (→ **v5.4.0**), ontology cell
-  re-count, retraction of the circular GraphRAG precision number, and a confidentiality
-  scrub of organization codes and internal product names.
+- **The UiPath integration layer (primary, self-contained evidence).** The entire
+  `scripts/uipath/` integration: `uipath_client.py` (stdlib HTTP client, token cache,
+  **Cloudflare-1010 User-Agent workaround** discovered and grounded against UiPath's
+  docs), `coded_agent_wrapper.py`, `loop_b_symbolic.py`, `healthcheck.py`, and the
+  BPMN 2.0 XML. All inspectable here; the +2 rests on this code.
+- **The Coded Agent lifecycle.** The `uipath` CLI flow (`auth`, `init`, `pack`,
+  `publish`) was driven via Claude Code; see `scripts/uipath/README.md` section 3-b.
+- **Cross-document reconciliation.** Claim verification, MITRE ATLAS version
+  correction (to **v5.4.0**), ontology cell re-count, retraction of the circular
+  GraphRAG precision number, and a confidentiality scrub of organization codes and
+  internal product names.
 
-**Evidence checkable in this repo (rules accept any one; we provide three):**
+> **Repository history (disclosed).** This public repo is published with a **clean, curated history**; the development repo, with its multi-lane working history,
+> is kept private. The +2 therefore does **not** rely on `git log`. It stands on this
+> section and the shipped code above. Each published commit carries a
+> `Co-Authored-By: Claude` trailer and a "Built with Claude Code via UiPath for Coding
+> Agents" line.
+
+**Evidence checkable in this repo (the rules accept any one; we provide three):**
 
 1. This dedicated README section (explicitly accepted as evidence).
-2. The `scripts/uipath/` **integration code** itself, authored by Claude Code, present
-   in this repo, with `Co-Authored-By: Claude` trailers on the commits that introduce it.
-3. *(Supplementary)* a short demo-video cut of the Claude Code → UiPath CLI
-   build/publish flow.
+2. The `scripts/uipath/` **integration code**, authored by Claude Code, in this repo.
+3. The published commit's `Co-Authored-By: Claude` trailer.
 
 > Scoring note: full documentation + verifiable evidence = **+2**; partial = +1;
-> undocumented = 0. Evidence items 1 to 4 meet the full bar on their own,
-> independent of the video.
+> undocumented = 0. Items 1 to 3 meet the full bar on their own, independent of the
+> video.
 
 ## 8. Accuracy notes (pre-submission honesty)
 

@@ -14,8 +14,8 @@ environment stays light. RAG is optional: if the corpus is absent the engine
 degrades to ontology-only (`degraded=True`), matching serve/app.py behaviour.
 
 Both orchestration layers use the engine the same way:
-    - Rapid / ADK : Cloud Run constructs the engine once, Gemini brain is applied
-                    by the serve layer for the executive summary (Gemini-only).
+    - Rapid / ADK : Cloud Run constructs the engine once, an external brain is applied
+                    by the serve layer for the executive summary.
     - UiPath/CrewAI: the Coded Agent constructs the engine; a multi-model brain
                     may be applied at the orchestration layer (UiPath path only).
 
