@@ -1,19 +1,19 @@
 """
 FDE Agent — Executive Summary Generator (Layer 3 Render)
 
-입력: TopologicalGraph + per-node NodeMitigationDossier list + ontology (cumulative_scenarios 활용)
-출력: Markdown 1 page (~30~50 lines), CDO/CIO 친화 layout
-산출 파일: scripts/output/{sample}-executive-summary-v0.1.md
+Input: TopologicalGraph + per-node NodeMitigationDossier list + ontology (cumulative_scenarios used)
+Output: Markdown 1 page (~30~50 lines), CDO/CIO-friendly layout
+Output file: scripts/output/{sample}-executive-summary-v0.1.md
 
-섹션 (architecture.md §8 RENDER의 'executive summary' 컴포넌트):
-  a. 전체 위험 등급 (CRITICAL / HIGH / MEDIUM / LOW)
-  b. RED 노드 N개 list + 핵심 failure mode 1줄
-  c. 핵심 failure mode top-3 (frequency + impact 기준)
-  d. Cumulative Scenario 권고 (Minimum / Balanced / Maximum Safety) — ontology field 그대로 + cell 근거
-  e. 추정 ROI 한 줄
-  f. 다음 액션 (3-step playbook 첫 단계)
+Sections (architecture.md §8 RENDER 'executive summary' component):
+  a. Overall risk grade (CRITICAL / HIGH / MEDIUM / LOW)
+  b. RED node list (N nodes) + core failure mode in one line
+  c. Core failure mode top-3 (by frequency + impact)
+  d. Cumulative Scenario recommendation (Minimum / Balanced / Maximum Safety) — ontology field as-is + cell evidence
+  e. Estimated ROI in one line
+  f. Next action (first step of 3-step playbook)
 
-Devpost 영상 마지막 30초 hero shot 가독성 우선.
+Prioritizing readability for the Devpost video final 30-second hero shot.
 """
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ from ..agents import NodeMitigationDossier, SubAgent5MitigationRecommender
 # =============================================================
 
 def grade_workflow(graph: TopologicalGraph, dossiers: list[NodeMitigationDossier]) -> tuple[str, str]:
-    """전체 워크플로우 위험 등급 + 한국어 한 줄 설명 return."""
+    """Return overall workflow risk grade + one-line description."""
     red_count = sum(1 for n in graph.nodes if n.color == "RED")
     yellow_count = sum(1 for n in graph.nodes if n.color == "YELLOW")
     red_dossiers = [d for d in dossiers if d.color == "RED"]
@@ -39,12 +39,12 @@ def grade_workflow(graph: TopologicalGraph, dossiers: list[NodeMitigationDossier
     )
 
     if red_count >= 3 and avg_red_risk >= 4.5:
-        return "🔴 CRITICAL", "production 배포 보류 권고 — RED 노드 다수 + aggregate risk ≥4.5"
+        return "🔴 CRITICAL", "Recommend halting production deployment — multiple RED nodes + aggregate risk ≥4.5"
     if red_count >= 2:
-        return "🔴 HIGH", "Must-Fix mitigation 모두 적용 후 단계적 배포 권고"
+        return "🔴 HIGH", "Recommend staged deployment after applying all Must-Fix mitigations"
     if red_count >= 1 or yellow_count >= 3:
-        return "🟡 MEDIUM", "Targeted mitigation + monitoring 적용 후 PoC 권장"
-    return "🟢 LOW", "Standard governance만으로 배포 가능"
+        return "🟡 MEDIUM", "Recommend PoC after applying targeted mitigations + monitoring"
+    return "🟢 LOW", "Deployable with standard governance only"
 
 
 # =============================================================
@@ -53,7 +53,7 @@ def grade_workflow(graph: TopologicalGraph, dossiers: list[NodeMitigationDossier
 
 def top_failure_modes(dossiers: list[NodeMitigationDossier], top_n: int = 3) -> list[dict]:
     """
-    모든 cells의 primary failure mode를 frequency × max_risk_score로 weight해서 top-N.
+    Weight all cells' primary failure modes by frequency × max_risk_score and return top-N.
     return: [{mode, count, max_risk, sample_cells}, ...]
     """
     bucket: dict[str, dict] = {}
@@ -79,11 +79,11 @@ def top_failure_modes(dossiers: list[NodeMitigationDossier], top_n: int = 3) -> 
 
 
 # =============================================================
-# Cumulative scenarios (ontology field 그대로 + cell 근거)
+# Cumulative scenarios (ontology field as-is + cell evidence)
 # =============================================================
 
 def render_cumulative_scenarios(ontology: dict, dossiers: list[NodeMitigationDossier]) -> list[str]:
-    """ontology.cumulative_scenarios 3종 + 각 dossier가 적용될 cell 근거 reference."""
+    """Three ontology.cumulative_scenarios + cell evidence reference for each applicable dossier."""
     scenarios = ontology.get("cumulative_scenarios", {}) or {}
     cell_ids_all = [
         c.cell_id
@@ -95,7 +95,7 @@ def render_cumulative_scenarios(ontology: dict, dossiers: list[NodeMitigationDos
     label_map = {
         "minimum_safe": "Minimum (Must Fix only)",
         "balanced": "Balanced (Must Fix + Recommend)",
-        "maximum_safety": "Maximum Safety (모두 적용)",
+        "maximum_safety": "Maximum Safety (all applied)",
     }
     for key, label in label_map.items():
         sc = scenarios.get(key, {})
@@ -104,32 +104,32 @@ def render_cumulative_scenarios(ontology: dict, dossiers: list[NodeMitigationDos
         desc = sc.get("description", "")
         delta = sc.get("total_risk_reduction_estimate", "—")
         suitable = ", ".join(sc.get("suitable_for", []) or [])
-        # cell 근거: 본 sample dossier들의 cell_id 일부 첨부 (full list는 heatmap)
+        # cell evidence: attach a subset of cell_ids from sample dossiers (full list in heatmap)
         ref = ", ".join(cell_ids_all[:6]) + (f", ... (+{len(cell_ids_all)-6})" if len(cell_ids_all) > 6 else "")
         lines.append(
             f"- **{label}** · risk Δ {delta} · _{desc.strip().splitlines()[0] if desc else ''}_\n"
-            f"  - 적합: {suitable or '—'}\n"
-            f"  - cell 근거 ({len(cell_ids_all)}개): `{ref}`"
+            f"  - Suitable for: {suitable or '—'}\n"
+            f"  - Cell evidence ({len(cell_ids_all)} cells): `{ref}`"
         )
     return lines
 
 
 # =============================================================
-# Next action — RED top-1 must_fix 첫 step
+# Next action — first must_fix step from the top RED node
 # =============================================================
 
 def first_next_action(dossiers: list[NodeMitigationDossier]) -> str:
     """
-    다음 액션 선택 순서:
-      1. RED 노드 중 aggregate 최고 1개 pick
-      2. axis 우선순위: general_failure → handoff → security
-         (CDO/CIO 친화: 기능적 root cause 우선, 보안 다음, handoff는 본인 IP 영역으로 마지막 fallback)
-      3. placeholder option ('see external reference' 시작) skip
-      4. 동일 axis 내 risk_delta 최대 옵션 select
+    Next action selection order:
+      1. Pick the single RED node with the highest aggregate risk
+      2. Axis priority: general_failure → handoff → security
+         (CDO/CIO-friendly: functional root cause first, security next, handoff as last fallback for IP-domain issues)
+      3. Skip placeholder options (starting with 'see external reference')
+      4. Select the option with the highest risk_delta within the same axis
     """
     red = [d for d in dossiers if d.color == "RED"]
     if not red:
-        return "(RED 노드 부재 — monitoring 단계로 진입)"
+        return "(No RED nodes — entering monitoring phase)"
     top = sorted(red, key=lambda d: d.aggregate_risk, reverse=True)[0]
     axis_priority = ("general_failure", "handoff", "security")
     for axis in axis_priority:
@@ -142,13 +142,13 @@ def first_next_action(dossiers: list[NodeMitigationDossier]) -> str:
                 continue
             o = max(real_options, key=lambda x: x.risk_delta)
             return (
-                f"노드 **{top.node_id}** (aggregate risk {top.aggregate_risk}) — "
-                f"_{c.primary or 'primary failure'}_ 대응:\n"
+                f"Node **{top.node_id}** (aggregate risk {top.aggregate_risk}) — "
+                f"addressing _{c.primary or 'primary failure'}_:\n"
                 f"  > {o.action}\n"
                 f"  (cell `{c.cell_id}`, axis {axis}, Δrisk -{o.risk_delta}, "
                 f"cost {o.cost}/5, impl {o.impl_effort}/5)"
             )
-    return f"노드 **{top.node_id}** — Must Fix 옵션 미정 (ontology refresh outstanding)"
+    return f"Node **{top.node_id}** — Must Fix option not yet defined (ontology refresh outstanding)"
 
 
 # =============================================================
@@ -169,7 +169,7 @@ def render_executive_summary(
     scenario_lines = render_cumulative_scenarios(ontology, dossiers)
     next_action_text = first_next_action(dossiers)
 
-    # RED 노드별 primary failure mode 1줄
+    # One-line primary failure mode per RED node
     red_lines: list[str] = []
     dossier_by_id = {d.node_id: d for d in dossiers}
     for n in red_nodes:
@@ -186,46 +186,46 @@ def render_executive_summary(
     for i, fm in enumerate(failure_top, start=1):
         cells_ref = ", ".join(f"`{c}`" for c in fm["sample_cells"])
         failure_lines.append(
-            f"  {i}. **{fm['mode']}** — {fm['count']} cells · max risk {fm['max_risk']}/5 · 예: {cells_ref}"
+            f"  {i}. **{fm['mode']}** — {fm['count']} cells · max risk {fm['max_risk']}/5 · e.g. {cells_ref}"
         )
 
     today = datetime.now().strftime("%Y-%m-%d")
     md = f"""# Executive Summary — {title}
 
-> **진단일**: {today} · **Engine**: FDE Agent v0.1 · **Ontology**: v0.3c (36 cells)
+> **Diagnosis date**: {today} · **Engine**: FDE Agent v0.1 · **Ontology**: v0.3c (36 cells)
 > {subtitle}
 
 ---
 
-## a. 전체 워크플로우 위험 등급
+## a. Overall Workflow Risk Grade
 
 **{grade}** — {grade_note}
 
-- 노드 분포: 🔴 RED {len(red_nodes)} · 🟡 YELLOW {len(yellow_nodes)} · 🟢 GREEN {len(graph.nodes) - len(red_nodes) - len(yellow_nodes)} · 총 {len(graph.nodes)}
-- 평균 RED aggregate risk: **{round(sum(d.aggregate_risk for d in dossiers if d.color == 'RED') / max(1, len([d for d in dossiers if d.color == 'RED'])), 2)}/5**
+- Node distribution: 🔴 RED {len(red_nodes)} · 🟡 YELLOW {len(yellow_nodes)} · 🟢 GREEN {len(graph.nodes) - len(red_nodes) - len(yellow_nodes)} · Total {len(graph.nodes)}
+- Average RED aggregate risk: **{round(sum(d.aggregate_risk for d in dossiers if d.color == 'RED') / max(1, len([d for d in dossiers if d.color == 'RED'])), 2)}/5**
 
-## b. RED 노드 ({len(red_nodes)}개) — 핵심 failure mode
+## b. RED Nodes ({len(red_nodes)}) — Core Failure Mode
 
-{chr(10).join(red_lines) if red_lines else '  - (RED 노드 없음)'}
+{chr(10).join(red_lines) if red_lines else '  - (No RED nodes)'}
 
-## c. 핵심 Failure Mode Top-3 (frequency × impact)
+## c. Core Failure Mode Top-3 (frequency × impact)
 
-{chr(10).join(failure_lines) if failure_lines else '  - (집계 가능 cell 없음)'}
+{chr(10).join(failure_lines) if failure_lines else '  - (No aggregatable cells found)'}
 
-## d. Cumulative Scenario 권고 (ontology v0.3c)
+## d. Cumulative Scenario Recommendation (ontology v0.3c)
 
-{chr(10).join(scenario_lines) if scenario_lines else '- (ontology cumulative_scenarios 미정)'}
+{chr(10).join(scenario_lines) if scenario_lines else '- (ontology cumulative_scenarios not yet defined)'}
 
-## e. 추정 ROI
+## e. Estimated ROI
 
-**AI 도입 전 사전 진단 — 평균 수억 원 매몰비용 회피.**
-근거: MIT NANDA 2025 GenAI 파일럿 95% 실패, RAND 80.3% ROI 미달, Gartner 2025년 42% 기업이 AI initiative ≥1개 폐기 (전년 17% → 2.5배). 본 진단은 *설계도 단계*에서 RED 노드를 식별해 매몰비용 발생 전 차단.
+**Pre-deployment diagnosis before AI adoption — avoids sunk costs averaging hundreds of millions of KRW.**
+Basis: MIT NANDA 2025 GenAI pilots 95% failure rate, RAND 80.3% ROI shortfall, Gartner 42% of enterprises in 2025 abandoned ≥1 AI initiative (vs. 17% prior year, 2.5× increase). This diagnosis identifies RED nodes at the *design stage*, blocking sunk costs before they occur.
 
-## f. 다음 액션 (3-step playbook 첫 단계)
+## f. Next Action (first step of 3-step playbook)
 
 {next_action_text}
 
-> 전체 dossier + Multi-Option mitigations는 동봉된 interactive heatmap HTML 참조.
+> See the attached interactive heatmap HTML for the full dossier + Multi-Option mitigations.
 """
     return md
 
@@ -270,7 +270,7 @@ if __name__ == "__main__":
             "sample_source": "korean_loan",
             "md_path": SAMPLES_DIR / "loan-underwriting-kr-v0.1.md",
             "title": "Korean Personal Loan Underwriting",
-            "subtitle": "한국 금융 vertical · K-PIPA / KoFIU / 공정대출법 / Article 22-2",
+            "subtitle": "Korean financial vertical · K-PIPA / KoFIU / Fair Lending Act / Article 22-2",
         },
     ]
 

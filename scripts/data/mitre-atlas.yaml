@@ -13207,8 +13207,8 @@ fde_last_updated: '2026-05-25'
 fde_enrichment_notes: v0.3 — per-technique mitigations field added (authoritative + heuristic). Heuristic
   supplements use tactic-pool ∩ keyword-overlap ranking. Korean financial heuristics top-level field added.
 korean_financial_heuristics:
-- node_label: eKYC — 얼굴 인증 (FIDO-bound, 비대면 실명확인)
-  workflow_context: loan_underwriting_kr.N2 — 신분증 OCR + 얼굴 매칭
+- node_label: eKYC — face authentication (FIDO-bound, non-face-to-face identity verification)
+  workflow_context: loan_underwriting_kr.N2 — ID document OCR + face matching
   target_atlas_techniques:
   - AML.T0015
   - AML.T0043
@@ -13216,12 +13216,12 @@ korean_financial_heuristics:
   - AML.M0005
   - AML.M0006
   - AML.M0017
-  rationale_ko: 딥페이크/Presentation Attack 대응 — PAD 모델 도입 + adversarial training + challenge-response (eye-blink,
-    motion) liveness. 김수키 APT 위협 모델 정합.
+  rationale_ko: Deepfake/Presentation Attack countermeasures — PAD model adoption + adversarial training + challenge-response
+    (eye-blink, motion) liveness. Kimsuky APT threat model aligned.
   source: korean_financial_heuristic
   confidence: medium
-- node_label: AML 트랜잭션 스크리닝 (KoFIU 보고 대상 자동 판정)
-  workflow_context: loan_underwriting_kr.N3 — STR/CTR 자동 판정 + 제재대상자 list 매칭
+- node_label: AML transaction screening (KoFIU-reportable auto-determination)
+  workflow_context: loan_underwriting_kr.N3 — STR/CTR auto-determination + sanctions-list matching
   target_atlas_techniques:
   - AML.T0018
   - AML.T0043
@@ -13230,12 +13230,12 @@ korean_financial_heuristics:
   - AML.M0007
   - AML.M0014
   - AML.M0019
-  rationale_ko: False-negative cascade(미보고 위험)에 대해 sanctions-list 정합성 audit + human-in-the-loop escalation.
-    KoFIU FIU2024-3호 권고 정합. Model output validation으로 LLM hallucination 차단.
+  rationale_ko: Sanctions-list consistency audit + human-in-the-loop escalation against false-negative cascade (under-reporting
+    risk). KoFIU FIU2024-3 recommendation aligned. Model output validation to block LLM hallucination.
   source: korean_financial_heuristic
   confidence: high
-- node_label: 신용평가 (ACS — Alternative Credit Scoring, 비금융 데이터 활용)
-  workflow_context: loan_underwriting_kr.N4 — 통신/유틸/SNS 등 비전통 데이터 기반 신용평점
+- node_label: Credit scoring (ACS — Alternative Credit Scoring, using non-financial data)
+  workflow_context: loan_underwriting_kr.N4 — credit score based on non-traditional data (telecom/utility/social media)
   target_atlas_techniques:
   - AML.T0018
   - AML.T0019
@@ -13244,12 +13244,12 @@ korean_financial_heuristics:
   - AML.M0007
   - AML.M0008
   - AML.M0014
-  rationale_ko: 공정대출법(예금자보호법) + 차별 금지 규제 정합 — 데이터셋 sanitization + drift monitoring + SHAP 기반 설명가능성 audit.
-    Bias cascade 차단.
+  rationale_ko: Fair Lending Act + anti-discrimination regulation alignment — dataset sanitization + drift monitoring + SHAP-based
+    explainability audit. Bias cascade suppression.
   source: korean_financial_heuristic
   confidence: high
-- node_label: LLM 기반 리스크 서술 (LLM Risk Narrator)
-  workflow_context: loan_underwriting_kr.N6 — 신용·재무 데이터 → 자연어 리스크 요약
+- node_label: LLM-based risk narrative (LLM Risk Narrator)
+  workflow_context: loan_underwriting_kr.N6 — credit/financial data → natural-language risk summary
   target_atlas_techniques:
   - AML.T0048
   - AML.T0051
@@ -13258,12 +13258,12 @@ korean_financial_heuristics:
   - AML.M0014
   - AML.M0015
   - AML.M0019
-  rationale_ko: 프롬프트 인젝션 + hallucination 차단 — output filtering + human-in-the-loop 검수 + 입출력 sanitization.
-    약관·법령 인용 강제로 hallucination footprint 최소화.
+  rationale_ko: Prompt injection + hallucination suppression — output filtering + human-in-the-loop review + I/O sanitization.
+    Mandatory T&C/statutory citation minimizes hallucination footprint.
   source: korean_financial_heuristic
   confidence: high
-- node_label: 보이스피싱 victim-as-applicant 탐지
-  workflow_context: loan_underwriting_kr.N7 — 피해자 가장 신청자 식별 (전기통신금융사기 특별법)
+- node_label: Voice phishing victim-as-applicant detection
+  workflow_context: loan_underwriting_kr.N7 — identifying applicants posing as victims (Telecommunications Financial Fraud Act)
   target_atlas_techniques:
   - AML.T0040
   - AML.T0048
@@ -13271,8 +13271,8 @@ korean_financial_heuristics:
   - AML.M0005
   - AML.M0019
   - AML.M0017
-  rationale_ko: 전기통신금융사기 특별법 + 금감원 가이드라인 정합 — anomaly behavioral pattern + multi-channel verification
-    (콜백, 영상통화) + cooling-off period 강제. victim-as-applicant cell의 핵심 mitigation 묶음.
+  rationale_ko: Telecommunications Financial Fraud Act + FSS guideline alignment — anomaly behavioral pattern + multi-channel
+    verification (callback, video call) + mandatory cooling-off period. Core mitigation bundle for victim-as-applicant cell.
   source: korean_financial_heuristic
   confidence: high
 fde_coverage_stats:

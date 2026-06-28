@@ -1,12 +1,12 @@
 """
-Aggregator — per-node final risk score + evidence cell 통합.
+Aggregator — per-node final risk score + evidence cell consolidation.
 
-Architecture §5 AGGREGATE 컴포넌트의 reference impl.
-Sub-Agent 1~6 출력을 단일 final risk score 0~5로 collapse하고
-3요소 evidence cell (failure mode + evidence type + mitigation)을 정합.
+Reference implementation of the Architecture §5 AGGREGATE component.
+Collapses Sub-Agent 1–6 outputs into a single final risk score 0–5
+and reconciles the 3-element evidence cell (failure mode + evidence type + mitigation).
 
-가중치 (본인 IP positioning):
-  handoff  0.4  ★ 본인 IP moat — IPS/ConfDecay/LaaJ runtime metric 반영
+Weights (proprietary IP positioning):
+  handoff  0.4  ★ proprietary IP moat — reflects IPS/ConfDecay/LaaJ runtime metrics
   security 0.3  OWASP / MITRE ATLAS mapping
   general  0.3  Risk vector + AIID RAG
 
@@ -15,9 +15,9 @@ Color mapping:
   2.5 ~ 3.9    YELLOW
   <  2.5       GREEN
 
-Runtime metric → axis score 보정 (handoff axis only):
+Runtime metric → axis score adjustment (handoff axis only):
   IPS alert (decay_alert)    +0.5
-  IPS watch band (0.5~0.7)   +0.2   # ontology spec "context partially lost" 반영
+  IPS watch band (0.5~0.7)   +0.2   # reflects ontology spec "context partially lost"
   ConfDecay over_trust_alert +0.5
   ConfDecay under_use_warning +0.3
   LaaJ alignment_score < 0.6 +0.3
@@ -34,7 +34,7 @@ COLOR_THRESHOLDS = {'RED': 4.0, 'YELLOW': 2.5}   # >= RED, >= YELLOW else GREEN
 
 HANDOFF_METRIC_BOOSTS = {
     'ips_alert': 0.5,
-    'ips_watch': 0.2,             # ontology spec "context partially lost" — alert 아니어도 risk signal
+    'ips_watch': 0.2,             # ontology spec "context partially lost" — risk signal even without an alert
     'over_trust_alert': 0.5,
     'under_use_warning': 0.3,
     'laaj_low_score': 0.3,        # < 0.6
@@ -45,7 +45,7 @@ SCORE_CAP = 5.0
 
 @dataclass
 class EvidenceItem:
-    """Heatmap 설계 원칙의 3요소 cell — failure mode + evidence type + mitigation."""
+    """3-element cell per Heatmap design principle — failure mode + evidence type + mitigation."""
     axis: str
     failure_mode: str
     evidence_type: str           # "ontology" | "aiid_rag" | "owasp" | "mitre_atlas" | "heuristic_ip" | "runtime_metric"
@@ -103,7 +103,7 @@ def _color_for(score: float) -> str:
 
 
 def _axis_base_score(cells: list) -> float:
-    """axis 내 cell들의 risk_score 평균. cell 없으면 0.0."""
+    """Average risk_score of cells within an axis. Returns 0.0 if no cells."""
     scores = [c.get('risk_score', 0) for c in cells if isinstance(c.get('risk_score'), (int, float))]
     return sum(scores) / len(scores) if scores else 0.0
 
@@ -143,7 +143,7 @@ def _runtime_boost_for_handoff(handoff_metrics: list) -> tuple[float, list]:
 
 
 def _build_evidence(diagnosis: dict, alerts: list) -> list:
-    """3요소 cell — Heatmap 설계 원칙 정합."""
+    """3-element cell — aligned with Heatmap design principle."""
     out = []
     n = diagnosis['node']
     for axis, cells in diagnosis['cells_by_axis'].items():
@@ -184,23 +184,23 @@ def _build_evidence(diagnosis: dict, alerts: list) -> list:
                     axis=axis,
                     failure_mode=fm,
                     evidence_type='heuristic_ip' + ('+runtime_metric' if alerts else ''),
-                    evidence_refs=[cell.get('heuristic_source', '본인 IP')],
+                    evidence_refs=[cell.get('heuristic_source', 'proprietary IP')],
                     mitigation_summary=' | '.join(mit_lines) or '(no inline options)',
                 ))
-    # runtime metric은 별도 evidence item (axis=handoff에 부착)
+    # runtime metrics are a separate evidence item (attached to the handoff axis)
     if alerts:
         out.append(EvidenceItem(
             axis='handoff',
             failure_mode='runtime_metric_alert',
             evidence_type='runtime_metric',
             evidence_refs=alerts,
-            mitigation_summary='IPS/ConfDecay/LaaJ runtime gating — Phase 1 Phoenix 통합 시 자동 escalation rule',
+            mitigation_summary='IPS/ConfDecay/LaaJ runtime gating — auto escalation rule on Phase 1 Phoenix integration',
         ))
     return out
 
 
 def _collect_mitigation_options(diagnosis: dict) -> dict:
-    """per-axis multi-option mitigation 통합 (Sub-Agent 5 룰셋 정합)."""
+    """Consolidates per-axis multi-option mitigations (aligned with Sub-Agent 5 ruleset)."""
     out = {}
     for axis, cells in diagnosis['cells_by_axis'].items():
         per_axis = {}
@@ -223,9 +223,9 @@ def _collect_mitigation_options(diagnosis: dict) -> dict:
 
 def aggregate_node(diagnosis: dict, handoff_metrics: list = None) -> AggregatedNode:
     """
-    diagnosis: diagnose.py에서 만든 dict {'node':..., 'cells_by_axis':{general_failure,security,handoff}, 'aiid':[...]}
+    diagnosis: dict created by diagnose.py — {'node':..., 'cells_by_axis':{general_failure,security,handoff}, 'aiid':[...]}
     handoff_metrics: list of {'ips': IPSResult, 'confdecay': ConfDecayResult, 'laaj': LaaJResult}
-                     — 해당 노드를 downstream으로 갖는 handoff pair들
+                     — handoff pairs that have this node as downstream
     """
     handoff_metrics = handoff_metrics or []
     n = diagnosis['node']
@@ -268,7 +268,7 @@ def aggregate_workflow(diagnoses: list, handoff_metrics_by_dn_node: dict = None)
     """
     diagnoses: per-RED-node diagnosis dicts
     handoff_metrics_by_dn_node: {downstream_node_id: [metric_rows...]}
-    Returns: list[AggregatedNode] (각 RED 노드 1건)
+    Returns: list[AggregatedNode] (one per RED node)
     """
     handoff_metrics_by_dn_node = handoff_metrics_by_dn_node or {}
     out = []
@@ -279,12 +279,12 @@ def aggregate_workflow(diagnoses: list, handoff_metrics_by_dn_node: dict = None)
 
 
 # -----------------------------------------------------------------------------
-# unit test — 합격선 검증 (RED 노드 정합 + IPS Alert 시 final ≥ 4.0)
+# unit test — passing criteria verification (RED node alignment + final ≥ 4.0 on IPS Alert)
 # -----------------------------------------------------------------------------
 if __name__ == "__main__":
     from dataclasses import dataclass as _dc
 
-    # Mock metric result objects (duck-type — band/alert/score만 보면 됨)
+    # Mock metric result objects (duck-type — only band/alert/score are inspected)
     @_dc
     class _IPS:
         upstream: str
@@ -307,8 +307,8 @@ if __name__ == "__main__":
         alignment_score: float
         disagreement_flags: list
 
-    # ----- case 1: legal N2 (ontology RED 시그니처 정합) -----
-    # cells_by_axis별 risk_score 평균: general 4.5, security 4.2, handoff 4.0
+    # ----- case 1: legal N2 (ontology RED signature alignment) -----
+    # risk_score average per cells_by_axis: general 4.5, security 4.2, handoff 4.0
     # base final = 0.3*4.5 + 0.3*4.2 + 0.4*4.0 = 1.35 + 1.26 + 1.6 = 4.21 → RED ✅
     legal_n2 = {
         'node': {'id': 'N2', 'function': 'LLM clause extraction', 'ai_mode': 'Full automation (LLM)'},
@@ -330,7 +330,7 @@ if __name__ == "__main__":
     assert r1.final_score >= 4.0, r1.final_score
     assert r1.runtime_metric_boost == 0.0
 
-    # ----- case 2: legal N2 + IPS alert handoff metric → final boost 적용 -----
+    # ----- case 2: legal N2 + IPS alert handoff metric → final boost applied -----
     metrics_alert = [{
         'ips': _IPS('N1', 'N2', score=0.42, alert=True),
         'confdecay': _CD('N1', 'N2', over_trust_gap=0.25, under_use_gap=0.0, band='over_trust_alert'),
@@ -357,7 +357,7 @@ if __name__ == "__main__":
     }
     r3 = aggregate_node(yellow_node, handoff_metrics=[])
     # 0.3*2.5 + 0.3*2.5 + 0.4*2.0 = 0.75 + 0.75 + 0.8 = 2.3 → GREEN (< 2.5)
-    # 경계 — adjust check
+    # boundary — adjust check
     assert r3.color in ('YELLOW', 'GREEN'), r3.color
     assert r3.final_score < 4.0
 
@@ -372,12 +372,12 @@ if __name__ == "__main__":
     assert r4.final_score == 0.0
     assert r4.evidence == []
 
-    # ----- case 5: evidence 3요소 정합 — failure_mode + evidence_type + mitigation_summary -----
+    # ----- case 5: evidence 3-element alignment — failure_mode + evidence_type + mitigation_summary -----
     for ev in r1.evidence:
         assert ev.failure_mode and ev.evidence_type, ev
         assert ev.mitigation_summary is not None
 
-    # ----- case 6: loan N6→N7 silent escalation 시그니처 -----
+    # ----- case 6: loan N6→N7 silent escalation signature -----
     loan_n7 = {
         'node': {'id': 'N7', 'function': '자동 결정 엔진', 'ai_mode': 'Full automation'},
         'cells_by_axis': {
@@ -389,7 +389,7 @@ if __name__ == "__main__":
         },
         'aiid': [],
     }
-    # loan_N6→N7 over_trust 시그니처
+    # loan_N6→N7 over_trust signature
     loan_metrics = [{
         'ips': _IPS('N6', 'N7', score=0.55, alert=False),
         'confdecay': _CD('N6', 'N7', over_trust_gap=0.29, under_use_gap=0.0, band='over_trust_alert'),
@@ -400,7 +400,7 @@ if __name__ == "__main__":
     assert r6.final_score >= 4.0
 
     # ----- case 7: legal N3 borderline — IPS watch + LaaJ flags (no full alert)
-    # 합격선: predicted RED ↔ aggregated RED 정합. base 3.91 + IPS watch boost 0.2 + LaaJ flags 0.2 → RED
+    # passing criterion: predicted RED ↔ aggregated RED alignment. base 3.91 + IPS watch boost 0.2 + LaaJ flags 0.2 → RED
     legal_n3 = {
         'node': {'id': 'N3', 'function': 'LLM risk flagging', 'ai_mode': 'Full automation (LLM)'},
         'cells_by_axis': {
@@ -417,7 +417,7 @@ if __name__ == "__main__":
         'confdecay': _CD('N2', 'N3', over_trust_gap=0.0, under_use_gap=0.0, band='healthy'),
         'laaj': _LaaJ('N2', 'N3', alignment_score=0.65, disagreement_flags=['schema token dropped']),
     }]
-    # set watch band manually via attr (IPSResult dataclass에 band 필드 있음)
+    # set watch band manually via attr (IPSResult dataclass has a band field)
     setattr(legal_n3_metrics[0]['ips'], 'band', 'watch')
     r7 = aggregate_node(legal_n3, handoff_metrics=legal_n3_metrics)
     # boost = 0.2 (ips_watch) + 0.2 (laaj_flags) = 0.4 → handoff 4.0+0.4 = 4.4

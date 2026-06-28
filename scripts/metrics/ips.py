@@ -12,13 +12,13 @@ thresholds (ontology spec):
   0.5~0.7 watch zone
   <  0.5  Context Decay Alert (silent failure risk)
 
-infra: BGE-M3 인프라 그대로 사용 (diagnose.py와 동일 model 재사용 가능)
+infra: reuses BGE-M3 infrastructure as-is (can reuse the same model as diagnose.py)
 
 v0.2 — embed backend factory (deterministic production):
   - bge_m3_embed_fn()       : sentence-transformers BAAI/bge-m3 production (deterministic, semantic)
-  - fallback_hash_embed_fn(): pure-python hash embed (venv 부재 시 fallback, PYTHONHASHSEED 의존)
-  - get_embed_fn(prefer)    : "bge-m3" 시도 → 실패 시 fallback 자동 swap + backend label 반환
-unit test는 fake_embed로 deterministic invariant 유지.
+  - fallback_hash_embed_fn(): pure-python hash embed (fallback when venv unavailable, depends on PYTHONHASHSEED)
+  - get_embed_fn(prefer)    : tries "bge-m3" → auto-swaps to fallback on failure + returns backend label
+unit test maintains deterministic invariants via fake_embed.
 """
 from __future__ import annotations
 from dataclasses import dataclass
@@ -47,7 +47,7 @@ class IPSResult:
 def bge_m3_embed_fn(model=None, device: Optional[str] = None) -> Callable[[str], list]:
     """
     Production BGE-M3 embedder. sentence-transformers BAAI/bge-m3 normalize_embeddings=True.
-    Lazy load — venv 없으면 ImportError 발생 → get_embed_fn에서 fallback swap.
+    Lazy load — raises ImportError if venv unavailable → get_embed_fn performs fallback swap.
     """
     if model is None:
         from sentence_transformers import SentenceTransformer
@@ -66,7 +66,7 @@ def bge_m3_embed_fn(model=None, device: Optional[str] = None) -> Callable[[str],
 def fallback_hash_embed_fn(dim: int = 256) -> Callable[[str], list]:
     """
     Pure-python deterministic-given-PYTHONHASHSEED hash embed.
-    Production aware: PYTHONHASHSEED 미고정 시 실행마다 결과 다름 — venv 부재 시만 사용.
+    Production aware: results differ per run if PYTHONHASHSEED is not fixed — use only when venv is unavailable.
     """
     import math, re
     def _embed(text: str) -> list:
@@ -81,7 +81,7 @@ def fallback_hash_embed_fn(dim: int = 256) -> Callable[[str], list]:
 
 def get_embed_fn(prefer: str = "bge-m3") -> Tuple[Callable[[str], list], str]:
     """
-    Production-aware factory — BGE-M3 시도 후 venv 부재 시 fallback hash로 자동 swap.
+    Production-aware factory — auto-swaps to fallback hash when BGE-M3 fails or venv is unavailable.
     Returns: (embed_fn, backend_label)  backend_label ∈ {"bge-m3", "hash-fallback"}
     """
     if prefer == "bge-m3":
@@ -95,7 +95,7 @@ def get_embed_fn(prefer: str = "bge-m3") -> Tuple[Callable[[str], list], str]:
 
 
 def _cosine(a, b) -> float:
-    # pure python — numpy 의존성 회피 (diagnose.py 환경에 한정)
+    # pure python — avoids numpy dependency (scoped to the diagnose.py environment)
     import math
     dot = sum(x * y for x, y in zip(a, b))
     na = math.sqrt(sum(x * x for x in a)) or 1e-12
@@ -110,7 +110,7 @@ def compute_ips(upstream_text: str,
                 embed_fn) -> IPSResult:
     """
     embed_fn: callable(text: str) -> list[float]
-              (BGE-M3 wrapper — diagnose.py의 model.encode 재사용)
+              (BGE-M3 wrapper — reuses model.encode from diagnose.py)
     """
     if not upstream_text or not downstream_text:
         return IPSResult(upstream_label, downstream_label, 0.0, "decay_alert", True)
@@ -139,7 +139,7 @@ if __name__ == "__main__":
     import math
 
     def fake_embed(text: str):
-        # 결정적 fake embedding — 단어 집합 hash 기반 vector
+        # deterministic fake embedding — hash-based vector over word tokens
         vec = [0.0] * 32
         for tok in text.lower().split():
             vec[hash(tok) % 32] += 1.0
@@ -168,10 +168,10 @@ if __name__ == "__main__":
     assert r4.alert
     assert r4.score == 0.0
 
-    # ----- v0.2: get_embed_fn factory sanity (BGE-M3 시도 후 자동 fallback) -----
+    # ----- v0.2: get_embed_fn factory sanity (auto-fallback after BGE-M3 attempt) -----
     embed_fn_auto, backend = get_embed_fn(prefer="bge-m3")
     print(f"\n--- get_embed_fn factory: backend selected = {backend!r} ---")
-    # backend는 venv 환경에 따라 "bge-m3" or "hash-fallback" 둘 중 하나
+    # backend is either "bge-m3" or "hash-fallback" depending on the venv environment
     assert backend in ("bge-m3", "hash-fallback"), backend
 
     # production-equivalent invariant: identical input → IPS ≈ 1.0

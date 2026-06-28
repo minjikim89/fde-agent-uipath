@@ -156,7 +156,7 @@ class DiagnosisEngine:
         # Candidate nodes = those the ONTOLOGY has risk cells for. Which nodes are
         # RED/AMBER is then decided by the ontology SCORE (below) — NOT read from the
         # input. (Previously this gated on parse_workflow's predicted_color, i.e. the
-        # input's own "예상 진단 결과" column, which let an input pre-label its answers.)
+        # input's own "Expected Diagnosis Result" column, which let an input pre-label its answers.)
         by_axis_by_node = {
             n["id"]: tools.ontology_lookup(n["id"], self.cells, sample_source=wf.sample_source)
             for n in nodes

@@ -2,7 +2,7 @@ version: "v2025"
 source: "https://genai.owasp.org/llm-top-10/"
 last_updated: "2026-05-25"
 license: "OWASP Foundation (CC BY-SA 4.0)"
-status: "v0.2 — 10/10 항목 모두 상세화 완료 (LLM01~LLM10). 각 항목: definition + sub_categories/sources + attack_scenarios + prevention + node_type_hints"
+status: "v0.2 — all 10 items fully detailed (LLM01~LLM10). Each item includes: definition + sub_categories/sources + attack_scenarios + prevention + node_type_hints"
 
 risks:
   - id: LLM01

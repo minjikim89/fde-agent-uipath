@@ -8,7 +8,7 @@ citation: 'Saerk, A. K., Lloyd George, S., Graham, J., Lacarriere, C., Slattery,
   '
 last_updated: '2026-05-25'
 status: v0.2 — Appendix A descriptions/examples + Table 1 distribution stats + 13 source documents + 5
-  Korean handoff mappings. 831 풀 텍스트는 Airtable, PDF 추출 가능 max.
+  Korean handoff mappings. 831 full-text entries hosted in Airtable; PDF extraction covers a maximum subset.
 total_mitigations: 831
 frameworks_scanned: 13
 categories:
@@ -452,50 +452,51 @@ uncategorized_bucket:
   document_count: 8
 korean_handoff_mappings:
 - ontology_cell: loan_underwriting_kr.N3 → N4 (KoFIU AML → ACS Credit Scoring)
-  handoff_failure: schema_contract_drift — AML 결과 (binary flag) → ACS feature (continuous score)로 의미 변형되며
-    false-negative이 reset됨
+  handoff_failure: schema_contract_drift — AML output (binary flag) → ACS feature (continuous score) undergoes
+    semantic shift, resetting false-negatives
   subcategory_targets:
   - '3.5'
   - '3.1'
   - '4.3'
-  rationale_ko: Post-deployment monitoring + 정기 audit + cross-system incident reporting로 AML→ACS pipe의
-    silent failure 감지. KoFIU FIU2024-3호 보고 의무 정합.
+  rationale_ko: Post-deployment monitoring + periodic audit + cross-system incident reporting to detect
+    silent failures in the AML→ACS pipe. Aligned with KoFIU FIU2024-3 reporting obligation.
   confidence: high
 - ontology_cell: loan_underwriting_kr.N4 → N6 (ACS Score → LLM Risk Narrator)
-  handoff_failure: weighting_loss — 다차원 ACS feature가 LLM 요약 단계에서 1~2 핵심 요인으로 압축, audit-trail 단절
+  handoff_failure: weighting_loss — multi-dimensional ACS features compressed to 1-2 key factors at the LLM
+    summarization stage, severing the audit trail
   subcategory_targets:
   - '4.1'
   - '2.3'
   - '3.1'
-  rationale_ko: System Documentation (model card+feature importance) + Model Safety Engineering (설명가능성
-    layer) + Testing & Auditing (SHAP 일관성 검사) 결합. 공정대출법 정합.
+  rationale_ko: System Documentation (model card + feature importance) + Model Safety Engineering (explainability
+    layer) + Testing & Auditing (SHAP consistency checks) combined. Fair Lending Act aligned.
   confidence: high
 - ontology_cell: loan_underwriting_kr.N6 → N7 (LLM Narrator → Auto Decision)
-  handoff_failure: false_negative_cascade — LLM hallucination이 자동 승인 단계로 직접 전이
+  handoff_failure: false_negative_cascade — LLM hallucination propagates directly into the auto-approval stage
   subcategory_targets:
   - '2.4'
   - '3.4'
   - '3.6'
-  rationale_ko: Content Safety Controls (output filtering) + Staged Deployment (canary % 제한) + Incident
-    Response & Recovery (rollback gate) 묶음. 금감원 '24 가이드 정합.
+  rationale_ko: Content Safety Controls (output filtering) + Staged Deployment (canary % limit) + Incident
+    Response & Recovery (rollback gate) bundle. FSS '24 guideline aligned.
   confidence: high
 - ontology_cell: legal_contract_review.N2 → N3 (Clause Extraction → Risk Flagging)
-  handoff_failure: schema_contract_drift — 추출된 clause type vs risk taxonomy의 의미 mismatch
+  handoff_failure: schema_contract_drift — semantic mismatch between extracted clause types and risk taxonomy
   subcategory_targets:
   - '3.2'
   - '3.1'
   - '4.1'
-  rationale_ko: Data Governance (clause schema 표준화) + Testing & Auditing (red-team contract corpus) +
-    System Documentation (schema versioning) 묶음. K-PIPA Art 22-2 정합.
+  rationale_ko: Data Governance (clause schema standardization) + Testing & Auditing (red-team contract corpus) +
+    System Documentation (schema versioning) bundle. K-PIPA Art 22-2 aligned.
   confidence: medium
-- ontology_cell: loan_underwriting_kr.N7 → External (자동 승인 → 외부 통보·금감원 보고)
-  handoff_failure: external_communication_risk — 자동 승인 결과의 disclosure 형식·시점 모호
+- ontology_cell: loan_underwriting_kr.N7 → External (auto-approval → external notification / FSS reporting)
+  handoff_failure: external_communication_risk — ambiguous disclosure format and timing for auto-approval outcomes
   subcategory_targets:
   - '4.2'
   - '4.6'
   - '4.3'
-  rationale_ko: Risk Disclosure (advance notification) + User Rights & Recourse (이의신청 channel) + Incident
-    Reporting (금감원·KoFIU 보고). 차별 사례 발생 시 책임 경계 명확화.
+  rationale_ko: Risk Disclosure (advance notification) + User Rights & Recourse (appeal channel) + Incident
+    Reporting (FSS / KoFIU reporting). Clarifies accountability boundaries when discrimination cases arise.
   confidence: high
 coverage_stats:
   subcategories_with_distribution: 23

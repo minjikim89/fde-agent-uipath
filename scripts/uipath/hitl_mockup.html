@@ -5,17 +5,17 @@
 <title>FDE Agent — Action Center HITL Review (Hero Moment Mockup)</title>
 <!--
   Phase 2 UiPath AgentHack Track 2 artifact.
-  Hero Moment scene Beat (d) Dossier + (e) Resolution 시각화.
-  Sample: Korean Personal Loan Underwriting v0.2 — RED node N7 (자동 심사 결정 엔진).
+  Hero Moment scene Beat (d) Dossier + (e) Resolution visualization.
+  Sample: Korean Personal Loan Underwriting v0.2 — RED node N7 (Auto Decision Engine).
 
   This is a *standalone* mockup (HTML + CSS only — no external JS / framework).
-  Browser open으로 즉시 capture 가능. UiPath Action Center form deploy는
-  Labs access 도착 후 README.md §3-c step에 따라 적용.
+  Open in browser to capture immediately. UiPath Action Center form deploy
+  applies per README.md §3-c once Labs access is received.
 
   Layout:
-    좌 (35%): RED node N7 Heatmap dossier — failure mode + AIID citation + 5-dim radar
-    우 (65%): Multi-Option mitigation 3종 + 5차원 trade-off + Approve/Modify
-  Footer: K-PIPA Article 22-2 (AI 거부권) 명시 + audit trail preview
+    Left (35%): RED node N7 Heatmap dossier — failure mode + AIID citation + 5-dim radar
+    Right (65%): Multi-Option mitigation (3 options) + 5-dim trade-off + Approve/Modify
+  Footer: K-PIPA Article 22-2 (AI right to object) disclosure + audit trail preview
 -->
 <style>
   * { box-sizing: border-box; }
@@ -437,7 +437,7 @@
     </div>
   </div>
   <div class="header-meta">
-    Assigned to <strong>심사역 #1042 (리스크관리팀)</strong><br/>
+    Assigned to <strong>Underwriter #1042 (Risk Management Team)</strong><br/>
     SLA: <strong>4h</strong> · Elapsed: <strong>00:12:34</strong>
   </div>
 </header>
@@ -462,7 +462,7 @@
       <span class="badge-red">RED</span>
       <span class="node-id">N7</span>
     </div>
-    <div class="node-name">자동 심사 결정 엔진 (Auto Decision Engine)</div>
+    <div class="node-name">Auto Decision Engine</div>
 
     <div class="score-card">
       <div class="score-item">
@@ -483,21 +483,21 @@
     <p style="font-size:13px; color:#ffabab; margin:6px 0;">
       <code style="background:#2d1a1a; padding:2px 6px; border-radius:3px;">false_positive_approval</code>
       — Excessive Autonomy (OWASP LLM06) + ACS-amplified bias cascade.
-      자동 거절 시 K-PIPA Art 22-2 (AI 거부권) 의무 미충족 시 즉시 법적 분쟁 risk.
+      Automated rejection without meeting K-PIPA Art 22-2 (right to object) creates immediate legal exposure.
     </p>
 
     <div class="section-title">AIID Evidence (Retrieved 5)</div>
     <div class="citation">
       <div class="src">incident_7003 <span class="sim">(sim 0.711)</span></div>
-      북한 김수키 APT — 군 공무원증 위조 + 딥페이크 ID 사례. 한국어 source.
+      North Korean Kimsuky APT — military official ID forgery + deepfake identity case. Korean-language source.
     </div>
     <div class="citation">
       <div class="src">incident_748 <span class="sim">(sim 0.682)</span></div>
-      PayPal AI — 잘못된 transaction notification false positive.
+      PayPal AI — erroneous transaction notification false positive.
     </div>
     <div class="citation">
       <div class="src">report_7003 (Korean) <span class="sim">(sim 0.658)</span></div>
-      한국어 보이스피싱·자영업자 unfair scoring 패턴 (KCB / NICE + ACS 결합).
+      Korean voice phishing and self-employed borrower unfair scoring patterns (KCB / NICE + ACS combined).
     </div>
 
     <div class="section-title">Standard Mapping</div>
@@ -510,8 +510,8 @@
 
     <div class="section-title">Handoff Pair (Upstream → Downstream)</div>
     <p style="font-size:13px; color:#b0c4d8;">
-      <strong>N6 LLM 위험 분석</strong> (upstream_conf=<span style="color:#ffa726;">0.65</span>)
-      → <strong>N7 자동 심사</strong> (downstream_conf=<span style="color:#ff5252;">0.94</span>)<br/>
+      <strong>N6 LLM Risk Analysis</strong> (upstream_conf=<span style="color:#ffa726;">0.65</span>)
+      → <strong>N7 Auto Underwriting</strong> (downstream_conf=<span style="color:#ff5252;">0.94</span>)<br/>
       <span style="color:#8b95a7;">Δ = +0.29 → silent escalation signature (downstream ignored upstream uncertainty)</span>
     </p>
   </div>
@@ -520,7 +520,7 @@
   <div class="panel" id="mitigation">
     <div class="mitigation-header">3-Option Mitigation Recommendation</div>
     <div class="mitigation-subtitle">
-      Sub-Agent 5 output. 컨설턴트가 옵션 비교 후 선택 — 자동 적용 X.
+      Sub-Agent 5 output. Consultant selects after comparing options — not applied automatically.
       Selected options → Maestro re-deploy (Loop B-Symbolic).
     </div>
 
@@ -531,14 +531,14 @@
         <div class="opt-tier">▲ Must Fix</div>
         <div class="opt-title">Fair Lending audit gate + ACS feature attribution</div>
         <div class="opt-desc">
-          공정대출법 compliance audit step를 N7 앞에 삽입. SHAP feature attribution
-          으로 ACS unfair scoring 자영업자·청년 demographic 즉시 flag.
+          Insert a fair-lending compliance audit step before N7. SHAP feature attribution
+          immediately flags ACS unfair scoring for self-employed and young borrower demographics.
         </div>
         <table class="tradeoff-table">
           <tr><th>Risk Δ</th><td class="val good">-2.8</td></tr>
           <tr><th>Cost</th><td class="val">low ($)</td></tr>
           <tr><th>Speed Δ</th><td class="val warn">-15%</td></tr>
-          <tr><th>Op복잡도</th><td class="val">Low</td></tr>
+          <tr><th>Op Complexity</th><td class="val">Low</td></tr>
           <tr><th>Impl effort</th><td class="val">3 dev-days</td></tr>
         </table>
         <label class="opt-check">
@@ -549,16 +549,16 @@
       <!-- Recommend -->
       <div class="opt-card rec">
         <div class="opt-tier">★ Recommend</div>
-        <div class="opt-title">K-PIPA Art 22-2 거부권 UI gate (HITL escalation)</div>
+        <div class="opt-title">K-PIPA Art 22-2 Right-to-Object UI Gate (HITL Escalation)</div>
         <div class="opt-desc">
-          AI 자동 거절 통보 시 거부권 행사 UI 의무 노출 + 7일 인간 재심사 SLA.
-          금감원 검사 audit trail 자동 stamp.
+          Mandatory right-to-object UI on automated rejection notifications + 7-day human re-review SLA.
+          FSS audit trail auto-stamped.
         </div>
         <table class="tradeoff-table">
           <tr><th>Risk Δ</th><td class="val good">-2.2</td></tr>
           <tr><th>Cost</th><td class="val warn">medium ($$)</td></tr>
           <tr><th>Speed Δ</th><td class="val warn">-10%</td></tr>
-          <tr><th>Op복잡도</th><td class="val">Med</td></tr>
+          <tr><th>Op Complexity</th><td class="val">Med</td></tr>
           <tr><th>Impl effort</th><td class="val">6 dev-days</td></tr>
         </table>
         <label class="opt-check">
@@ -571,14 +571,14 @@
         <div class="opt-tier">○ Optional</div>
         <div class="opt-title">Demographic fairness dashboard (quarterly review)</div>
         <div class="opt-desc">
-          분기별 demographic distribution × approval rate 시각화. 장기 fairness drift
-          monitoring + 컴플라이언스 보고 자료. CDO/CIO 정량 deliverable.
+          Quarterly demographic distribution × approval rate visualization. Long-term fairness drift
+          monitoring + compliance reporting deliverable for CDO/CIO.
         </div>
         <table class="tradeoff-table">
-          <tr><th>Risk Δ</th><td class="val">-0.6 (장기 +)</td></tr>
+          <tr><th>Risk Δ</th><td class="val">-0.6 (long-term +)</td></tr>
           <tr><th>Cost</th><td class="val warn">medium ($$)</td></tr>
           <tr><th>Speed Δ</th><td class="val good">0%</td></tr>
-          <tr><th>Op복잡도</th><td class="val bad">High</td></tr>
+          <tr><th>Op Complexity</th><td class="val bad">High</td></tr>
           <tr><th>Impl effort</th><td class="val">10 dev-days</td></tr>
         </table>
         <label class="opt-check">
@@ -601,13 +601,13 @@
 <!-- ============== Compliance + Audit ============== -->
 <div class="compliance-row">
   <div class="kpipa-box">
-    <div class="kpipa-title">⚖ K-PIPA Art 22-2 (개인정보 보호법 — AI 자동결정 거부권)</div>
+    <div class="kpipa-title">⚖ K-PIPA Art 22-2 (Personal Information Protection Act — AI Automated Decision Right to Object)</div>
     <div class="kpipa-text">
-      정보주체는 완전히 자동화된 시스템에 의한 결정(프로파일링 포함)이 자신에게 중대한 영향을
-      미치는 경우, 해당 결정을 거부하거나 설명을 요구할 권리를 가진다. 본 워크플로우는
-      <strong>자동 거절 사유서(N9)</strong>와 함께 <strong>거부권 행사 UI</strong>를 의무 노출해야
-      하며, 7일 이내 인간 재심사 SLA를 보장해야 합니다.
-      <span style="color:#d8b0d8;">→ "Recommend" 옵션 선택 시 자동 충족.</span>
+      The data subject has the right to refuse or request an explanation for any decision made
+      by a fully automated system (including profiling) that significantly affects them. This workflow
+      must mandatorily expose a <strong>right-to-object UI</strong> along with an
+      <strong>automated rejection notice (N9)</strong> and guarantee a human re-review SLA within 7 days.
+      <span style="color:#d8b0d8;">→ Automatically satisfied when the "Recommend" option is selected.</span>
     </div>
   </div>
   <div>
@@ -632,7 +632,7 @@
   <div class="left-meta">
     Selected: <strong>2 of 3 options</strong>
     · Estimated re-deploy time: <strong>~3 min</strong>
-    · Audit log will be persisted to <strong>UiPath Action Center</strong> + <strong>금감원 검사 archive</strong>
+    · Audit log will be persisted to <strong>UiPath Action Center</strong> + <strong>FSS Inspection Archive</strong>
   </div>
   <div>
     <button class="btn btn-secondary">📥 Download Report</button>

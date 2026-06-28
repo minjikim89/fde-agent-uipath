@@ -1,17 +1,17 @@
 """
 FDE Agent — Heatmap Renderer (HTML + Mermaid.js + D3.js)
 
-본 모듈은 TopologicalGraph + NodeMitigationDossier list를 입력받아
-self-contained interactive HTML 1 file을 emit.
+This module accepts a TopologicalGraph + NodeMitigationDossier list and emits
+a single self-contained interactive HTML file.
 
 UI:
-  - 좌측: Mermaid.js로 BPMN flowchart 렌더 (sample의 mermaid block 그대로 사용)
-    각 노드는 color overlay (RED/YELLOW/GREEN) + 클릭 가능
-  - 우측: dossier panel — 노드 클릭 시 axis별 cells + 3요소 (failure_mode + evidence + mitigation)
-  - 상단: 워크플로우 메타 + RED/YELLOW 노드 카운트 + aggregate risk 분포
+  - Left: BPMN flowchart rendered with Mermaid.js (uses the sample's mermaid block as-is)
+    Each node has a color overlay (RED/YELLOW/GREEN) and is clickable
+  - Right: dossier panel — clicking a node shows per-axis cells + 3 elements (failure_mode + evidence + mitigation)
+  - Top: workflow metadata + RED/YELLOW node counts + aggregate risk distribution
 
-외부 dependency: 2개 CDN script만 (Mermaid.js + D3.js v7).
-embed JSON으로 클라이언트 dossier lookup → 추가 fetch 없음 (서버 호스팅 불필요).
+External dependencies: 2 CDN scripts only (Mermaid.js + D3.js v7).
+Client-side dossier lookup via embedded JSON — no additional fetch required (no server hosting needed).
 
 Export:
   - render_heatmap_html(graph, dossiers, mermaid_src, title) -> str
@@ -32,12 +32,12 @@ from ..metrics.laaj import LaaJResult
 
 
 # =============================================================
-# Demo handoff metrics — Phase 1 Phoenix integration까지의 placeholder
+# Demo handoff metrics — placeholder until Phase 1 Phoenix integration
 # =============================================================
 #
-# 실제 IPS/ConfDecay/LaaJ는 노드별 output text가 있어야 계산 가능 (Phase 1 PoC).
-# 본 sprint는 sample 별 signature 시그니처를 박아 영상 demo의 narrative를 강화.
-# 메트릭 값은 sample markdown의 RED handoff 셀과 정합되도록 선택.
+# Actual IPS/ConfDecay/LaaJ metrics require per-node output text (Phase 1 PoC).
+# This sprint embeds per-sample signature values to strengthen the video demo narrative.
+# Metric values are chosen to align with the RED handoff cells in sample markdowns.
 
 def _cd(upstream, downstream, uc, dc, band="healthy", alert=False):
     decay = round(dc - uc, 2)
@@ -64,8 +64,8 @@ def _laaj(upstream, downstream, alignment, reasoning, flags=None, band=""):
 def _demo_handoff_metrics(sample_key: str) -> dict[str, list[dict]]:
     """
     Returns: {downstream_node_id: [{ips, confdecay, laaj}, ...]}
-    Legal: N3에 ips_watch (N2→N3) + laaj_flags / N5a에 over_trust (N3→N5a) + laaj_low
-    Loan : N7에 over_trust + laaj_low (N6→N7) + ips_watch (N4→N7 SHAP) / N9에 ips_watch (N7→N9)
+    Legal: N3 gets ips_watch (N2→N3) + laaj_flags / N5a gets over_trust (N3→N5a) + laaj_low
+    Loan : N7 gets over_trust + laaj_low (N6→N7) + ips_watch (N4→N7 SHAP) / N9 gets ips_watch (N7→N9)
     """
     if sample_key == "legal":
         return {
@@ -113,7 +113,7 @@ def build_aggregated_nodes(
     sample_key: str,
 ) -> dict[str, AggregatedNode]:
     """
-    RED + YELLOW 노드에 대해 aggregator.aggregate_node() → AggregatedNode dict.
+    Run aggregator.aggregate_node() for RED + YELLOW nodes → AggregatedNode dict.
     Returns: {node_id: AggregatedNode}
     """
     handoff_by_dn = _demo_handoff_metrics(sample_key)
@@ -133,8 +133,8 @@ def render_heatmap_html(
     aggregated: dict[str, AggregatedNode] | None = None,
 ) -> str:
     """
-    Mermaid src + dossier JSON + aggregated (final_score + handoff metrics) embed 하여
-    self-contained HTML 1 file return.
+    Embed Mermaid src + dossier JSON + aggregated (final_score + handoff metrics) and
+    return a single self-contained HTML file.
     """
     dossier_by_node: dict[str, dict] = {d.node_id: d.to_dict() for d in dossiers}
     aggregated_by_node: dict[str, dict] = (
@@ -147,12 +147,12 @@ def render_heatmap_html(
         "title": title,
         "subtitle": subtitle,
     }
-    # `</script>` breakout 방어 — Phase 1 LaaJ reasoning은 LLM 생성 텍스트이므로
-    # `</` 가 박힐 수 있다. JSON에서 `\/` 는 `/` 와 동치이므로 의미 손실 없음.
+    # Guard against `</script>` breakout — Phase 1 LaaJ reasoning is LLM-generated text
+    # and may contain `</`. `\/` is equivalent to `/` in JSON, so no semantic loss.
     payload_json = json.dumps(embedded_payload, ensure_ascii=False).replace("</", "<\\/")
 
-    # Mermaid 원문에 클릭 가능 노드 마킹 추가
-    # Mermaid.js의 `click NodeId callback`을 mermaid src 끝에 추가 — RED/YELLOW만
+    # Add clickable node markers to the original Mermaid source
+    # Append Mermaid.js `click NodeId callback` at the end of the mermaid src — RED/YELLOW only
     click_lines: list[str] = []
     for n in graph.red_yellow_nodes():
         click_lines.append(f'    click {n.id} call window.fdeAgentClick("{n.id}") "Click for dossier"')
@@ -310,7 +310,7 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
   </section>
   <aside id="dossier">
-    <div class="placeholder">RED/YELLOW 노드를 클릭하면 진단 dossier가 표시됩니다.</div>
+    <div class="placeholder">Click a RED/YELLOW node to view the diagnosis dossier.</div>
   </aside>
 </main>
 
@@ -421,7 +421,7 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
     const aggregated = (PAYLOAD.aggregated || {{}})[nodeId];
     const target = document.getElementById("dossier");
     if (!dossier) {{
-      target.innerHTML = `<div class="placeholder">No dossier for ${{nodeId}} (이 노드는 ontology v0.3c에 cell 정의가 없습니다.)</div>`;
+      target.innerHTML = `<div class="placeholder">No dossier for ${{nodeId}} (this node has no cell definition in ontology v0.3c)</div>`;
       return;
     }}
     const node = PAYLOAD.graph.nodes.find(n => n.id === nodeId);
@@ -452,7 +452,7 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
 
   window.fdeAgentClick = renderDossier;
 
-  // Mermaid render 이후 노드에 hover style 추가
+  // Add hover styles to nodes after Mermaid renders
   document.addEventListener("DOMContentLoaded", () => {{
     setTimeout(() => {{
       Object.keys(PAYLOAD.dossiers).forEach(nid => {{
@@ -472,12 +472,12 @@ if __name__ == "__main__":
     # E2E dry-run — legal + loan sample → heatmap HTML 2 pages
     # =========================================================
     #
-    # Pipeline (양 sample 동일):
-    #   1. Mermaid parse → TopologicalGraph (RED/YELLOW/GREEN 색상 포함)
+    # Pipeline (same for both samples):
+    #   1. Mermaid parse → TopologicalGraph (includes RED/YELLOW/GREEN colors)
     #   2. Sub-Agent 5 Mitigation Recommender → per RED+YELLOW NodeMitigationDossier
     #   3. Heatmap HTML render → scripts/output/{sample}-heatmap-v0.1.html
     #
-    # 한국 컨텍스트 우선: loan sample은 sample_source='korean_loan'으로 retrieval.
+    # Korean context first: loan sample retrieves with sample_source='korean_loan'.
     import sys
     from pathlib import Path
 
@@ -498,7 +498,7 @@ if __name__ == "__main__":
             "sample_source": "korean_loan",
             "md_path": SAMPLES_DIR / "loan-underwriting-kr-v0.1.md",
             "title": "FDE Agent — Korean Personal Loan Underwriting (v0.1)",
-            "subtitle": "Layer 2 input · 한국 금융 vertical · 11 nodes · K-PIPA / KoFIU / 공정대출법 컨텍스트",
+            "subtitle": "Layer 2 input · Korean financial vertical · 11 nodes · K-PIPA / KoFIU / Fair Lending Act context",
         },
     ]
 

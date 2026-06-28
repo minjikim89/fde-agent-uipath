@@ -3,15 +3,15 @@ Loop B-Symbolic — Mitigation Application to BPMN Workflow
 ==========================================================
 
 Phase 2 UiPath AgentHack Track 2 artifact.
-Hero Moment scene Beat (e) Resolution 코어 module:
+Hero Moment scene Beat (e) Resolution core module:
     diagnosis → mitigation option (Sub-Agent 5) → BPMN XML patch → Maestro re-deploy
 
 Symbolic option (vs Recommendation-only / vs Hybrid w/ approval gate):
     See `_research/2026-05-26-loop-b-symbolic-decision.md` for rationale.
 
-UiPath SDK access **무관**하게 dry-run 가능:
-    Maestro re-deploy 트리거는 stub (Labs access 수령 후 wire).
-    Pure XML patching layer는 standalone — `xml.etree.ElementTree` only.
+Dry-run is possible regardless of UiPath SDK access:
+    Maestro re-deploy trigger is stubbed (wire after Labs access is received).
+    Pure XML patching layer is standalone — `xml.etree.ElementTree` only.
 
 Usage (CLI sanity):
     # apply must_fix option to N7 (loan workflow) — produces .applied.xml
@@ -46,8 +46,8 @@ from pathlib import Path
 from typing import Iterable
 
 # --------------------------------------------------------------------------
-# UiPath SDK stub — access 수령 후 import path 결정 (uipath / uipath_sdk /
-# uipath.maestro / uipath_agents 중 1종).
+# UiPath SDK stub — import path to be determined after access is received (uipath / uipath_sdk /
+# uipath.maestro / uipath_agents — one of these).
 # --------------------------------------------------------------------------
 try:
     import uipath  # type: ignore  # noqa: F401
@@ -152,7 +152,7 @@ def _stamp_mitigation(
 
     entry = ET.SubElement(target, _FDE_MITIGATION_TAG)
     entry.set("option_id", option_id)
-    # Timezone-aware UTC for audit trail (EU AI Act Annex III + 금감원 검사
+    # Timezone-aware UTC for audit trail (EU AI Act Annex III + FSS inspection
     # cross-jurisdiction time consistency).
     entry.set("applied_at",
               _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"))

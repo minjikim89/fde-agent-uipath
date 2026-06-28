@@ -1,12 +1,12 @@
-# Mapping Ontology v0.1 — FDE Agent 진단 룰셋 (본인 컨설팅 IP 핵심)
+# Mapping Ontology v0.1 — FDE Agent Diagnostic Rule Set (Core Consulting IP)
 #
-# Spec: legal contract review sample (v0.2)의 RED 3 노드 × 3 axes = 9 cell
-# 각 cell = node_type × axis 매핑 + failure_mode + evidence + multi-option mitigation
+# Spec: legal contract review sample (v0.2) RED 3 nodes × 3 axes = 9 cells
+# Each cell = node_type × axis mapping + failure_mode + evidence + multi-option mitigation
 #
-# Layer 1 Sub-Agent 2 (Risk Diagnosis Engine)의 핵심 lookup table.
-# Sub-Agent 5 (Mitigation Recommender)가 mitigation_options를 multi-option으로 output.
+# Core lookup table for Layer 1 Sub-Agent 2 (Risk Diagnosis Engine).
+# Sub-Agent 5 (Mitigation Recommender) outputs mitigation_options as multi-option.
 #
-# v0.2 보강 예정: YELLOW 노드 + edge handoff diagnosis + Korean loan sample 통합
+# v0.2 planned additions: YELLOW nodes + edge handoff diagnosis + Korean loan sample integration
 
 version: v0.4
 last_updated: 2026-05-25
@@ -18,8 +18,8 @@ total_cells: 36  # by risk_score>=4.0 banding: RED 17 + YELLOW 19
                  #  but N3_security risk_score=3.5 → YELLOW band, so cell-level RED=17 / YELLOW=19)
 korean_loan_added: 2026-05-25
 v0_3_added: 2026-05-25  # Handoff Quantification Framework (IPS / Confidence Decay / LLM-as-a-Judge)
-v0_3c_added: 2026-05-25  # YELLOW nodes × 3 axes (legal N1/N4/N6 + loan N2/N3/N4) Phase 0c 보강
-v0_4_added: 2026-05-25  # (1) Security axis mitigation_options 7 cells 보강 + MITRE M-ID/OWASP/MIT 831 references
+v0_3c_added: 2026-05-25  # YELLOW nodes × 3 axes (legal N1/N4/N6 + loan N2/N3/N4) Phase 0c additions
+v0_4_added: 2026-05-25  # (1) Security axis mitigation_options 7 cells expanded + MITRE M-ID/OWASP/MIT 831 references
                         # (2) Agentic Failure Taxonomy 6 items on axes.handoff
                         # (3) NIST AI RMF + EU AI Act Annex III cross-mapping (legal/loan RED 6 cells)
 regulatory_anchors:
@@ -33,25 +33,25 @@ regulatory_anchors:
     - scripts/data/owasp-llm-top10-v2025.yaml
     - scripts/data/mit-mitigation-taxonomy.yaml  # session B v0.2
     - scripts/data/mit-risk-causal-domain-v0.1.yaml  # session B v0.1
-  korean_regulatory_overlap_frames: 4  # EU AI Act + 공정대출법 + 신용정보법 + K-PIPA
+  korean_regulatory_overlap_frames: 4  # EU AI Act + Fair Lending Act + Credit Information Act + K-PIPA
 
 # =============================================================
-# v0.3 — Handoff Quantification Framework (★ 본 아이디어 기술적 moat)
+# v0.3 — Handoff Quantification Framework (★ Technical moat of this concept)
 # =============================================================
 #
-# 동기: handoff axis의 휴리스틱을 수학적 정량 지표로 격상.
-# 결과: 컨설팅 휴리스틱 + 정량 메트릭 = generic AI tool과 결정적 차별화.
-# Arize Phoenix와 정확 정합 — Phoenix custom metric으로 박을 수 있음.
-# 구현: 본 세션은 design만, 실제 구현은 Phase 1 (Rapid Agent) PoC v0.2 (세션 B)에서.
+# Motivation: elevate handoff axis heuristics to mathematically quantified metrics.
+# Result: consulting heuristics + quantitative metrics = decisive differentiation from generic AI tools.
+# Exact alignment with Arize Phoenix — can be embedded as Phoenix custom metrics.
+# Implementation: this session is design only; actual implementation in Phase 1 (Rapid Agent) PoC v0.2 (Session B).
 
 handoff_quantification_framework:
 
   metric_1_intent_preservation_score:
     short_name: IPS
     description: |
-      상위 노드 산출 텍스트와 하위 노드 진단 텍스트 간 의미 유사도.
+      Semantic similarity between upstream node output text and downstream node diagnosis text.
       cosine(embed(upstream_output), embed(downstream_diagnosis))
-      → 임계치 이하면 'Context Decay Alert' 발생.
+      → triggers 'Context Decay Alert' when below threshold.
     formula: |
       IPS(node_a → node_b) = cosine_similarity(
         BGE-M3.embed(node_a.output_text),
@@ -63,49 +63,49 @@ handoff_quantification_framework:
       "0.5~0.7":  "watch zone — context partially lost"
       "below 0.5": "Context Decay Alert — silent failure risk high"
     implementation:
-      infrastructure: "BGE-M3 (이미 Chroma에서 사용 중) — 추가 인프라 없음"
-      latency: "node 당 ~50ms embedding compute (negligible)"
+      infrastructure: "BGE-M3 (already in use with Chroma) — no additional infrastructure required"
+      latency: "~50ms embedding compute per node (negligible)"
       output: "per-handoff numeric score + alert binary"
     use_in_diagnosis:
-      - "RED handoff cell에 IPS threshold 추가 (현재 risk_score는 휴리스틱 평가, IPS는 runtime 측정)"
-      - "워크플로우 실제 운영 시 (post-deployment) IPS streaming → drift detection"
-      - "Heatmap에 'Decay' badge per-edge 가능"
+      - "Add IPS threshold to RED handoff cells (current risk_score is heuristic assessment, IPS is runtime measurement)"
+      - "During live workflow operation (post-deployment) IPS streaming → drift detection"
+      - "'Decay' badge per-edge on Heatmap is possible"
     applies_to:
       - N2_clause_extraction → N3_risk_flagging (schema_contract_drift cell)
       - N3_risk_flagging → N5b_attorney_review (weighting_loss cell)
       - loan_N4_credit_scoring → loan_N7_auto_decision (bias_cascade_from_ACS cell)
       - loan_N6_llm_risk → loan_N7_auto_decision (false_negative_cascade cell)
-      - 모든 LLM-to-LLM handoff에 universal
+      - universal for all LLM-to-LLM handoffs
 
   metric_2_confidence_decay:
     short_name: ConfDecay
     description: |
-      각 노드의 confidence score가 downstream으로 갈수록 어떻게 변동하는지 측정.
-      특히 over-trust 패턴: low upstream confidence (0.7) → high downstream confidence (0.99)
-      이건 본인 IP의 가장 강한 instantiation — '자동화 신뢰 편향'의 수치화.
+      Measures how each node's confidence score changes as it flows downstream.
+      Particularly the over-trust pattern: low upstream confidence (0.7) → high downstream confidence (0.99)
+      This is the strongest instantiation of this IP — quantifying 'automation trust bias'.
     formula: |
       ConfDecay(node_a → node_b) = node_b.confidence - node_a.confidence
       Over-Trust Gap = max(0, ConfDecay) when node_a.confidence < 0.8
       Under-Use Gap = max(0, -ConfDecay) when node_a.confidence > 0.9
     interpretation:
-      "Over-Trust Gap > 0.2":  "ALERT — downstream이 upstream uncertainty를 무시하고 over-commit"
-      "Under-Use Gap > 0.2":   "WARNING — downstream이 confident upstream을 underutilize"
+      "Over-Trust Gap > 0.2":  "ALERT — downstream ignores upstream uncertainty and over-commits"
+      "Under-Use Gap > 0.2":   "WARNING — downstream underutilizes a confident upstream"
       "abs(decay) ≤ 0.1":       "healthy propagation"
     implementation:
-      requirement: "각 sub-agent가 output에 confidence score 필수 attach (현재 PoC v0.1은 confidence 없음 — v0.2 구현 필요)"
+      requirement: "Each sub-agent must attach a confidence score to output (current PoC v0.1 has no confidence — required in v0.2 implementation)"
       output: "per-handoff numeric gap + binary alert"
     use_in_diagnosis:
-      - "loan_N6 → loan_N7 핵심 사례: N6 LLM 위험 분석이 0.7 confidence였는데 N7이 0.99로 자동 승인 결정 = silent escalation"
-      - "Post-deployment monitoring: confidence delta distribution이 시간에 따라 drift하면 model retraining trigger"
+      - "loan_N6 → loan_N7 key case: N6 LLM risk analysis had 0.7 confidence, but N7 made auto-approve decision at 0.99 = silent escalation"
+      - "Post-deployment monitoring: if confidence delta distribution drifts over time, trigger model retraining"
     applies_to:
-      - 모든 sequential LLM handoff
-      - 특히 LLM → decision automation handoff (N5a, loan_N7)
+      - all sequential LLM handoffs
+      - especially LLM → decision automation handoffs (N5a, loan_N7)
 
   metric_3_llm_as_judge:
     short_name: LaaJ
     description: |
-      두 노드 output을 별도 LLM이 alignment·coherence·factual consistency 평가.
-      Multi-LLM ensemble의 자연스러운 instantiation — Arize Phoenix와 정확 정합.
+      A separate LLM evaluates alignment, coherence, and factual consistency between two node outputs.
+      Natural instantiation of multi-LLM ensemble — exact alignment with Arize Phoenix.
     formula: |
       LaaJ(node_a, node_b) = JudgeLLM.score(
         prompt="""Are these two outputs aligned, coherent, and factually consistent?
@@ -115,106 +115,106 @@ handoff_quantification_framework:
         judge_model="claude-3.5-sonnet"  # or different family from upstream
       )
     interpretation:
-      "alignment_score < 0.6":  "Judge가 disagreement detect — manual review trigger"
-      "disagreement_flags 비어있지 않음":  "specific issue 검토 필요"
+      "alignment_score < 0.6":  "Judge detects disagreement — triggers manual review"
+      "disagreement_flags non-empty":  "specific issue requires review"
     implementation:
-      cost: "judge LLM call per handoff = $$ — 모든 노드에 매번 호출 아닌 sampling 권장 (e.g., 10% spot-check)"
+      cost: "judge LLM call per handoff = $$ — recommend sampling rather than calling for every node (e.g., 10% spot-check)"
       output: "alignment score + reasoning + disagreement flags"
     use_in_diagnosis:
-      - "Sub-Agent 6 (Claude Peer Reviewer)의 자연스러운 extension"
-      - "Phase 1 Rapid Agent에서 Arize Phoenix가 LaaJ score를 시각화"
+      - "Natural extension of Sub-Agent 6 (Claude Peer Reviewer)"
+      - "Arize Phoenix visualizes LaaJ score in Phase 1 Rapid Agent"
     arize_phoenix_integration:
-      - "Phoenix custom metric으로 IPS + ConfDecay + LaaJ 3종 모두 etch"
-      - "Trace UI에 per-handoff 3 metric overlay = 본 아이디어 시각화 자산"
+      - "Embed all 3 types (IPS + ConfDecay + LaaJ) as Phoenix custom metrics"
+      - "Per-handoff 3-metric overlay on Trace UI = visualization asset for this concept"
 
 # =============================================================
-# Handoff cell 통합 사용
+# Handoff cell integrated usage
 # =============================================================
 
-# 기존 handoff cells (v0.1/v0.2)의 risk_score는 design-time 휴리스틱 평가.
-# v0.3 metrics는 runtime 측정 → design-time + runtime 결합으로 진단 깊이↑.
+# Existing handoff cells (v0.1/v0.2) risk_score is design-time heuristic assessment.
+# v0.3 metrics are runtime measurements → combining design-time + runtime deepens diagnostic depth.
 #
-# 예시 (loan_N7_handoff cell 강화):
-#   기존: bias_cascade_from_ACS (heuristic), risk_score 4.7
-#   v0.3 추가:
-#     - IPS(N4 → N7): runtime 측정 — ACS 결과의 의미가 N7 결정에 반영되는지
-#     - ConfDecay(N6 → N7): N6 LLM 위험 분석 confidence와 N7 결정 confidence gap
-#     - LaaJ(N4, N7): ACS factor와 N7 결정의 alignment 평가
-#   결과: 단일 휴리스틱 → 3 차원 정량 + 휴리스틱 = 진단 robustness↑
+# Example (loan_N7_handoff cell enhancement):
+#   Existing: bias_cascade_from_ACS (heuristic), risk_score 4.7
+#   v0.3 additions:
+#     - IPS(N4 → N7): runtime measurement — whether the meaning of ACS results is reflected in N7 decisions
+#     - ConfDecay(N6 → N7): gap between N6 LLM risk analysis confidence and N7 decision confidence
+#     - LaaJ(N4, N7): alignment evaluation between ACS factors and N7 decision
+#   Result: single heuristic → 3-dimensional quantitative + heuristic = improved diagnostic robustness
 
 # =============================================================
-# 구현 우선순위 (세션 B Phase 1에서)
+# Implementation priority (in Session B Phase 1)
 # =============================================================
 #
-# P1: IPS (BGE-M3 인프라 그대로 사용 가능, 즉시 구현)
-# P2: ConfDecay (각 sub-agent에 confidence output 추가 필요)
-# P3: LaaJ (judge LLM 호출 추가 — Arize Phoenix와 정합 narrative 강화)
+# P1: IPS (can use BGE-M3 infrastructure as-is, implement immediately)
+# P2: ConfDecay (requires adding confidence output to each sub-agent)
+# P3: LaaJ (add judge LLM call — strengthens alignment narrative with Arize Phoenix)
 #
-# 본 세션 종료 후 세션 B에서 PoC v0.2에 P1부터 구현.
+# After this session, implement from P1 in PoC v0.2 during Session B.
 
 axes:
   general_failure:
     description: "Functional failure of the node itself (hallucination, edge case, drift, false negative, etc.)"
-    sources: [AIID corpus, MIT Risk Repository, NANDA 정성 발견]
+    sources: [AIID corpus, MIT Risk Repository, NANDA qualitative findings]
   security:
     description: "Attack surface (OWASP LLM Top 10 + MITRE ATLAS)"
     sources: [OWASP LLM Top 10 v2025, MITRE ATLAS v5.4.0]
   handoff:
     description: "Inter-node context loss, responsibility boundaries, human-AI trust bias, etc. (core area of proprietary consulting IP, missing in public data)"
-    sources: [본인 휴리스틱, NANDA "GenAI Divide" learning gap insight]
+    sources: [proprietary heuristics, NANDA "GenAI Divide" learning gap insight]
     # ─────────────────────────────────────────────────────────
-    # Agentic Failure Taxonomy (v0.4 — 본 sprint 추가, 외부 review feedback 반영)
+    # Agentic Failure Taxonomy (v0.4 — added in this sprint, incorporating external review feedback)
     # ─────────────────────────────────────────────────────────
-    # Multi-agent / agentic 시스템에서 발생하는 6대 cascade failure 패턴.
-    # 단일 LLM call이 아닌 chain (Agent A → Tool → Agent B → RAG → Decision) 컨텍스트에서
-    # FDE Agent 진단의 1st-class concept. 본인 IP의 agentic extension.
+    # Six major cascade failure patterns in multi-agent / agentic systems.
+    # In the context of a chain (Agent A → Tool → Agent B → RAG → Decision), not a single LLM call —
+    # a 1st-class concept in FDE Agent diagnosis. Agentic extension of proprietary IP.
     agentic_failure_taxonomy:
       - id: agent_handoff_misalignment
         description: "Agent A's output format, meaning, and confidence misalign with Agent B's input assumptions — silent drift"
         external_reference: "Liu et al. (2024) — AgentBench multi-agent error traces 18% misalignment rate (https://arxiv.org/abs/2308.03688)"
-        diagnostic_signal: "downstream agent가 upstream 의도와 다른 task로 분기, 단 error는 raise 안 됨 (silent)"
+        diagnostic_signal: "downstream agent diverges to a different task from upstream intent, but no error is raised (silent)"
         fde_cells_applicable: [N2_handoff, loan_N4_handoff, loan_N6_handoff]
         runtime_metric: "IPS (Information Preservation Score) < 0.5"
       - id: rag_retrieval_poisoning_by_agent
         description: "Agent reinforces RAG results with its own hallucination and propagates to downstream agents — false information amplification"
         external_reference: "Zou et al. (2024) — PoisonedRAG attack on LLM RAG pipelines (https://arxiv.org/abs/2402.07867)"
-        diagnostic_signal: "동일 retrieval source에 대해 N회 추론마다 결과 분산 ↑ + reasoning trace에 source 인용 누락"
+        diagnostic_signal: "result variance increases across N inferences on the same retrieval source + missing source citations in reasoning trace"
         fde_cells_applicable: [N2_handoff, N3_handoff, loan_N6_handoff]
         runtime_metric: "Confidence Decay > 0.3 across N hops"
       - id: tool_execution_loop
         description: "Agent repeatedly calls the same tool with incorrect inputs — token budget exhaustion + side effect risk"
         external_reference: "WebArena (Zhou et al., 2024) — agent webhook recursion failure cases (https://arxiv.org/abs/2307.13854)"
-        diagnostic_signal: "단일 task 내 tool call frequency가 baseline의 N×, 동일 parameter signature 반복"
+        diagnostic_signal: "tool call frequency within a single task is N× the baseline, repeated with the same parameter signature"
         fde_cells_applicable: [N5a_handoff, loan_N7_handoff]
         runtime_metric: "tool_call_depth > threshold (default 5)"
       - id: cascading_failure
         description: "Silent failure of a single upstream node is amplified across the entire chain path — agentic expansion of 'cascade_amplification' from Phase 0 v0.3c"
         external_reference: "Anthropic agentic safety blog (2024) — chain fault propagation taxonomy"
-        diagnostic_signal: "N+1 노드 error rate가 N 노드 error rate × M (M ≥ 2)"
+        diagnostic_signal: "N+1 node error rate is N node error rate × M (M ≥ 2)"
         fde_cells_applicable: [N5a_handoff, loan_N7_handoff, loan_N9_handoff]
         runtime_metric: "downstream/upstream error correlation > 0.7"
       - id: infinite_loop_between_agents
         description: "Agent A → B → A → B ping-pong, termination condition unmet. Infinite loop in the absence of a human escalation rule"
         external_reference: "CrewAI agentic framework error logs (2025 Q1 incidents)"
-        diagnostic_signal: "단일 task graph 내 동일 (agent_a, agent_b) edge 5회 이상 통과"
+        diagnostic_signal: "same (agent_a, agent_b) edge traversed 5 or more times within a single task graph"
         fde_cells_applicable: [N6_handoff, loan_N6_handoff]
         runtime_metric: "edge_revisit_count > 5"
       - id: trust_collapse_in_chain
         description: "When 1 agent in the chain outputs a high-confidence falsehood, the downstream agent trusts it without verification → reasoning corruption"
         external_reference: "MIT NANDA — 'GenAI Divide' learning gap (2025) trust calibration findings"
-        diagnostic_signal: "Confidence가 chain 진행 시 monotonically 증가 (verification 없이)"
+        diagnostic_signal: "Confidence increases monotonically as the chain progresses (without verification)"
         fde_cells_applicable: [N3_handoff, loan_N6_handoff, loan_N7_handoff]
         runtime_metric: "tail_confidence > head_confidence by margin > 0.2"
     agentic_korean_context_mapping:
-      - cell: loan_N6_handoff  # LLM Risk Analysis (한국 fraud detection LLM)
+      - cell: loan_N6_handoff  # LLM Risk Analysis (Korean fraud detection LLM)
         applied_failure: agent_handoff_misalignment
         scenario_ko: |
-          loan_N5 income verification agent가 출력한 fraud signal (binary flag)이
-          loan_N6 LLM Risk Analysis agent에서 다른 의미로 해석 — false negative cascade로 자동승인.
-          특히 한국 보이스피싱 victim-as-applicant 패턴 (대포통장)에서 N5 agent가 'income legit'
-          판정해도 N6가 이를 'low risk' 가정으로 재해석. IPS metric으로 정량 탐지 가능.
-        mitigation_pointer: "loan_N6_handoff.mitigation_options.must_fix (N6 결과에 confidence + reasoning trace 첨부)"
-        knowledge_status: "v0.4 — 한국 컨텍스트 1건 매핑 (외부 review 채택). Phase 1 PoC에서 5건 확장."
+          The fraud signal (binary flag) output by the loan_N5 income verification agent
+          is misinterpreted by the loan_N6 LLM Risk Analysis agent — leading to auto-approval via false negative cascade.
+          Particularly in the Korean voice phishing victim-as-applicant pattern (burner account), even if the N5 agent rules 'income legit',
+          N6 re-interprets this as a 'low risk' assumption. Quantitatively detectable via the IPS metric.
+        mitigation_pointer: "loan_N6_handoff.mitigation_options.must_fix (attach confidence + reasoning trace to N6 output)"
+        knowledge_status: "v0.4 — 1 Korean context mapped (adopted in external review). Expanding to 5 cases in Phase 1 PoC."
 
 cells:
 
@@ -230,9 +230,9 @@ cells:
 
     primary_failure_mode: hallucination
     secondary_failure_modes:
-      - edge_case_misclassification  # 비표준 계약 (foreign jurisdiction, custom clauses)
-      - schema_drift  # extracted output format이 시간에 따라 변화
-      - language_specific_failure  # 한국어 etc 비영문 처리 약함
+      - edge_case_misclassification  # non-standard contracts (foreign jurisdiction, custom clauses)
+      - schema_drift  # extracted output format changes over time
+      - language_specific_failure  # weak processing of non-English languages such as Korean
 
     risk_level: HIGH
     risk_score: 4.5
@@ -256,16 +256,16 @@ cells:
       functions: [MAP, MEASURE]
       sub_categories: ["MAP 2", "MEASURE 1", "MEASURE 2"]
       genai_profile_risks: ["GAI-2"]   # Confabulation / Hallucination
-      rationale: "N2 = LLM 분류·추출 노드, NIST MAP 2 categorization + GenAI Profile confabulation 직접 정합"
+      rationale: "N2 = LLM classification/extraction node, directly maps to NIST MAP 2 categorization + GenAI Profile confabulation"
 
     eu_ai_act_mapping:
       annex_iii_point: "8(a)"
       point_name: "Judicial assistance — researching/interpreting facts and law"
       articles: ["Article 13 (transparency)", "Article 15 (accuracy)", "Article 9 (risk management)"]
       obligations:
-        - "Legal contract review 워크플로우가 법무법인·기업법무팀에 배포 시 8(a) high-risk 자동 분류"
-        - "Article 15 accuracy: hallucinated clause extraction = 직접 위반 risk"
-      korean_regulatory_overlap: ["K-PIPA Article 22-2 (AI 자동 의사결정 권리)"]
+        - "Legal contract review workflow automatically classified as 8(a) high-risk when deployed to law firms or corporate legal teams"
+        - "Article 15 accuracy: hallucinated clause extraction = direct violation risk"
+      korean_regulatory_overlap: ["K-PIPA Article 22-2 (right regarding AI automated decision-making)"]
 
   - cell_id: N2_security
     node: N2_clause_extraction
@@ -292,21 +292,21 @@ cells:
     mitigation_options:
       must_fix:
         action: "Output schema validation enforcement — strict type + enum + per-field validator for the extracted clause JSON. Reject non-compliant outputs."
-        rationale: "LLM09 Misinformation 차단 + general_failure hallucination mitigation 동시 충족 (overlap)"
+        rationale: "Blocks LLM09 Misinformation + simultaneously satisfies general_failure hallucination mitigation (overlap)"
         references:
           owasp_llm: ["LLM09", "LLM05"]
           mitre_atlas: ["AML.M0033", "AML.M0020"]   # Input/Output Validation + GenAI Guardrails
           mit_831: ["2.4", "3.1"]                    # Content Safety + Testing & Auditing
       recommend:
         action: "Vendor-supplied contract preprocessing — embed a calibrated PII/prompt-injection scanner at the front of the N2 input pipe (blocks LLM01 indirect)"
-        rationale: "Vendor-side adversarial input의 LLM 도달 차단"
+        rationale: "Blocks vendor-side adversarial input from reaching the LLM"
         references:
           owasp_llm: ["LLM01"]
           mitre_atlas: ["AML.M0034", "AML.M0033"]   # Restrict Library Loading + I/O Validation
           mit_831: ["2.3", "3.2"]                    # Model Safety Engineering + Data Governance
       optional:
         action: "Retrieval-grounded extraction — enforce clause anchors after retrieving playbook/precedent corpus (no free-form extract)"
-        rationale: "Hallucination footprint 최소화 — RAG anchor가 LLM 자유도 제한"
+        rationale: "Minimizes hallucination footprint — RAG anchor restricts LLM degrees of freedom"
         references:
           owasp_llm: ["LLM09"]
           mitre_atlas: ["AML.M0014", "AML.M0019"]   # Verify ML Artifacts + Control Access
@@ -321,29 +321,29 @@ cells:
 
     primary_handoff_risk: schema_contract_drift
     description: |
-      N2 extract 결과의 schema가 N3 risk flagging input format과 호환 필수.
-      schema 불일치 시 silent failure로 N3가 빈 결과 산출 가능 — 진짜 risk가 missed.
-      또한 N1 classify가 잘못된 contract type 분류 시, N2가 잘못된 clause set 추출.
+      N2 extraction output schema must be compatible with N3 risk flagging input format.
+      Schema mismatch can cause N3 to produce empty results via silent failure — real risk gets missed.
+      Also, if N1 classify routes to the wrong contract type, N2 extracts the wrong clause set.
 
     secondary_handoff_risks:
-      - extraction_confidence_lost  # N2 confidence score가 downstream에 전달 안 됨 → downstream이 모든 결과를 equal하게 신뢰
-      - cascading_silent_failure  # N2 → N3 → N5a 전 경로에 silent error 누적
+      - extraction_confidence_lost  # N2 confidence score not propagated downstream → downstream trusts all results equally
+      - cascading_silent_failure  # silent errors accumulate across the full N2 → N3 → N5a path
 
     risk_level: HIGH
     risk_score: 4.0
 
-    heuristic_source: 본인 IP (공개 데이터 결측 영역)
+    heuristic_source: Proprietary IP (domain missing from public data)
 
     mitigation_options:
       must_fix:
         action: "Confidence score downstream propagation mandatory — per-clause confidence on N2 output + confidence threshold gating on N3 input schema"
-        rationale: "Silent failure 차단의 가장 직접 mitigation"
+        rationale: "Most direct mitigation for blocking silent failure"
       recommend:
         action: "Schema contract test — automatic testing of N2/N3 schema compatibility for each deploy"
-        rationale: "Schema drift 조기 발견"
+        rationale: "Early detection of schema drift"
       optional:
         action: "End-to-end synthetic test — periodically inject known-failure clauses across the entire pipeline path + monitor results"
-        rationale: "Cascading failure 통합 monitoring"
+        rationale: "Integrated monitoring of cascading failure"
 
   # =============================================================
   # NODE N3: Risk Flagging (LLM identifies risky clauses)
@@ -357,9 +357,9 @@ cells:
 
     primary_failure_mode: false_negative
     secondary_failure_modes:
-      - false_positive_overflow  # 너무 많은 flag → reviewer fatigue
-      - novelty_blindness  # 새로운 risk pattern 미인지
-      - context_loss  # 단일 clause 단위 분석으로 cross-clause risk 미인지
+      - false_positive_overflow  # too many flags → reviewer fatigue
+      - novelty_blindness  # failure to recognize novel risk patterns
+      - context_loss  # single-clause-level analysis fails to detect cross-clause risk
 
     risk_level: HIGH
     risk_score: 4.2
@@ -369,7 +369,7 @@ cells:
         - id: incident_704
           relevance: indirect
       academic:
-        - "Klarna AI rollback case — fraud detection false negative 누적이 1차 원인 중 하나"
+        - "Klarna AI rollback case — accumulation of fraud detection false negatives as a primary contributing factor"
 
     mitigation_options_ref: legal-contract-review-v0.1.md#n3-multi-option
 
@@ -377,15 +377,15 @@ cells:
       functions: [MAP, MEASURE]
       sub_categories: ["MAP 4", "MEASURE 2", "MEASURE 3"]
       genai_profile_risks: ["GAI-8"]   # Information Integrity
-      rationale: "False negative이 risk profile 왜곡 → MEASURE 2 trustworthy + MEASURE 3 tracking 핵심"
+      rationale: "False negative distorts risk profile → core for MEASURE 2 trustworthy + MEASURE 3 tracking"
 
     eu_ai_act_mapping:
       annex_iii_point: "8(a)"
       point_name: "Judicial assistance"
       articles: ["Article 9 (risk management)", "Article 10 (data governance)", "Article 14 (human oversight)"]
       obligations:
-        - "Article 9: false negative pattern을 risk register에 등재 + 분기별 재평가"
-        - "Article 14: high-risk flag 결과에 변호사 review 강제 (HITL)"
+        - "Article 9: register false negative patterns in risk register + quarterly re-evaluation"
+        - "Article 14: mandatory attorney review (HITL) for high-risk flag results"
       korean_regulatory_overlap: ["K-PIPA Article 22-2"]
 
   - cell_id: N3_security
@@ -405,21 +405,21 @@ cells:
     mitigation_options:
       must_fix:
         action: "Risk score schema strict typing + downstream contract — multi-dimensional scores for {liability, indemnity, IP, termination} + per-dim confidence on N3 output, no raw text for downstream"
-        rationale: "Improper Output Handling 차단 + N4/N5a에서 score breakdown 강제 사용"
+        rationale: "Blocks Improper Output Handling + forces use of score breakdown in N4/N5a"
         references:
           owasp_llm: ["LLM05", "LLM09"]
           mitre_atlas: ["AML.M0033", "AML.M0020"]   # I/O Validation + GenAI Guardrails
           mit_831: ["2.4", "3.1"]                    # Content Safety + Testing & Auditing
       recommend:
         action: "Red-team risk-flagging corpus — quarterly measurement of N3 evasion using a known-malicious clause set"
-        rationale: "LLM09 evasion drift 추적 (적대적 vendor 시나리오)"
+        rationale: "Tracks LLM09 evasion drift (adversarial vendor scenario)"
         references:
           owasp_llm: ["LLM09"]
           mitre_atlas: ["AML.M0005", "AML.M0008"]   # Adversarial Training + Validate ML Model
           mit_831: ["3.1", "2.3"]                    # Testing & Auditing + Model Safety Engineering
       optional:
         action: "Score provenance log — permanent recording of prompt version + model version + retrieval context for each N3 decision"
-        rationale: "사후 incident 추적 + 분쟁 evidence"
+        rationale: "Post-incident tracking + dispute evidence"
         references:
           owasp_llm: ["LLM05"]
           mitre_atlas: ["AML.M0024"]                # AI Telemetry Logging
@@ -434,28 +434,28 @@ cells:
 
     primary_handoff_risk: weighting_loss
     description: |
-      N3가 단일 risk score 출력 시 multi-dimensional risk (예: liability ↑ but indemnity OK)의
-      nuance가 downstream에 전달 안 됨. 변호사(N5b)가 N3 score만 보고 over-trust 가능 (자동화 신뢰 편향).
+      When N3 outputs a single risk score, the nuance of multi-dimensional risk (e.g., liability ↑ but indemnity OK)
+      is not conveyed downstream. The attorney (N5b) may over-trust the N3 score alone (automation trust bias).
 
     secondary_handoff_risks:
-      - threshold_arbitrary  # N4의 0.3 threshold 근거 부재 → false positive/negative trade-off 미검증
-      - escalation_under_trigger  # high-risk score인데 escalation rule 미설계 시 silent pass
+      - threshold_arbitrary  # no basis for N4's 0.3 threshold → false positive/negative trade-off unvalidated
+      - escalation_under_trigger  # high-risk score but passes silently when escalation rules are not designed
 
     risk_level: HIGH
     risk_score: 4.0
 
-    heuristic_source: 본인 IP
+    heuristic_source: Proprietary IP
 
     mitigation_options:
       must_fix:
         action: "Multi-dim risk vector output — no single score, separate outputs for [liability/indemnity/IP/termination]"
-        rationale: "Nuance 보존이 가장 root mitigation"
+        rationale: "Preserving nuance is the most root-level mitigation"
       recommend:
         action: "Variance flagging — automatic escalation upon large variance among risk dimensions"
-        rationale: "Outlier 자동 catch"
+        rationale: "Automatic outlier detection"
       optional:
         action: "Visualize score breakdown on the attorney dashboard (no single number)"
-        rationale: "신뢰 편향 회피 — 변호사가 multi-dim 보면서 자기 판단"
+        rationale: "Avoids trust bias — attorney exercises own judgment while reviewing multi-dimensional data"
 
   # =============================================================
   # NODE N5a: Auto-Approve (Excessive Autonomy)
@@ -467,10 +467,10 @@ cells:
     ai_mode: full_automation
     axis: general_failure
 
-    primary_failure_mode: false_positive_approval  # 위험 계약이 자동 승인
+    primary_failure_mode: false_positive_approval  # risky contract auto-approved
     secondary_failure_modes:
-      - threshold_drift  # 시간에 따라 threshold가 너무 관대해짐
-      - cascade_amplification  # N2/N3/N4 의 모든 silent failure가 N5a에서 amplify
+      - threshold_drift  # threshold becomes too lenient over time
+      - cascade_amplification  # all silent failures from N2/N3/N4 are amplified at N5a
 
     risk_level: CRITICAL
     risk_score: 4.8
@@ -482,22 +482,22 @@ cells:
       academic:
         - "Klarna AI rollback — autonomous customer service decisions backed off"
         - "Air Canada v. Moffatt precedent — autonomous AI promise = legal liability"
-        - "MIT NANDA — 95% pilots stall, autonomous decisions in regulated industries 가장 많이 retreat"
+        - "MIT NANDA — 95% pilots stall, autonomous decisions in regulated industries retreat most frequently"
 
     nist_rmf_mapping:
       functions: [GOVERN, MANAGE]
       sub_categories: ["GOVERN 1", "MANAGE 1", "MANAGE 4"]
       genai_profile_risks: ["GAI-7"]   # Human-AI Configuration
-      rationale: "자동 승인 = 외부 영향 결정. MANAGE 1 prioritized response + GAI-7 human-AI config (자동화 깊이 결정) 정합"
+      rationale: "Auto-approval = decision with external impact. Aligned with MANAGE 1 prioritized response + GAI-7 human-AI config (determining automation depth)"
 
     eu_ai_act_mapping:
       annex_iii_point: "8(a)"
       point_name: "Judicial assistance — applying the law to concrete facts"
       articles: ["Article 14 (★ human oversight)", "Article 26 (deployer log retention)", "Article 9", "Article 13"]
       obligations:
-        - "★ Article 14 deficit risk: 'auto-approve'가 human oversight 의무 위반 risk — N5b 변호사 escalation 필수"
-        - "Article 26: 6개월 이상 audit log retention"
-      korean_regulatory_overlap: ["K-PIPA Article 22-2", "신용정보법 Article 36-2 (자동 의사결정 거부권 정합)"]
+        - "★ Article 14 deficit risk: 'auto-approve' poses risk of violating human oversight obligation — N5b attorney escalation mandatory"
+        - "Article 26: audit log retention of 6 months or more"
+      korean_regulatory_overlap: ["K-PIPA Article 22-2", "Credit Information Act Article 36-2 (aligned with right to opt out of automated decision-making)"]
 
   - cell_id: N5a_security
     node: N5a_auto_approve
@@ -521,21 +521,21 @@ cells:
     mitigation_options:
       must_fix:
         action: "Auto-approve allowlist gating — allow auto-approve only when N4 confidence ≥ 0.95 AND N2/N3 hallucination score < 0.1 AND contract value < cap are all met. Mandatory escalation to N5b attorney for all other cases."
-        rationale: "LLM06 Excessive Agency 핵심 차단점 — 자율 권한 범위 명시 + 외부에 영향 끼치는 high-risk impact 제한"
+        rationale: "Key checkpoint for blocking LLM06 Excessive Agency — explicitly defining the scope of autonomous authority + limiting high-risk impacts on external parties"
         references:
           owasp_llm: ["LLM06"]
           mitre_atlas: ["AML.M0030", "AML.M0019", "AML.M0033"]   # Limit AI Actions/Privileges + Control Access + I/O Validation
           mit_831: ["3.3", "3.4", "1.5"]                          # Access Management + Staged Deployment + Safety Decision Frameworks
       recommend:
         action: "Pre-approval simulation gate — enforce passing a dry-run in the N8 audit pipeline before N5a emits 'approve' (deterministic check of contract terms + company policy rule engine)"
-        rationale: "결정 결과의 외부 영향 (Air Canada precedent) 사전 차단"
+        rationale: "Proactively blocks external impact of decision outcomes (Air Canada precedent)"
         references:
           owasp_llm: ["LLM06", "LLM05"]
           mitre_atlas: ["AML.M0024", "AML.M0008"]   # Telemetry + Validate ML Model
           mit_831: ["3.1", "3.6"]                    # Testing & Auditing + Incident Response & Recovery
       optional:
         action: "Capability ceiling — automatic freeze + revert to attorney routing if the quarterly auto-approve ratio deviates by ±1σ from the baseline"
-        rationale: "Excessive Agency long-term drift 자동 제어"
+        rationale: "Automatic control of long-term Excessive Agency drift"
         references:
           owasp_llm: ["LLM06"]
           mitre_atlas: ["AML.M0030"]
@@ -550,29 +550,29 @@ cells:
 
     primary_handoff_risk: HITL_bypass
     description: |
-      N5a가 HITL을 완전히 bypass하는 게 risk 본질. N4 threshold 결정이 silent gate가 됨.
-      더 깊은 문제: audit log (N8)가 "auto-approved" stamp만 기록하면 사후 추적 시 진단 불가.
-      Air Canada 류 분쟁 발생 시 "왜 auto-approved 되었나" 질문에 답 불가.
+      The core risk is N5a completely bypassing HITL. The N4 threshold decision becomes a silent gate.
+      A deeper issue: if the audit log (N8) only records an "auto-approved" stamp, diagnosis during post-hoc tracing is impossible.
+      In Air Canada-type disputes, there is no way to answer "why was this auto-approved."
 
     secondary_handoff_risks:
-      - no_appeal_mechanism  # vendor 또는 내부 stakeholder가 auto-approval 결과에 이의 제기 channel 부재
-      - reviewer_atrophy  # auto-approve 비율이 높아질수록 N5b 변호사가 routine을 잃음 → real review 능력 약화
+      - no_appeal_mechanism  # no channel for vendors or internal stakeholders to contest auto-approval results
+      - reviewer_atrophy  # as the auto-approve ratio rises, N5b attorneys lose routine practice → real review capability degrades
 
     risk_level: CRITICAL
     risk_score: 4.7
 
-    heuristic_source: 본인 IP (특히 reviewer_atrophy는 long-term operational risk, 공개 사례 거의 없음)
+    heuristic_source: Proprietary IP (reviewer_atrophy in particular is a long-term operational risk with few public precedents)
 
     mitigation_options:
       must_fix:
         action: "Permanent retention of 'auto-approved + reasoning trace (N2 extracts, N3 flags, N4 score)' in the Audit log — utilizing Maestro Durable Execution"
-        rationale: "Air Canada 류 분쟁 시 defense + 사후 진단 가능"
+        rationale: "Defense in Air Canada-type disputes + enables post-hoc diagnosis"
       recommend:
         action: "Appeal channel design — 30-day review window for auto-approved contracts, retroactive escalation to N5b upon stakeholder request"
-        rationale: "사후 catch 기회"
+        rationale: "Opportunity for post-hoc catching"
       optional:
         action: "Reviewer rotation — monitor auto-approve ratio, mandatory assignment of routine real-cases to N5b attorneys if a certain threshold is exceeded"
-        rationale: "Long-term review skill 보존"
+        rationale: "Preserves long-term review skills"
 
 
 # =============================================================
@@ -581,7 +581,7 @@ cells:
 # =============================================================
 
   # ===========================================================
-  # NODE N6 (loan): LLM 위험 분석 (Fraud / 이상거래 / 사회적 risk)
+  # NODE N6 (loan): LLM Risk Analysis (Fraud / Anomalous Transactions / Social Risk)
   # ===========================================================
 
   - cell_id: loan_N6_general_failure
@@ -593,9 +593,9 @@ cells:
 
     primary_failure_mode: false_negative
     secondary_failure_modes:
-      - novelty_blindness  # 새로운 한국 보이스피싱·사회공학 패턴 미인지
-      - context_loss_korean  # 한국어 문화/지역 컨텍스트 LLM 약점
-      - voice_phishing_evolution  # 보이스피싱이 빠르게 진화하므로 모델 drift
+      - novelty_blindness  # failure to recognize novel Korean voice phishing and social engineering patterns
+      - context_loss_korean  # LLM weakness in Korean cultural/regional context
+      - voice_phishing_evolution  # model drift due to rapidly evolving voice phishing
 
     risk_level: HIGH
     risk_score: 4.4
@@ -604,42 +604,42 @@ cells:
       aiid_incidents:
         - id: report_7003
           relevance: direct
-          title: "AI 딥페이크 기반 군 공무원증 위조 김수키 APT 캠페인"
+          title: "AI Deepfake-based Military ID Forgery — Kimsuky APT Campaign"
           note: "Korean source, North Korean APT, most direct alignment with this node"
         - id: incident_748
           relevance: indirect
           title: "PayPal AI Assistant erroneous transaction notification"
       academic:
-        - "Klarna AI rollback — fraud detection 자동화 후 retreat 1차 원인"
+        - "Klarna AI rollback — primary cause of retreat after fraud detection automation"
 
     mitigation_options:
       must_fix:
         action: "Mandatory fine-tune on Korean fraud pattern training set (voice phishing, burner accounts, money laundering)"
-        rationale: "Generic LLM이 한국 specific pattern 약함 — 적응 필수"
+        rationale: "Generic LLMs are weak on Korea-specific patterns — adaptation is essential"
       recommend:
         action: "Rule-based hybrid — cross-check LLM results with KFIU registered cases + internal fraud DB rules"
-        rationale: "Novel pattern은 LLM, known pattern은 rule = 양자 cover"
+        rationale: "Novel patterns handled by LLM, known patterns by rules = covers both"
       optional:
         action: "Quarterly re-execution of known-fraud test set + drift measurement"
-        rationale: "보이스피싱 evolution 추적"
+        rationale: "Tracks voice phishing evolution"
 
     nist_rmf_mapping:
       functions: [MAP, MEASURE, MANAGE]
       sub_categories: ["MAP 5", "MEASURE 3", "MANAGE 3"]
       genai_profile_risks: ["GAI-8"]   # Information Integrity
-      rationale: "MAP 5 disparate impact (보이스피싱 victim 오탐) + MEASURE 3 fraud drift + MANAGE 3 third-party (KCB/NICE vendor) 정합"
+      rationale: "MAP 5 disparate impact (voice phishing victim false positive) + MEASURE 3 fraud drift + MANAGE 3 third-party (KCB/NICE vendor) alignment"
 
     eu_ai_act_mapping:
       annex_iii_point: "5(b)"
       point_name: "Creditworthiness evaluation — note: EXCLUDES fraud detection (Recital 58)"
       articles: ["Article 9 (risk management)", "Article 10 (data governance)", "Article 15 (accuracy)"]
       obligations:
-        - "Recital 58: Point 5(b)의 'excluding fraud detection' clause 적용 — 본 노드는 단독으로는 high-risk 분류 X"
-        - "단, loan_N7_auto_decision으로 결과가 흘러서 credit decision에 영향 시 chain effect로 5(b) high-risk 의무 인계"
+        - "Recital 58: 'excluding fraud detection' clause of Point 5(b) applies — this node alone is not classified as high-risk"
+        - "However, when results flow into loan_N7_auto_decision and influence the credit decision, 5(b) high-risk obligations are inherited via chain effect"
       korean_regulatory_overlap:
-        - "전기통신금융사기 특별법 (보이스피싱)"
-        - "KoFIU FIU2024-3호 (AML 보고 의무)"
-        - "신용정보법 (잘못된 fraud flag = 정보주체 권리 침해)"
+        - "Special Act on Prevention of Financial Fraud via Telecommunications (voice phishing)"
+        - "KoFIU Notice FIU2024-3 (AML reporting obligation)"
+        - "Credit Information Act (incorrect fraud flag = violation of data subject rights)"
 
   - cell_id: loan_N6_security
     node: N6_llm_risk_analysis
@@ -658,23 +658,23 @@ cells:
     mitigation_options:
       must_fix:
         action: "Application form input sanitization — reject or escape upon detecting instruction-like patterns (e.g., 'Ignore previous', 'System:', URL/HTML, etc.) in the application form free-text fields. Block before reaching LLM input."
-        rationale: "LLM01 Prompt Injection 정면 차단 — fraud actor가 자기 risk score를 조작 시도하는 한국 보이스피싱·대포통장 패턴 대응"
+        rationale: "Direct block of LLM01 Prompt Injection — addresses Korean voice phishing and burner account patterns where fraudsters attempt to manipulate their own risk score"
         references:
           owasp_llm: ["LLM01", "LLM09"]
           mitre_atlas: ["AML.M0033", "AML.M0020"]   # I/O Validation + GenAI Guardrails
           mit_831: ["2.3", "2.4", "3.2"]             # Model Safety Engineering + Content Safety + Data Governance
-          korean_regulator: ["KoFIU FIU2024-3호", "전기통신금융사기 특별법"]
+          korean_regulator: ["KoFIU Notice FIU2024-3", "Special Act on Prevention of Financial Fraud via Telecommunications"]
       recommend:
         action: "RAG-grounded fraud reasoning — enforce retrieval grounding using KoFIU registered cases + internal fraud DB cases, no free-form risk reasoning by LLM"
-        rationale: "Hallucination (LLM09) 차단 + Korean fraud pattern 정합성 보강. Rule-based hybrid의 강화 버전."
+        rationale: "Blocks hallucination (LLM09) + reinforces Korean fraud pattern alignment. Enhanced version of the rule-based hybrid."
         references:
           owasp_llm: ["LLM09"]
           mitre_atlas: ["AML.M0014", "AML.M0019"]   # Verify ML Artifacts + Control Access to AI Models and Data
           mit_831: ["3.2", "4.1"]                    # Data Governance + System Documentation
-          korean_regulator: ["KoFIU", "신용정보법"]
+          korean_regulator: ["KoFIU", "Credit Information Act"]
       optional:
         action: "Multimodal adversarial test set — quarterly red-team evaluation of suspicious patterns in ID cards, call recordings, and SMS spam"
-        rationale: "한국 사기 진화 추적 (김수키 APT 류 딥페이크 ID 포함)"
+        rationale: "Tracks Korean fraud evolution (including Kimsuky APT-style deepfake ID)"
         references:
           owasp_llm: ["LLM01", "LLM09"]
           mitre_atlas: ["AML.M0005", "AML.M0006"]   # Adversarial Training + Generative AI Model Alignment
@@ -690,28 +690,28 @@ cells:
 
     primary_handoff_risk: false_negative_cascade
     description: |
-      N6의 false negative가 N7 자동 심사에서 risk-free로 인식되어 자동 승인됨.
-      Audit trail에는 "N6 OK + N7 자동승인"만 기록되어 사후 분석 시 어디서 miss했는지 진단 어려움.
-      특히 보이스피싱 victim이 본인 명의로 신청 시 (대포통장 사례), 모든 N1~N5 통과하므로 N6가 last line of defense.
+      N6's false negative is treated as risk-free in N7 auto-review, leading to auto-approval.
+      The audit trail only records "N6 OK + N7 auto-approve," making it difficult to diagnose where the miss occurred during post-hoc analysis.
+      In particular, when a voice phishing victim applies under their own name (burner account case), all N1–N5 are passed, making N6 the last line of defense.
 
     risk_level: HIGH
     risk_score: 4.3
 
-    heuristic_source: 본인 IP (특히 한국 보이스피싱 victim-as-applicant 패턴은 공개 사례 적음)
+    heuristic_source: Proprietary IP (Korean voice phishing victim-as-applicant pattern in particular has few public precedents)
 
     mitigation_options:
       must_fix:
         action: "Mandatory attachment of confidence + reasoning trace to N6 results — N7 does not accept simple binaries"
-        rationale: "N7 자동 승인 결정의 근거 추적 가능"
+        rationale: "Enables tracing of the basis for N7 auto-approval decisions"
       recommend:
         action: "Mandatory escalation to N8 manual review when N6 score < 0.8 (blocks auto-approve path)"
-        rationale: "Boundary case에 사람 개입"
+        rationale: "Human intervention on boundary cases"
       optional:
         action: "Victim-as-applicant detection sub-model — separately identify voice phishing victim patterns"
-        rationale: "한국 fraud landscape 특화"
+        rationale: "Specialized for the Korean fraud landscape"
 
   # ===========================================================
-  # NODE N7 (loan): 자동 심사 결정 엔진
+  # NODE N7 (loan): Automated Underwriting Decision Engine
   # ===========================================================
 
   - cell_id: loan_N7_general_failure
@@ -723,9 +723,9 @@ cells:
 
     primary_failure_mode: false_positive_approval
     secondary_failure_modes:
-      - bias_amplification  # ACS (N4) 의 bias가 자동 거절 결정으로 amplify
-      - threshold_drift  # 영업 압박 시 threshold 관대해짐
-      - cascade_amplification  # N2~N6 silent failure 누적
+      - bias_amplification  # ACS (N4) bias amplified into automatic rejection decisions
+      - threshold_drift  # threshold becomes lenient under business pressure
+      - cascade_amplification  # silent failures from N2–N6 accumulate
 
     risk_level: CRITICAL
     risk_score: 4.8
@@ -735,26 +735,26 @@ cells:
         - id: incident_704
           relevance: indirect
       academic:
-        - "한국 신용평가 차별 논란 (자영업자·청년·비전통 직군)"
+        - "Korean credit scoring discrimination controversy (self-employed, young adults, non-traditional occupations)"
         - "Apple Card gender bias (Goldman Sachs ACS)"
         - "MIT NANDA — 95% pilots stall, autonomous decisions in regulated industries"
 
     mitigation_options:
       must_fix:
         action: "Fair Lending audit — quarterly measurement of demographic disparate impact in auto-approval/rejection ratios"
-        rationale: "공정대출법·신용정보법 compliance 필수"
+        rationale: "Required for Fair Lending Act and Credit Information Act compliance"
       recommend:
         action: "Always expose K-PIPA Article 15 (right to opt-out of automated decision-making) UI on rejection decisions"
-        rationale: "규제 의무 + 분쟁 예방"
+        rationale: "Regulatory obligation + dispute prevention"
       optional:
         action: "Differential threshold per vendor risk tier + include fair lending metrics in sales KPIs"
-        rationale: "Long-term bias 회피"
+        rationale: "Long-term bias avoidance"
 
     nist_rmf_mapping:
       functions: [GOVERN, MANAGE, MEASURE]
       sub_categories: ["GOVERN 1", "MANAGE 1", "MANAGE 4", "MEASURE 2"]
       genai_profile_risks: ["GAI-6", "GAI-7"]   # Harmful Bias + Human-AI Configuration
-      rationale: "자동 결정 = MANAGE 1 prioritized; GAI-6 bias homogenization은 ACS feedback의 핵심 risk"
+      rationale: "Automated decision = MANAGE 1 prioritized; GAI-6 bias homogenization is the core risk of ACS feedback"
 
     eu_ai_act_mapping:
       annex_iii_point: "5(b)"
@@ -763,22 +763,22 @@ cells:
       bpmn_anchor: "scripts/data/sample-workflows/loan-underwriting-kr-v0.1.md"
       articles: ["Article 9", "Article 10", "Article 13", "Article 14", "Article 15", "Article 26"]
       obligations:
-        - "Article 9 risk management — ACS bias monitoring 필수 (자영업자·청년·비전통 직군)"
-        - "Article 10 data governance — training data representativeness 보장"
-        - "Article 13 transparency — 신청인에게 meaningful information on logic 제공"
-        - "Article 14 human oversight — 거절 시 appeal channel + 사람 심사 routing"
-        - "Article 15 accuracy/robustness — disparate impact testing (4/5 rule 등)"
-        - "Article 26 deployer log retention — 6개월 이상"
+        - "Article 9 risk management — ACS bias monitoring mandatory (self-employed, young adults, non-traditional occupations)"
+        - "Article 10 data governance — ensure training data representativeness"
+        - "Article 13 transparency — provide applicant with meaningful information on logic"
+        - "Article 14 human oversight — appeal channel + human review routing upon rejection"
+        - "Article 15 accuracy/robustness — disparate impact testing (4/5 rule, etc.)"
+        - "Article 26 deployer log retention — 6 months or more"
       penalty_exposure: "Non-compliance: up to 3% global annual turnover (Article 99)"
       korean_regulatory_overlap:
-        - "공정대출법 — Article 9/15와 정면 정합"
-        - "신용정보법 Article 36-2 자동 의사결정 거부권 — Article 14 정합"
-        - "K-PIPA Article 22-2 — Article 13 정합"
+        - "Fair Lending Act — directly aligned with Article 9/15"
+        - "Credit Information Act Article 36-2 right to opt out of automated decision-making — aligned with Article 14"
+        - "K-PIPA Article 22-2 — aligned with Article 13"
       sales_wedge_note: |
-        ★ FDE Agent 진단의 PRIMARY anchor cell. 한국 금융사가 EU 진출/EU 고객 서비스 시
-        자동으로 5(b) high-risk classification. FDE Agent가 단일 deliverable로 EU AI Act +
-        공정대출법 + 신용정보법 + K-PIPA 4-frame 동시 compliance gap을 정량화 — Big 4
-        컨설팅 (₩수억) 대비 차별화 영업 wedge.
+        ★ PRIMARY anchor cell of FDE Agent diagnosis. Korean financial firms serving EU markets or EU customers
+        are automatically subject to 5(b) high-risk classification. FDE Agent quantifies the compliance gap across
+        the Fair Lending Act + Credit Information Act + K-PIPA 4-framework simultaneously in a single deliverable —
+        a differentiated sales wedge compared to Big 4 consulting (₩hundreds of millions).
 
   - cell_id: loan_N7_security
     node: N7_auto_decision
@@ -801,15 +801,15 @@ cells:
     mitigation_options:
       must_fix:
         action: "Decision authority ceiling — N7 auto-approval is permitted only when all 4 conditions are met simultaneously: (a) application amount ≤ ₩50M, (b) ACS confidence ≥ 0.95, (c) N6 fraud score < 0.05, (d) loan_N3 AML score < 0.10. Mandatory N8 manual review for all others."
-        rationale: "LLM06 Excessive Agency 차단 + 공정대출법·신용정보법 위반 가능성 사전 격리. 한국 금감원 검사 시 'auto-approve 권한 범위 명시' 필수 요구사항 정합."
+        rationale: "Blocks LLM06 Excessive Agency + pre-isolates potential violations of the Fair Lending Act and Credit Information Act. Aligned with the mandatory requirement to 'explicitly define auto-approve authority scope' during Korean FSS inspections."
         references:
           owasp_llm: ["LLM06"]
           mitre_atlas: ["AML.M0030", "AML.M0019", "AML.M0024"]   # Limit AI Actions/Privileges + Control Access + Telemetry
           mit_831: ["3.3", "1.5", "3.4"]                          # Access Management + Safety Decision Frameworks + Staged Deployment
-          korean_regulator: ["공정대출법", "신용정보법 Article 36-2", "금감원 AI 모범규준"]
+          korean_regulator: ["Fair Lending Act", "Credit Information Act Article 36-2", "FSS AI Best Practice Guidelines"]
       recommend:
         action: "Decision rationale persistence — permanent retention of {ACS feature contributions (SHAP), N6 reasoning trace, applied rule version, threshold values} for all N7 decisions (utilizing Maestro Durable Execution)"
-        rationale: "K-PIPA Article 22-2 자동 의사결정 거부권 + 금감원 검사 시 사후 추적 가능 (분쟁 evidence)"
+        rationale: "K-PIPA Article 22-2 right to opt out of automated decision-making + enables post-hoc tracing during FSS inspections (dispute evidence)"
         references:
           owasp_llm: ["LLM06", "LLM05"]
           mitre_atlas: ["AML.M0024"]                # AI Telemetry Logging
@@ -817,12 +817,12 @@ cells:
           korean_regulator: ["K-PIPA Article 22-2"]
       optional:
         action: "Disparate impact circuit-breaker — N7 auto-decision freeze + revert to N8 routing if the rejection ratio per demographic group (gender, age, region, occupation) violates the 4/5 rule quarterly"
-        rationale: "공정대출법 위반 사전 차단 + Long-term fair lending"
+        rationale: "Pre-empts Fair Lending Act violations + long-term fair lending"
         references:
           owasp_llm: ["LLM06"]
           mitre_atlas: ["AML.M0030"]
           mit_831: ["3.5", "1.7"]                    # Post-Deployment Monitoring + Societal Impact Assessment
-          korean_regulator: ["공정대출법"]
+          korean_regulator: ["Fair Lending Act"]
 
   - cell_id: loan_N7_handoff
     node: N7_auto_decision
@@ -834,28 +834,28 @@ cells:
 
     primary_handoff_risk: bias_cascade_from_ACS
     description: |
-      N4 ACS의 bias (자영업자·청년·비전통 직군 unfair scoring)가 N7에서 자동 거절로 cascade.
-      거절 결정은 N9 거절사유서로 흘러서 신청인에게 통보됨 — bias 결정의 외부 가시화.
-      금감원 검사 시 "왜 거절했나" 추적해서 N4 ACS까지 거슬러 가야 하는데, N7의 결정 reasoning이 N4 raw score만 참조하면 bias 원인 추적 어려움.
+      N4 ACS bias (unfair scoring against self-employed, young adults, non-traditional occupations) cascades into automatic rejection at N7.
+      The rejection decision flows into the N9 rejection letter sent to the applicant — external visibility of a biased decision.
+      During FSS inspections, tracing "why was it rejected" requires going back to N4 ACS, but if N7's decision reasoning only references the N4 raw score, tracing the bias cause becomes difficult.
 
     risk_level: CRITICAL
     risk_score: 4.7
 
-    heuristic_source: 본인 IP (한국 공정대출법 컨텍스트, 글로벌 사례 적음)
+    heuristic_source: Proprietary IP (Korean Fair Lending Act context, few global precedents)
 
     mitigation_options:
       must_fix:
         action: "Permanent retention of both N4 ACS feature contribution (SHAP, etc.) + N6 reasoning in the N7 decision audit log"
-        rationale: "사후 bias 진단 + 금감원 대응 + 분쟁 evidence"
+        rationale: "Post-hoc bias diagnosis + FSS response + dispute evidence"
       recommend:
         action: "Immediate activation of K-PIPA Article 22-2 'AI right to opt-out' channel upon N7 decision — applicants can request human review"
-        rationale: "규제 의무 + 신뢰 회복"
+        rationale: "Regulatory obligation + trust restoration"
       optional:
         action: "Demographic monitoring dashboard of quarterly rejection ratios — reporting to CRO + CDO"
-        rationale: "Trend 조기 catch"
+        rationale: "Early trend detection"
 
   # ===========================================================
-  # NODE N9 (loan): 거절 사유서 LLM 한글 생성
+  # NODE N9 (loan): LLM Korean-language Rejection Letter Generation
   # ===========================================================
 
   - cell_id: loan_N9_general_failure
@@ -867,9 +867,9 @@ cells:
 
     primary_failure_mode: hallucination
     secondary_failure_modes:
-      - regulatory_misrepresentation  # 잘못된 거절 사유 → 신용정보법 위반
-      - language_specific_hallucination  # 한글 LLM의 sub-optimal generation
-      - inconsistency_across_letters  # 동일 사유의 letter 간 불일치
+      - regulatory_misrepresentation  # incorrect rejection reason → Credit Information Act violation
+      - language_specific_hallucination  # sub-optimal generation by Korean-language LLM
+      - inconsistency_across_letters  # inconsistency across letters with the same rejection reason
 
     risk_level: HIGH
     risk_score: 4.5
@@ -883,38 +883,38 @@ cells:
           relevance: direct
           title: "Norwegian Supreme Court Fabricated Citations"
       academic:
-        - "Air Canada v. Moffatt precedent — chatbot misrepresentation = 회사 책임"
-        - "한국 금융사 Air Canada 평행 risk: K-PIPA + 신용정보법 + 공정대출법 동시 위반 가능"
+        - "Air Canada v. Moffatt precedent — chatbot misrepresentation = corporate liability"
+        - "Korean financial firm Air Canada parallel risk: simultaneous potential violation of K-PIPA + Credit Information Act + Fair Lending Act"
 
     mitigation_options:
       must_fix:
         action: "Rejection letter template enforcement — no free-form generation by LLM, only fills fixed slots per regulatory item (KCB factor / ACS factor / fraud signal / income, etc.)"
-        rationale: "Hallucination + 규제 misrepresentation 동시 차단"
+        rationale: "Simultaneously blocks hallucination + regulatory misrepresentation"
       recommend:
         action: "Reviewer sign-off enforcement — mandatory 1-minute review window after automatic generation (no auto-send)"
         rationale: "Last line of defense"
       optional:
         action: "Quarterly random sample review by legal team — violation verification per article of the Korean Credit Information Act"
-        rationale: "Compliance drift 추적"
+        rationale: "Tracks compliance drift"
 
     nist_rmf_mapping:
       functions: [GOVERN, MANAGE]
       sub_categories: ["GOVERN 1", "MANAGE 4"]
       genai_profile_risks: ["GAI-2", "GAI-4"]   # Confabulation + Data Privacy (letter contains PII)
-      rationale: "거절 사유서 = MANAGE 4 risk treatment 산출물 + 외부 communication. GAI-2 confabulation이 신용정보법 misrepresentation으로 직결"
+      rationale: "Rejection letter = MANAGE 4 risk treatment output + external communication. GAI-2 confabulation directly leads to Credit Information Act misrepresentation"
 
     eu_ai_act_mapping:
       annex_iii_point: "5(b)"
       point_name: "Creditworthiness — downstream output channel"
       articles: ["Article 13 (★ transparency to applicant)", "Article 14 (oversight)", "Article 86 (right to explanation)", "Article 26 (log retention)"]
       obligations:
-        - "★ Article 86: 신청인의 'right to explanation' 의무 — 거절 사유 정확성 직접 위반 시 분쟁"
-        - "Article 13: 거절 letter에 meaningful info on logic 명시"
-        - "Article 26: letter content + reasoning trace 6개월 이상 audit log 보존"
+        - "★ Article 86: applicant's 'right to explanation' obligation — direct inaccuracies in rejection reasons trigger disputes"
+        - "Article 13: include meaningful info on logic in the rejection letter"
+        - "Article 26: retain letter content + reasoning trace in audit log for 6 months or more"
       korean_regulatory_overlap:
-        - "신용정보법 — 잘못된 사유 = 정보주체 권리 침해 직접 위반"
-        - "공정대출법 — 차별적 사유 적시 시 위반"
-        - "K-PIPA — PII가 letter에 포함될 시 minimization 의무"
+        - "Credit Information Act — incorrect reason = direct violation of data subject rights"
+        - "Fair Lending Act — violation upon stating discriminatory reasons"
+        - "K-PIPA — minimization obligation when PII is included in the letter"
 
   - cell_id: loan_N9_security
     node: N9_rejection_letter
@@ -934,27 +934,27 @@ cells:
     mitigation_options:
       must_fix:
         action: "Letter slot-fill enforcement — no free-form generation of rejection reasons by LLM, only fills fixed slots per Credit Information Act and Fair Lending Act items (KCB factor / ACS factor / fraud signal / income criteria). Reject if tokens outside slots are emitted."
-        rationale: "LLM09 Misinformation + LLM05 Improper Output Handling 동시 차단. 신용정보법 misrepresentation 위반 가능성 제거 — 한국 분쟁 evidence 정합."
+        rationale: "Simultaneously blocks LLM09 Misinformation + LLM05 Improper Output Handling. Eliminates the risk of Credit Information Act misrepresentation violation — aligned with Korean dispute evidence standards."
         references:
           owasp_llm: ["LLM09", "LLM05"]
           mitre_atlas: ["AML.M0020", "AML.M0033", "AML.M0014"]   # GenAI Guardrails + I/O Validation + Verify Artifacts
           mit_831: ["2.4", "4.6", "4.1"]                          # Content Safety + User Rights & Recourse + System Documentation
-          korean_regulator: ["신용정보법", "공정대출법", "K-PIPA"]
+          korean_regulator: ["Credit Information Act", "Fair Lending Act", "K-PIPA"]
       recommend:
         action: "Letter rendering separation — deterministic extraction of N7 decision factors (does not pass through LLM), LLM handles only Korean phrasing. Separation into two stages (factor extraction → text generation) + schema enforcement between stages."
-        rationale: "Hallucination footprint를 phrasing 단으로 격리 — 사실(factor)은 LLM 자유도 영향 받지 않음"
+        rationale: "Isolates hallucination footprint to the phrasing stage — facts (factors) are not affected by LLM degrees of freedom"
         references:
           owasp_llm: ["LLM09", "LLM05"]
           mitre_atlas: ["AML.M0020", "AML.M0033"]
           mit_831: ["2.3", "2.4"]                    # Model Safety Engineering + Content Safety
       optional:
         action: "Letter consistency cross-check — automatic escalation if rejection reason modal fields conflict across the same applicant's historical letters (multi-bank/multi-instance). Credit Information Act violation risk."
-        rationale: "동일 사유의 letter 간 불일치 차단 — 금감원 검사·분쟁 시 inconsistent letter 제출 회피"
+        rationale: "Blocks inconsistency across letters with the same rejection reason — avoids submitting inconsistent letters during FSS inspections or disputes"
         references:
           owasp_llm: ["LLM09"]
           mitre_atlas: ["AML.M0024"]                # Telemetry Logging
           mit_831: ["3.5", "4.3"]                    # Post-Deployment Monitoring + Incident Reporting
-          korean_regulator: ["신용정보법", "금감원"]
+          korean_regulator: ["Credit Information Act", "FSS"]
 
   - cell_id: loan_N9_handoff
     node: N9_rejection_letter
@@ -966,36 +966,36 @@ cells:
 
     primary_handoff_risk: external_communication_risk
     description: |
-      N9 출력이 신청인에게 직접 전달되는 external communication.
-      Hallucinated 거절 사유 → 신청인이 잘못된 정보 기반 항의·금감원 신고·소송 가능.
-      Audit trail (N11)이 letter text 보존해도 "왜 그렇게 썼나"의 reasoning 보존 안 하면 사후 defense 약함.
-      특히 동일 신청인이 다른 은행 신청 시 inconsistent 사유 발생 가능 — 신용정보법 위반.
+      N9 output is an external communication delivered directly to the applicant.
+      Hallucinated rejection reasons → applicant may file complaints, FSS reports, or lawsuits based on incorrect information.
+      Even if the audit trail (N11) retains the letter text, defense is weak post-hoc if the reasoning behind "why it was written that way" is not preserved.
+      In particular, when the same applicant applies at another bank, inconsistent reasons may arise — Credit Information Act violation.
 
     risk_level: HIGH
     risk_score: 4.3
 
-    heuristic_source: 본인 IP (한국 금융 분쟁·금감원 검사 컨텍스트)
+    heuristic_source: Proprietary IP (Korean financial dispute and FSS inspection context)
 
     mitigation_options:
       must_fix:
         action: "Attach N7 decision reasoning trace + used factor list to letter metadata during Letter generation (not visible to applicant but permanently retained in audit log)"
-        rationale: "사후 defense + 금감원 검사 대응"
+        rationale: "Post-hoc defense + FSS inspection response"
       recommend:
         action: "Deterministic extraction of Letter content from N7 decision factors — LLM handles only Korean phrasing"
-        rationale: "Factor (deterministic) vs Phrasing (LLM) 분리 → hallucination 차단"
+        rationale: "Separates Factor (deterministic) vs Phrasing (LLM) → blocks hallucination"
       optional:
         action: "Letter consistency check — automatic detection of conflicts with the same applicant's historical letters"
-        rationale: "Inconsistency risk 회피"
+        rationale: "Avoids inconsistency risk"
 
 
 # =============================================================
-# v0.3c — YELLOW NODES (Phase 0c 보강, 2026-05-25 session D)
+# v0.3c — YELLOW NODES (Phase 0c additions, 2026-05-25 session D)
 # legal N1/N4/N6 + loan N2/N3/N4 × 3 axes = 18 new cells
 # =============================================================
 #
-# YELLOW 톤 vs RED 톤:
-#   RED  = "must fix immediate, 자동 결정 path 차단"
-#   YELLOW = "threshold gating + monitoring + escalation rule 필요"
+# YELLOW tone vs RED tone:
+#   RED  = "must fix immediately, block auto-decision path"
+#   YELLOW = "threshold gating + monitoring + escalation rule required"
 # Must Fix: confidence/threshold gate, escalation rule
 # Recommend: audit/monitoring/drift detection
 # Optional: long-term adaptation (retraining cycle, ensemble)
@@ -1014,9 +1014,9 @@ cells:
 
     primary_failure_mode: misclassification
     secondary_failure_modes:
-      - low_confidence_default_routing  # threshold 부재 시 모든 결과 동등 신뢰
-      - novel_contract_type_failure  # 학습 분포 외 계약 (marketplace ToS, custom NDA 변형)
-      - language_specific_failure  # 비영문 계약 (KO/JP)
+      - low_confidence_default_routing  # all results trusted equally in the absence of a threshold
+      - novel_contract_type_failure  # contracts outside the training distribution (marketplace ToS, custom NDA variants)
+      - language_specific_failure  # non-English contracts (KO/JP)
 
     risk_level: MEDIUM
     risk_score: 3.4
@@ -1031,13 +1031,13 @@ cells:
     mitigation_options:
       must_fix:
         action: "Confidence threshold gating — mandatory human classification when N1 confidence < 0.85 (blocks automatic N2 entry)"
-        rationale: "Misclassification cascade의 가장 직접 차단점"
+        rationale: "Most direct checkpoint for blocking misclassification cascade"
       recommend:
         action: "Classification audit log — accumulation of input excerpt + predicted class + confidence + post-facto attorney verify"
-        rationale: "Drift 감지 + retraining set 보강"
+        rationale: "Drift detection + retraining set augmentation"
       optional:
         action: "Retraining cycle upon quarterly discovery of novel contract types"
-        rationale: "Long-term distribution shift 대응"
+        rationale: "Addresses long-term distribution shift"
 
   - cell_id: N1_security
     node: N1_intake_classify
@@ -1058,21 +1058,21 @@ cells:
     mitigation_options:
       must_fix:
         action: "Preamble sanitization — remove from N1 LLM input upon detecting instruction-like patterns + meta-comments in the first N tokens (header/preamble) of the contract. Reject upon residual detection."
-        rationale: "LLM01 Prompt Injection을 input gate에서 차단 — Confidence threshold gating (general_failure)의 보완"
+        rationale: "Blocks LLM01 Prompt Injection at the input gate — complements Confidence threshold gating (general_failure)"
         references:
           owasp_llm: ["LLM01", "LLM09"]
           mitre_atlas: ["AML.M0033", "AML.M0020"]   # I/O Validation + GenAI Guardrails
           mit_831: ["2.3", "2.4"]                    # Model Safety Engineering + Content Safety
       recommend:
         action: "Classification audit log retention — accumulation of N1 input excerpt + predicted class + confidence + post-facto attorney verify, quarterly drift analysis"
-        rationale: "Injection lateral impact 사후 추적 + retraining set 보강 (general_failure recommend와 overlap)"
+        rationale: "Post-hoc tracking of injection lateral impact + retraining set augmentation (overlaps with general_failure recommend)"
         references:
           owasp_llm: ["LLM01"]
           mitre_atlas: ["AML.M0024"]                # AI Telemetry Logging
           mit_831: ["4.1", "3.1"]                    # System Documentation + Testing & Auditing
       optional:
         action: "Adversarial classifier red-team — quarterly measurement of evasion ratio by passing a vendor-side prompt injection attempt corpus through N1"
-        rationale: "Long-term injection landscape 추적"
+        rationale: "Tracks long-term injection landscape"
         references:
           owasp_llm: ["LLM01"]
           mitre_atlas: ["AML.M0005"]                # Adversarial Training
@@ -1088,23 +1088,23 @@ cells:
 
     primary_handoff_risk: misroute_cascade
     description: |
-      잘못된 contract type 분류 → N2가 wrong clause set 추출 → N3가 wrong risk profile.
-      Confidence가 downstream에 propagation 안 되면 모든 결과 동등 신뢰 = silent failure path.
-      N5a auto-approve까지 cascade 시 wrong-type 계약이 자동 승인 risk.
+      Wrong contract type classification → N2 extracts wrong clause set → N3 produces wrong risk profile.
+      If confidence is not propagated downstream, all results are trusted equally = silent failure path.
+      If cascade reaches N5a auto-approve, a wrong-type contract faces auto-approval risk.
 
     secondary_handoff_risks:
       - confidence_lost_downstream
-      - reviewer_assignment_mismatch  # 분류에 따라 변호사 풀 다르면 wrong expertise
+      - reviewer_assignment_mismatch  # if different attorney pools are assigned by classification, wrong expertise
 
     risk_level: MEDIUM
     risk_score: 3.4
 
-    heuristic_source: 본인 IP
+    heuristic_source: Proprietary IP
 
     mitigation_options:
       must_fix:
         action: "Mandatory propagation of N1 classification metadata (predicted_class + confidence) to all downstream nodes"
-        rationale: "Confidence threshold gating의 enabler — N3/N5a에서 사용"
+        rationale: "Enabler for confidence threshold gating — used in N3/N5a"
       recommend:
         action: "Routing audit — automatically load into N1 retraining queue upon detecting classification mismatch during attorney review"
         rationale: "Self-improving classification loop"
@@ -1125,9 +1125,9 @@ cells:
 
     primary_failure_mode: playbook_interpretation_error
     secondary_failure_modes:
-      - comparison_ambiguity  # clause가 playbook standard와 partial overlap 시 점수 흔들림
-      - missing_deviation  # 새로운 형태의 deviation을 standard에 매핑 못함
-      - deviation_score_drift  # 시간에 따라 동일 deviation에 다른 점수
+      - comparison_ambiguity  # score fluctuates when a clause partially overlaps with the playbook standard
+      - missing_deviation  # cannot map novel deviation forms to the standard
+      - deviation_score_drift  # different scores for the same deviation over time
 
     risk_level: MEDIUM
     risk_score: 3.3
@@ -1137,18 +1137,18 @@ cells:
         - id: incident_704
           relevance: indirect
       academic:
-        - "LegalBench (Stanford CRFM) — comparison/entailment tasks 가장 약한 LLM 약점"
+        - "LegalBench (Stanford CRFM) — comparison/entailment tasks are the weakest LLM capability"
 
     mitigation_options:
       must_fix:
         action: "Mandatory output of Per-deviation reasoning trace — N4 outputs not just the score, attaches rationale for 'why is it a deviation'"
-        rationale: "N5a/N5b에서 score만 보고 over-trust 차단"
+        rationale: "Blocks over-trust in N5a/N5b from relying solely on the score"
       recommend:
         action: "Calibration test — quarterly measurement of N4 score stability using a known deviation set"
-        rationale: "Drift 조기 catch"
+        rationale: "Early drift detection"
       optional:
         action: "Separate the Playbook itself into structured rules rather than LLM + LLM handles only mapping"
-        rationale: "Playbook interpretation을 deterministic 영역으로 격상"
+        rationale: "Elevates playbook interpretation to a deterministic domain"
 
   - cell_id: N4_security
     node: N4_compare_playbook
@@ -1169,7 +1169,7 @@ cells:
     mitigation_options:
       must_fix:
         action: "Do not embed Playbook content in the system prompt, fetch via retrieval but prohibit verbatim citation in N4 output"
-        rationale: "Playbook leak 방지 — vendor가 회사 negotiation strategy 추론 불가"
+        rationale: "Prevents playbook leak — prevents vendors from inferring company negotiation strategy"
       recommend:
         action: "Output filter — redact upon detecting original playbook phrases in N4 results"
         rationale: "Defense in depth"
@@ -1187,29 +1187,29 @@ cells:
 
     primary_handoff_risk: threshold_arbitrary
     description: |
-      N4의 deviation score가 N5a auto-approve의 silent gate.
-      Threshold (0.3 등)의 근거가 historical data 기반 검증 없으면 false positive/negative trade-off 비가시.
-      N3 → N4 → N5a 전체 chain의 cascade silent failure가 N4에서 amplify.
+      N4's deviation score acts as a silent gate for N5a auto-approve.
+      If the threshold (e.g., 0.3) lacks validation from historical data, the false positive/negative trade-off is invisible.
+      Cascade silent failure across the entire N3 → N4 → N5a chain is amplified at N4.
 
     secondary_handoff_risks:
-      - score_overconfidence  # N4 score가 단일 number라 nuance 상실
-      - playbook_version_drift  # playbook 업데이트 시 historical score와 inconsistent
+      - score_overconfidence  # N4 score is a single number so nuance is lost
+      - playbook_version_drift  # inconsistent with historical scores when the playbook is updated
 
     risk_level: MEDIUM
     risk_score: 3.5
 
-    heuristic_source: 본인 IP
+    heuristic_source: Proprietary IP
 
     mitigation_options:
       must_fix:
         action: "Attach historical ROC curve basis to Threshold values + quarterly reverification (false positive/negative ratio)"
-        rationale: "Arbitrary threshold = silent gate의 원천 차단"
+        rationale: "Blocks the root cause of arbitrary threshold = silent gate"
       recommend:
         action: "Playbook versioning — tag playbook_version on each N4 output, add disclaimer when comparing with past decisions"
-        rationale: "Version drift 추적"
+        rationale: "Tracks version drift"
       optional:
         action: "Second-opinion gate between N4 → N5a — separate LLM performs sanity check on N4 decisions"
-        rationale: "단일 LLM 의존 분산"
+        rationale: "Distributes single-LLM dependency"
 
   # ===========================================================
   # NODE N6 (legal): Counterproposal (LLM drafts counter terms)
@@ -1224,9 +1224,9 @@ cells:
 
     primary_failure_mode: hallucination
     secondary_failure_modes:
-      - legalese_drift  # 법률 용어 정확도 저하
-      - inconsistency_with_playbook  # N4에서 deviation 측정한 항목과 counter 제안 mismatch
-      - jurisdiction_blindness  # 한국/미국/EU 법률 구분 약점
+      - legalese_drift  # degraded legal terminology accuracy
+      - inconsistency_with_playbook  # mismatch between items measured as deviations in N4 and counter proposals
+      - jurisdiction_blindness  # weakness in distinguishing Korean/US/EU law
 
     risk_level: MEDIUM
     risk_score: 3.6
@@ -1245,10 +1245,10 @@ cells:
     mitigation_options:
       must_fix:
         action: "Counterproposal template enforcement — no free-form by LLM, limited to fixed slots per playbook section"
-        rationale: "Hallucination 차단 + N4 mapping 일관성"
+        rationale: "Blocks hallucination + ensures N4 mapping consistency"
       recommend:
         action: "Variant generation (3 options) + selection by attorney — prevent over-commit to a single option"
-        rationale: "결과 다양성으로 환각 detect 용이"
+        rationale: "Easier hallucination detection through result diversity"
       optional:
         action: "Quarterly legal team audit of sent counters — track hallucination/jurisdiction error patterns"
         rationale: "Long-term quality monitoring"
@@ -1275,13 +1275,13 @@ cells:
     mitigation_options:
       must_fix:
         action: "Attorney sign-off enforcement before send — no auto-send path, mandatory 1st-level human review"
-        rationale: "Air Canada 류 외부 commitment risk 차단"
+        rationale: "Blocks external commitment risk of the Air Canada type"
       recommend:
         action: "Output sanitization — redact pass for internal-only expressions/original playbook texts"
-        rationale: "Leak 방어"
+        rationale: "Leak defense"
       optional:
         action: "Automatic monitoring of Vendor responses — alert upon detecting clues that our counter was misinterpreted"
-        rationale: "Communication drift 조기 catch"
+        rationale: "Early detection of communication drift"
 
   - cell_id: N6_handoff
     node: N6_counterproposal
@@ -1293,34 +1293,34 @@ cells:
 
     primary_handoff_risk: external_communication_risk
     description: |
-      N6 출력이 vendor에 직접 송부되는 external communication.
-      Hallucinated terms → 회사 측 의도하지 않은 commitment 위험 (Air Canada precedent).
-      특히 N4 → N6 사이 reasoning이 보존 안 되면 사후 "왜 이 counter를 보냈나" 추적 불가.
-      Loop B (UiPath Maestro durable execution) 컨텍스트: N6 → N6send 사이 attorney loop이 끊기면 silent auto-send 위험.
+      N6 output is an external communication sent directly to the vendor.
+      Hallucinated terms → risk of unintended commitment from the company's side (Air Canada precedent).
+      In particular, if reasoning between N4 → N6 is not preserved, post-hoc tracing of "why this counter was sent" becomes impossible.
+      Loop B (UiPath Maestro durable execution) context: if the attorney loop between N6 → N6send is broken, there is a risk of silent auto-send.
 
     secondary_handoff_risks:
       - reasoning_trace_loss
-      - counter_inconsistency_across_negotiations  # 동일 vendor와 multiple negotiation 시 정합성 깨짐
+      - counter_inconsistency_across_negotiations  # consistency breaks in multiple negotiations with the same vendor
 
     risk_level: MEDIUM
     risk_score: 3.5
 
-    heuristic_source: 본인 IP (특히 multi-round negotiation consistency는 공개 사례 적음)
+    heuristic_source: Proprietary IP (multi-round negotiation consistency in particular has few public precedents)
 
     mitigation_options:
       must_fix:
         action: "Embed the 3 stages of Counter draft → attorney sign-off → send into a Maestro durable workflow (audit log for each stage)"
-        rationale: "Silent auto-send 차단 + 사후 추적 가능"
+        rationale: "Blocks silent auto-send + enables post-hoc tracing"
       recommend:
         action: "Vendor history aware drafting — add past negotiation history of the same vendor to N6 input"
-        rationale: "Multi-round consistency 보존"
+        rationale: "Preserves multi-round consistency"
       optional:
         action: "Counter version diff display — N6 provides the attorney with a comparison of the final draft + previous draft"
-        rationale: "Reviewer가 LLM revision 빠른 catch"
+        rationale: "Reviewer can quickly catch LLM revisions"
 
 
   # ===========================================================
-  # NODE N2 (loan): eKYC (얼굴인증 + 신분증 OCR, 한국)
+  # NODE N2 (loan): eKYC (Face Authentication + ID Card OCR, Korea)
   # ===========================================================
 
   - cell_id: loan_N2_general_failure
@@ -1332,9 +1332,9 @@ cells:
 
     primary_failure_mode: identity_mismatch
     secondary_failure_modes:
-      - ocr_error_korean  # 한글 신분증 (주민등록증) OCR 약점
-      - deepfake_face_match  # 딥페이크 얼굴 인증 우회
-      - id_document_forgery  # 김수키 APT 류 위조 신분증
+      - ocr_error_korean  # OCR weakness on Korean ID cards (resident registration card)
+      - deepfake_face_match  # deepfake face authentication bypass
+      - id_document_forgery  # Kimsuky APT-style forged ID documents
 
     risk_level: MEDIUM
     risk_score: 3.6
@@ -1343,21 +1343,21 @@ cells:
       aiid_incidents:
         - id: report_7003
           relevance: direct
-          title: "AI 딥페이크 기반 군 공무원증 위조 김수키 APT 캠페인"
+          title: "AI Deepfake-based Military ID Forgery — Kimsuky APT Campaign"
           note: "Korean source — direct alignment with this node"
       academic:
-        - "MIT NANDA — biometric authentication edge cases 가장 retreat 비율 높음"
+        - "MIT NANDA — biometric authentication edge cases have the highest retreat rate"
 
     mitigation_options:
       must_fix:
         action: "Multi-factor identity gating — no single OCR + face, mandatory combination with telecom identity verification (PASS, etc.)"
-        rationale: "단일 modality 우회 가능성 → multi-factor가 deepfake/forgery 핵심 차단"
+        rationale: "Single modality can be bypassed → multi-factor is the key block against deepfake/forgery"
       recommend:
         action: "Mandatory quarterly evaluation set for Liveness detection (including latest deepfake tools)"
-        rationale: "Deepfake evolution 추적"
+        rationale: "Tracks deepfake evolution"
       optional:
         action: "Propagation of both OCR confidence + face match score to downstream nodes"
-        rationale: "Low confidence ID는 N6 LLM 위험 분석 input으로 활용"
+        rationale: "Low confidence IDs are used as input to N6 LLM risk analysis"
 
   - cell_id: loan_N2_security
     node: N2_eKYC
@@ -1376,7 +1376,7 @@ cells:
       - id: AML.T0015
         title: "Evade ML Model"  # deepfake = evasion
       - id: AML.T0043
-        title: "Craft Adversarial Data"  # 위조 신분증 = adversarial input
+        title: "Craft Adversarial Data"  # forged ID = adversarial input
 
     risk_level: MEDIUM
     risk_score: 3.5
@@ -1384,13 +1384,13 @@ cells:
     mitigation_options:
       must_fix:
         action: "Multimodal injection filter — reject if OCR extracted text contains instruction-like patterns"
-        rationale: "이미지 임베드 injection 차단"
+        rationale: "Blocks image-embedded injection"
       recommend:
         action: "Quarterly red-team test of Adversarial ID patterns"
-        rationale: "위조/deepfake 진화 대응"
+        rationale: "Addresses forgery/deepfake evolution"
       optional:
         action: "ID image forensic metadata verification (EXIF, compression artifacts, etc.)"
-        rationale: "비-AI evidence layer 추가"
+        rationale: "Adds a non-AI evidence layer"
 
   - cell_id: loan_N2_handoff
     node: N2_eKYC
@@ -1402,31 +1402,31 @@ cells:
 
     primary_handoff_risk: identity_propagation_silent
     description: |
-      N2가 identity OK 판정 시 downstream 모든 노드가 신뢰. 잘못된 identity가 N3 AML 검색을 wrong identity로 수행 → 진짜 제재 인물 누락.
-      특히 보이스피싱 victim-as-applicant 시 N2 통과하므로 N6 LLM 위험 분석이 last line of defense — 본인 IP의 핵심 패턴 (loan_N6_handoff와 정합).
+      When N2 judges identity as OK, all downstream nodes trust it. An incorrect identity causes N3 AML screening to run on the wrong identity → real sanctioned individuals are missed.
+      In particular, in voice phishing victim-as-applicant cases, N2 is passed, making N6 LLM risk analysis the last line of defense — a core pattern of proprietary IP (aligned with loan_N6_handoff).
 
     secondary_handoff_risks:
-      - confidence_lost_downstream  # OCR confidence 등 미전달 시 모든 결과 동등
-      - retroactive_identity_change_blindness  # 추후 다른 신원 의심 시 historical 결정 영향 추적 X
+      - confidence_lost_downstream  # all results treated equally when OCR confidence etc. is not propagated
+      - retroactive_identity_change_blindness  # cannot trace the impact on historical decisions when a different identity is suspected later
 
     risk_level: MEDIUM
     risk_score: 3.5
 
-    heuristic_source: 본인 IP (한국 보이스피싱 victim-as-applicant 컨텍스트)
+    heuristic_source: Proprietary IP (Korean voice phishing victim-as-applicant context)
 
     mitigation_options:
       must_fix:
         action: "Attach OCR confidence + face match score + multi-factor result all to N2 output → N6 handles borderline cases separately"
-        rationale: "Silent identity propagation 차단"
+        rationale: "Blocks silent identity propagation"
       recommend:
         action: "Identity-mismatch retroactive scan — batch review of historical applications upon subsequent fraud discovery"
-        rationale: "Identity evolution 추적"
+        rationale: "Tracks identity evolution"
       optional:
         action: "High-risk ID pattern (multiple reissuances, etc.) detection sub-model"
-        rationale: "Long-term fraud landscape 대응"
+        rationale: "Addresses long-term fraud landscape"
 
   # ===========================================================
-  # NODE N3 (loan): AML / Watchlist Screening (외환관리법·자금세탁방지법)
+  # NODE N3 (loan): AML / Watchlist Screening (Foreign Exchange Act · Anti-Money Laundering Act)
   # ===========================================================
 
   - cell_id: loan_N3_general_failure
@@ -1438,9 +1438,9 @@ cells:
 
     primary_failure_mode: name_matching_false_negative
     secondary_failure_modes:
-      - list_currency_lag  # KoFIU/OFAC/UN 제재 list 업데이트 지연
-      - transliteration_failure  # 한글-영문 음역 불일치 (Kim/Gim/Keem)
-      - llm_name_match_overrelance  # LLM이 fuzzy match 과도 신뢰
+      - list_currency_lag  # delayed updates to KoFIU/OFAC/UN sanctions lists
+      - transliteration_failure  # Korean-English transliteration mismatch (Kim/Gim/Keem)
+      - llm_name_match_overrelance  # LLM over-reliance on fuzzy matching
 
     risk_level: MEDIUM
     risk_score: 3.5
@@ -1451,18 +1451,18 @@ cells:
           relevance: indirect
           title: "PayPal AI erroneous transaction notification"
       academic:
-        - "KoFIU 연간 제재 위반 사례 — name matching 결함이 흔한 원인"
+        - "KoFIU annual sanctions violation cases — name matching defects are a common cause"
 
     mitigation_options:
       must_fix:
         action: "Multi-source list aggregation + daily update SLA — avoid single list dependency"
-        rationale: "List currency가 compliance 핵심 — lag = 즉시 법 위반"
+        rationale: "List currency is compliance-critical — lag = immediate legal violation"
       recommend:
         action: "Korean transliteration ensemble — combination of 3 types: KCB/NICE standard notation + pronunciation-based fuzzy + LLM semantic"
-        rationale: "한글-영문 음역 robust"
+        rationale: "Robust Korean-English transliteration"
       optional:
         action: "Quarterly simulation of known-sanctioned individuals — measure false negative ratio"
-        rationale: "Drift 추적"
+        rationale: "Tracks drift"
 
   - cell_id: loan_N3_security
     node: N3_AML_screening
@@ -1483,13 +1483,13 @@ cells:
     mitigation_options:
       must_fix:
         action: "List integrity verification — source checksum + government official endpoint cross-verify upon every update"
-        rationale: "List poisoning 차단"
+        rationale: "Blocks list poisoning"
       recommend:
         action: "Name field input sanitization — flag upon detecting instruction-like patterns"
-        rationale: "Prompt injection 방어"
+        rationale: "Prompt injection defense"
       optional:
         action: "Adversarial name matching red-team — quarterly test of transliteration evasion patterns"
-        rationale: "Evasion 대응"
+        rationale: "Addresses evasion"
 
   - cell_id: loan_N3_handoff
     node: N3_AML_screening
@@ -1501,32 +1501,32 @@ cells:
 
     primary_handoff_risk: compliance_cascade_silent
     description: |
-      N3 false negative 시 downstream 모두 신뢰 가정으로 진행. N7 자동 승인까지 통과 시 즉시 외환관리법·자금세탁방지법 위반 발생.
-      Audit trail에 "N3 OK" stamp만 있으면 사후 KoFIU 검사 시 root cause 추적 불가.
-      특히 N2 identity false negative와 chain되면 (wrong identity + wrong AML) compliance 이중 risk.
+      On N3 false negative, all downstream processes proceed assuming trust. If passed through to N7 auto-approval, an immediate violation of the Foreign Exchange Act and Anti-Money Laundering Act occurs.
+      If the audit trail only has a "N3 OK" stamp, root cause tracing during post-hoc KoFIU inspection is impossible.
+      In particular, when chained with an N2 identity false negative (wrong identity + wrong AML), compliance risk is doubled.
 
     secondary_handoff_risks:
-      - match_score_lost_downstream  # N3 fuzzy match score가 미전달 시 borderline case 미식별
-      - list_version_blindness  # 사후 동일 신청 재실행 시 다른 결과 → 검사 시 inconsistent
+      - match_score_lost_downstream  # borderline cases unidentified when N3 fuzzy match score is not propagated
+      - list_version_blindness  # different results when re-running the same application post-hoc → inconsistent during inspection
 
     risk_level: MEDIUM
     risk_score: 3.5
 
-    heuristic_source: 본인 IP (한국 KoFIU 검사 컨텍스트)
+    heuristic_source: Proprietary IP (Korean KoFIU inspection context)
 
     mitigation_options:
       must_fix:
         action: "Attach used list version + match score + alternative spellings all to N3 output → permanent retention in audit log"
-        rationale: "KoFIU 검사 대응 + 사후 root cause 추적"
+        rationale: "KoFIU inspection response + post-hoc root cause tracing"
       recommend:
         action: "Mandatory N8 manual review when N3 score < 0.95 — blocks N4·N7 automatic paths"
-        rationale: "Borderline에 사람 개입"
+        rationale: "Human intervention on borderline cases"
       optional:
         action: "Federated cross-bank AML sharing (privacy-preserving) — reflect rejection histories from other banks"
         rationale: "Ecosystem-level fraud reduction"
 
   # ===========================================================
-  # NODE N4 (loan): 신용평가 (KCB/NICE + ACS 결합, 한국 differentiation)
+  # NODE N4 (loan): Credit Scoring (KCB/NICE + ACS combination, Korean differentiation)
   # ===========================================================
 
   - cell_id: loan_N4_general_failure
@@ -1538,9 +1538,9 @@ cells:
 
     primary_failure_mode: ACS_bias_skewed_scoring
     secondary_failure_modes:
-      - feature_proxy_discrimination  # 통신/이커머스 데이터가 protected class proxy
-      - scoring_opacity  # ACS 모델의 black-box reasoning
-      - score_drift_macro  # 거시 경제 환경 변동 시 점수 의미 변화
+      - feature_proxy_discrimination  # telecom/e-commerce data as protected class proxy
+      - scoring_opacity  # black-box reasoning of the ACS model
+      - score_drift_macro  # score meaning shifts with macroeconomic environment changes
 
     risk_level: MEDIUM
     risk_score: 3.6
@@ -1550,17 +1550,17 @@ cells:
         - id: incident_704
           relevance: indirect
       academic:
-        - "Apple Card gender bias (Goldman Sachs ACS) — 가장 직접 정합"
-        - "한국 신용평가 차별 논란 (자영업자·청년·비전통 직군)"
-        - "공정대출법 (Fair Lending Act) compliance 요구"
+        - "Apple Card gender bias (Goldman Sachs ACS) — most directly aligned"
+        - "Korean credit scoring discrimination controversy (self-employed, young adults, non-traditional occupations)"
+        - "Fair Lending Act compliance requirements"
 
     mitigation_options:
       must_fix:
         action: "Attach SHAP feature contribution to all ACS decisions — no black box, enforce explainable scoring"
-        rationale: "Bias source 추적 + 공정대출법 compliance"
+        rationale: "Bias source tracking + Fair Lending Act compliance"
       recommend:
         action: "Quarterly demographic disparate impact test (4/5 rule, etc.) — compare acceptance ratios by protected class"
-        rationale: "Bias 정량 monitoring"
+        rationale: "Quantitative bias monitoring"
       optional:
         action: "ACS feature blacklist — automatic exclusion of protected class proxies (use of specific telecom carriers, etc.)"
         rationale: "Long-term fair lending"
@@ -1587,13 +1587,13 @@ cells:
     mitigation_options:
       must_fix:
         action: "Redact protected feature values when exposing ACS decision reasoning externally — sanitized rationale only for the applicant"
-        rationale: "K-PIPA 위반 + 차별 분쟁 risk 차단"
+        rationale: "Blocks K-PIPA violation + discrimination dispute risk"
       recommend:
         action: "ACS training data provenance + integrity hash — track poisoning"
-        rationale: "Data poisoning 방어"
+        rationale: "Data poisoning defense"
       optional:
         action: "Input data minimization during Vendor ACS API call — transmit only essential features"
-        rationale: "PII leak surface 축소"
+        rationale: "Reduces PII leak surface"
 
   - cell_id: loan_N4_handoff
     node: N4_credit_scoring_ACS
@@ -1605,33 +1605,33 @@ cells:
 
     primary_handoff_risk: bias_propagation_origin
     description: |
-      N4의 ACS bias가 N7 자동 결정으로 cascade — loan_N7_handoff에서 다룬 "bias_cascade_from_ACS"의 origin side.
-      거절 결정이 N9 거절사유서로 흘러서 신청인에게 외부 가시화 → 분쟁/금감원 신고 trigger.
-      N4 SHAP feature contribution이 N7/N9 audit log에 전달 안 되면 사후 bias 추적 불가.
+      N4's ACS bias cascades into N7 automated decisions — the origin side of "bias_cascade_from_ACS" addressed in loan_N7_handoff.
+      The rejection decision flows into the N9 rejection letter, externally visible to the applicant → triggers disputes/FSS reports.
+      If N4 SHAP feature contribution is not propagated to the N7/N9 audit log, post-hoc bias tracing is impossible.
 
     secondary_handoff_risks:
-      - score_summary_loss  # ACS multi-feature를 단일 score로 summarize 시 nuance 상실
-      - feature_attribution_lost_downstream  # SHAP/explainability가 N7 결정에 propagation 안 됨
+      - score_summary_loss  # nuance lost when summarizing ACS multi-features into a single score
+      - feature_attribution_lost_downstream  # SHAP/explainability not propagated to N7 decisions
 
     risk_level: MEDIUM
     risk_score: 3.6
 
-    heuristic_source: 본인 IP (한국 공정대출법·금감원 검사 컨텍스트)
+    heuristic_source: Proprietary IP (Korean Fair Lending Act and FSS inspection context)
 
     mitigation_options:
       must_fix:
         action: "Permanently attach SHAP feature contribution to N4 output → use feature breakdown instead of raw score in N7/N9"
-        rationale: "Bias cascade origin에서 차단 — N7 mitigation의 enabler"
+        rationale: "Blocks at the bias cascade origin — enabler for N7 mitigation"
       recommend:
         action: "Per-feature variance flagging — escalate when the per-feature scores of the same applicant are unusually skewed to one side"
-        rationale: "ACS outlier 자동 catch"
+        rationale: "Automatic ACS outlier detection"
       optional:
         action: "Differential privacy on ACS aggregation — mask individual-level identity/behavioral patterns"
-        rationale: "Long-term privacy + bias 동시 감소"
+        rationale: "Simultaneously reduces long-term privacy risk + bias"
 
 
 # =============================================================
-# 통합 권고 — Cumulative Scenario (v0.3c reconcile: cells sequence 다음으로 이동, YELLOW cells YAML parse 정합)
+# Integrated recommendations — Cumulative Scenario (v0.3c reconcile: moved after cells sequence, YELLOW cells YAML parse aligned)
 # =============================================================
 
 cumulative_scenarios:
@@ -1653,11 +1653,11 @@ cumulative_scenarios:
 
 
 # =============================================================
-# v0.4 보강 예정 영역
+# v0.4 planned enhancement areas
 # =============================================================
 
 v0_4_pending:
-  - "Edge handoff diagnosis 별도 cell (D1 gateway, N6 → N6send loop 등)"
-  - "Handoff heuristics 별도 YAML로 분리 (15+ heuristics 누적 시)"
-  - "Cell 간 cascade analysis — N2 silent failure가 N3 → N5a로 amplify되는 path 명시 (legal/loan 모두)"
-  - "IPS/ConfDecay/LaaJ runtime 측정값을 YELLOW 셀에도 통합 (현재는 RED handoff 위주)"
+  - "Separate cells for edge handoff diagnosis (D1 gateway, N6 → N6send loop, etc.)"
+  - "Separate YAML for handoff heuristics (when 15+ heuristics accumulate)"
+  - "Cross-cell cascade analysis — explicitly document the path where N2 silent failure is amplified to N3 → N5a (for both legal/loan)"
+  - "Integrate IPS/ConfDecay/LaaJ runtime measurements into YELLOW cells as well (currently focused on RED handoff)"

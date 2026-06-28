@@ -13,8 +13,8 @@ thresholds (ontology spec):
   disagreement_flags non-empty → specific issue review
   >= 0.8                       → trusted
 
-cost note: judge LLM call per handoff = $$ → sampling (10% spot-check) 권장.
-구독 우선 원칙: `claude -p` subprocess 1순위, Anthropic SDK는 fallback/명시 요청 시.
+cost note: judge LLM call per handoff = $$ → sampling (10% spot-check) recommended.
+Subscription-first policy: `claude -p` subprocess is primary; Anthropic SDK is fallback/explicit-request only.
 """
 from __future__ import annotations
 import json
@@ -75,7 +75,7 @@ def _interpret(alignment_score: float, disagreement_flags: list) -> tuple[str, b
 
 
 def _extract_json(text: str) -> dict:
-    """Claude output에서 첫 JSON object 추출 (markdown code fence 또는 raw)."""
+    """Extracts the first JSON object from Claude output (markdown code fence or raw)."""
     if "```json" in text:
         text = text.split("```json", 1)[1].split("```", 1)[0]
     elif "```" in text:
@@ -104,7 +104,7 @@ def _judge_via_claude_cli(prompt: str, model: Optional[str] = None) -> str:
 
 
 def _judge_via_mock(context: dict, node_a: dict, node_b: dict) -> dict:
-    """결정적 mock — unit test + offline demo용. 단어 overlap 휴리스틱으로 점수."""
+    """Deterministic mock — for unit tests and offline demos. Scores by word overlap heuristic."""
     a_tokens = set(str(node_a.get("output", "")).lower().split())
     b_tokens = set(str(node_b.get("output", "")).lower().split())
     overlap = len(a_tokens & b_tokens)
@@ -144,8 +144,8 @@ def compute_laaj(context: dict,
                  model: Optional[str] = None) -> LaaJResult:
     """
     backend:
-      - "auto":       claude CLI 시도 → 실패 시 mock으로 fallback
-      - "claude_cli": `claude -p` subprocess 강제
+      - "auto":       tries claude CLI → falls back to mock on failure
+      - "claude_cli": forces `claude -p` subprocess
       - "mock":       offline deterministic
     """
     upstream_label = node_a.get("id", "?")
@@ -221,7 +221,7 @@ if __name__ == "__main__":
     assert r2.alert
     assert r2.band == "manual_review_trigger"
 
-    # case 3: ontology의 loan_N6→N7 silent escalation 시그니처
+    # case 3: loan_N6→N7 silent escalation signature from ontology spec
     ctx_loan = {
         "workflow": "korean_loan",
         "handoff_pair": "loan_N6 → loan_N7",
@@ -236,7 +236,7 @@ if __name__ == "__main__":
                 "output": "approved confidence 0.99"},
         backend="mock",
     )
-    assert r3.alert or r3.alignment_score < 0.8, r3   # 적어도 trusted는 아님
+    assert r3.alert or r3.alignment_score < 0.8, r3   # at least not trusted
 
     # case 4: explicit mock backend, raw text fallback message
     assert r1.raw_judge_text == "" or "mock" in r1.raw_judge_text.lower() or r1.judge_backend == "mock"

@@ -1,22 +1,22 @@
 """
-CrewAI 5-Role Wrap PoC (블로커 #5 결론 적용).
+CrewAI 5-Role Wrap PoC (applying Blocker #5 conclusions).
 
-블로커 #5 보고서 (`_research/2026-05-25-crewai-phoenix-trace.md`)의 결정 그대로:
-  - Process.sequential primary, async_execution=True로 implicit parallel
-  - 5 fixed role: BPMN Parser / Risk Diagnoser / Standards Mapper / AIID Retriever / Mitigation Recommender
-  - (선택) Sub-Agent 6 Peer Reviewer (Claude) — Phase 1 진입 후 통합
-  - Phoenix instrumentation: `phoenix.otel.register(auto_instrument=True)` 한 줄
-  - 본 PoC는 environment-agnostic skeleton — crewai/phoenix 미설치 시 graceful 단축
+Decisions from Blocker #5 report (`_research/2026-05-25-crewai-phoenix-trace.md`):
+  - Process.sequential primary, implicit parallel via async_execution=True
+  - 5 fixed roles: BPMN Parser / Risk Diagnoser / Standards Mapper / AIID Retriever / Mitigation Recommender
+  - (optional) Sub-Agent 6 Peer Reviewer (Claude) — integrate after Phase 1 entry
+  - Phoenix instrumentation: single line `phoenix.otel.register(auto_instrument=True)`
+  - This PoC is an environment-agnostic skeleton — gracefully skips crewai/phoenix if not installed
 
-GCP Agent Builder 진입 전 sanity check 용도:
-  - 5-role 정의 syntactic 정확성 — Phase 1 빌드 시 그대로 복사 가능
-  - Phoenix instrumentation 셋업 패턴 박음
+Sanity check purposes before entering GCP Agent Builder:
+  - Syntactic correctness of 5-role definitions — can be copied as-is for Phase 1 build
+  - Phoenix instrumentation setup pattern baked in
   - tool function signature freeze (parser/risk/standards/rag/mitigation)
-  - 모든 sub-agent의 input/output schema 명시 → Aggregator가 consume
+  - All sub-agent input/output schemas specified → consumed by Aggregator
 
 Run modes:
   python3 crew_poc.py                # smoke test (stub LLM, deterministic)
-  python3 crew_poc.py --check-deps   # crewai/phoenix import 가능 여부만 보고
+  python3 crew_poc.py --check-deps   # crewai/phoenix import availability check only
 """
 from __future__ import annotations
 import os
@@ -29,7 +29,7 @@ from typing import Any, Callable, Optional
 SCRIPT_DIR = Path(__file__).parent.parent
 sys.path.insert(0, str(SCRIPT_DIR))
 
-# 본 PoC 자산 — Phase 1 진입 시 실제 LLM-backed agent의 tool로 wrap
+# PoC assets — wrap as tools for real LLM-backed agents on Phase 1 entry
 TOOLS_NEEDED = {
     "parse_bpmn_md":  "scripts/diagnose.py § parse_workflow",
     "ontology_lookup":"scripts/diagnose.py § cells_for_node",
@@ -45,51 +45,51 @@ TOOLS_NEEDED = {
 
 
 # =============================================================================
-# 1) Role definitions — Phase 1 빌드 시 그대로 사용
+# 1) Role definitions — use as-is for Phase 1 build
 # =============================================================================
 
 ROLE_SPECS = [
     {
         "role": "BPMN Parser",
-        "goal": "워크플로우 도식(BPMN XML / Mermaid / 이미지)을 topological graph로 추출. "
-                "각 노드의 type / ai_mode / 의존 관계를 분류.",
-        "backstory": "수백 건의 enterprise workflow를 정규화해 본 process engineer. "
-                     "도식·문서·SOP에서 명시 안 된 handoff까지 추적.",
+        "goal": "Extract a topological graph from a workflow diagram (BPMN XML / Mermaid / image). "
+                "Classify each node's type / ai_mode / dependency relationships.",
+        "backstory": "A process engineer who has normalized hundreds of enterprise workflows. "
+                     "Tracks handoffs not explicitly stated in diagrams, documents, or SOPs.",
         "tools":     ["parse_bpmn_md"],
         "llm_role":  "primary_llm",     # Rapid Agent: primary LLM
         "outputs":   ["nodes: list[Node]", "edges: list[Edge]"],
     },
     {
         "role": "Risk Diagnoser",
-        "goal": "각 노드의 8-axis risk vector + cell-level 진단. Mapping ontology(★ 본인 IP) 룰셋 기반.",
-        "backstory": "AI 시스템 사고 사례 1,400+건을 분석한 risk analyst. "
-                     "공개 데이터 없는 handoff·예외처리 휴리스틱 영역까지 식별.",
+        "goal": "Diagnose each node's 8-axis risk vector + cell-level diagnosis based on the Mapping ontology (★ proprietary IP) ruleset.",
+        "backstory": "A risk analyst who has analyzed 1,400+ AI system incident cases. "
+                     "Identifies even handoff and exception-handling heuristic areas lacking public data.",
         "tools":     ["ontology_lookup", "ips", "confdecay", "laaj"],
         "llm_role":  "primary_llm",
         "outputs":   ["per-node cells_by_axis", "handoff_metrics (IPS/CD/LaaJ)"],
     },
     {
         "role": "Standards Mapper",
-        "goal": "각 노드 risk를 OWASP LLM Top 10 v2025 + MITRE ATLAS v5.6.0 매핑.",
-        "backstory": "보안 표준 큐레이터. LLM06 Excessive Agency와 AML.T0043 같은 매핑이 자동.",
+        "goal": "Map each node's risk to OWASP LLM Top 10 v2025 + MITRE ATLAS v5.6.0.",
+        "backstory": "A security standards curator. Automatically maps items like LLM06 Excessive Agency and AML.T0043.",
         "tools":     ["owasp_lookup", "mitre_lookup"],
         "llm_role":  "primary_llm",
         "outputs":   ["per-node standards mapping (LLM01~LLM10, AML.T*, NIST AI RMF)"],
     },
     {
         "role": "AIID Retriever",
-        "goal": "high-risk 노드별 AIID/AIAAIC corpus에서 유사 사고 3~5건 retrieval.",
-        "backstory": "incident 7,959 vectors(1,480 + 6,479 reports)를 BGE-M3로 검색. "
-                     "Air Canada / Klarna 류 레퍼런스를 자동 인용.",
+        "goal": "Retrieve 3–5 similar incidents from the AIID/AIAAIC corpus per high-risk node.",
+        "backstory": "Searches 7,959 incident vectors (1,480 + 6,479 reports) via BGE-M3. "
+                     "Automatically cites Air Canada / Klarna-style references.",
         "tools":     ["chroma_search"],
         "llm_role":  "primary_llm",
         "outputs":   ["per high-risk node 3~5 incidents w/ similarity + title + date"],
     },
     {
         "role": "Mitigation Recommender",
-        "goal": "high-risk 노드별 multi-option (Must Fix / Recommend / Optional) playbook 제안. "
-                "MIT Mitigation Taxonomy(831) + OWASP prevention + 본인 IP 룰셋.",
-        "backstory": "McKinsey 식 multi-scenario consulting 톤 — 단일 fix 강요 X, 옵션 + trade-off.",
+        "goal": "Propose per-high-risk node multi-option (Must Fix / Recommend / Optional) playbooks. "
+                "Based on MIT Mitigation Taxonomy (831) + OWASP prevention + proprietary IP ruleset.",
+        "backstory": "McKinsey-style multi-scenario consulting tone — no single fix pushed, options + trade-offs.",
         "tools":     ["mit_taxonomy"],
         "llm_role":  "primary_llm",
         "outputs":   ["per-node mitigation_options {must_fix, recommend, optional} + trade-off matrix"],
@@ -111,26 +111,26 @@ TASK_GRAPH = [
 
 
 # =============================================================================
-# 3) Phoenix instrumentation setup spec (Phase 1 진입 시 적용)
+# 3) Phoenix instrumentation setup spec (apply on Phase 1 entry)
 # =============================================================================
 
 PHOENIX_SETUP_SPEC = """\
-# Phase 1 진입 시 셋업 한 줄 (블로커 #3 결론):
+# One-line setup for Phase 1 entry (Blocker #3 conclusion):
 from phoenix.otel import register
 tracer_provider = register(
     project_name="fde-agent-rapid-agent-demo",
     auto_instrument=True,
 )
-# auto_instrument=True → 설치된 OpenInference instrumentor 자동 enable:
+# auto_instrument=True → automatically enables installed OpenInference instrumentors:
 #   - openinference-instrumentation-crewai
-#   - openinference-instrumentation-litellm   (CrewAI ≥0.63 LiteLLM 경유)
+#   - openinference-instrumentation-litellm   (via LiteLLM in CrewAI ≥0.63)
 #   - (optional tracing instrumentation)
 #   - openinference-instrumentation-anthropic (Sub-Agent 6 Claude peer reviewer)
 """
 
 
 # =============================================================================
-# 4) Stub Crew (environment-agnostic) — crewai 미설치 시도 graceful
+# 4) Stub Crew (environment-agnostic) — gracefully handles missing crewai install
 # =============================================================================
 
 @dataclass
@@ -142,7 +142,7 @@ class StubAgent:
     llm_role: str = "primary_llm"
 
     def execute(self, task_name: str, inputs: dict) -> dict:
-        # Stub LLM: 입력을 그대로 echo + role tag
+        # Stub LLM: echo input as-is + role tag
         return {
             "agent_role": self.role,
             "task": task_name,
@@ -162,7 +162,7 @@ class StubTask:
 
 
 def build_stub_crew() -> tuple[list, list]:
-    """environment-agnostic 빌드 — crewai 부재해도 5-role 정의가 살아있는지 sanity."""
+    """Environment-agnostic build — sanity check that 5-role definitions survive without crewai."""
     agents = [StubAgent(role=s["role"], goal=s["goal"], backstory=s["backstory"],
                         tools=s["tools"], llm_role=s["llm_role"])
               for s in ROLE_SPECS]
@@ -173,7 +173,7 @@ def build_stub_crew() -> tuple[list, list]:
 
 
 def stub_run(agents: list, tasks: list, bpmn_path: str = "scripts/data/sample-workflows/legal-contract-review-v0.1.md") -> list:
-    """Stub orchestrator — Phase 1 진입 시 CrewAI Crew.kickoff()로 교체."""
+    """Stub orchestrator — replace with CrewAI Crew.kickoff() on Phase 1 entry."""
     agents_by_role = {a.role: a for a in agents}
     completed = {}
     trace = []
@@ -190,13 +190,13 @@ def stub_run(agents: list, tasks: list, bpmn_path: str = "scripts/data/sample-wo
 
 
 # =============================================================================
-# 5) Real CrewAI path (Phase 1 진입 후 활성화)
+# 5) Real CrewAI path (activate after Phase 1 entry)
 # =============================================================================
 
 def real_crew_build():
     """
-    Phase 1 진입 시 활성화. 본 함수는 placeholder로 import 시도만 — 미설치 시 None 반환.
-    실제 빌드 코드 패턴은 함수 본문 docstring + _research/2026-05-25-crewai-phoenix-trace.md §2 참조.
+    Activate on Phase 1 entry. This function is a placeholder that only attempts imports — returns None if not installed.
+    See function body docstring + _research/2026-05-25-crewai-phoenix-trace.md §2 for actual build code pattern.
     """
     try:
         from crewai import Agent, Task, Crew, Process
@@ -213,7 +213,7 @@ def real_crew_build():
         except ImportError:
             phoenix_status = "not_installed"
 
-        # 실제 빌드는 Phase 1 진입 후 — 본 함수는 prerequisites checker
+        # Actual build happens after Phase 1 entry — this function is a prerequisites checker
         return {"crewai": True, "llm": llm_ready, "phoenix": phoenix_status}
     except ImportError as e:
         return {"crewai": False, "missing": str(e)}
@@ -273,9 +273,9 @@ def main():
         print(f"  {k}: {v}")
 
     # sanity invariants
-    assert len(ROLE_SPECS) == 5, "5 role 정의가 깨졌음"
-    assert len(TASK_GRAPH) == len(ROLE_SPECS), "task ↔ agent 1:1 매핑 깨졌음"
-    assert all(t['agent_role'] in {s['role'] for s in ROLE_SPECS} for t in TASK_GRAPH), "task agent_role 누락"
+    assert len(ROLE_SPECS) == 5, "5 role definitions are broken"
+    assert len(TASK_GRAPH) == len(ROLE_SPECS), "task ↔ agent 1:1 mapping is broken"
+    assert all(t['agent_role'] in {s['role'] for s in ROLE_SPECS} for t in TASK_GRAPH), "task agent_role missing"
     print("\n✅ crew_poc.py sanity invariants passed (5 roles · 5 tasks · trace e2e)")
 
 

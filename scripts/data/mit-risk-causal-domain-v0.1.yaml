@@ -8,7 +8,7 @@ source:
     FutureTech, 2025).
 last_updated: '2026-05-25'
 scope_note: v0.1 — Causal + Domain taxonomy structure + per-cell descriptions extracted from the public xlsx snapshot.
-  Statistics scraped best-effort from auxiliary sheets. Node-type × Domain heuristics rows are FDE Agent 본인 IP (Korean
+  Statistics scraped best-effort from auxiliary sheets. Node-type × Domain heuristics rows are FDE Agent proprietary IP (Korean
   financial anchor).
 ai_risk_database_classified_rows: 2574
 causal_taxonomy:
@@ -340,7 +340,7 @@ domain_statistics:
       proportion_of_risks: 0.03
       proportion_of_documents: 0.07
 node_type_x_domain_heuristics:
-- node_type: classification (분류)
+- node_type: classification
   primary_domains:
   - 1.0 Discrimination & Toxicity
   - 7.0 AI safety/failures
@@ -348,9 +348,9 @@ node_type_x_domain_heuristics:
   - '1.1'
   - '1.3'
   - '7.3'
-  rationale: 분류 모델 — 그룹 간 성능 격차 + 불공정 차별 가장 자주 보고됨. ACS(신용평가) bias cascade 대표 케이스.
-  korean_anchor: loan_underwriting_kr.N4 ACS — 공정대출법 차별 금지 + SHAP audit 정합
-- node_type: generation (생성)
+  rationale: Classification models — performance gap across groups + unfair discrimination most frequently reported. ACS (credit scoring) bias cascade is the canonical case.
+  korean_anchor: loan_underwriting_kr.N4 ACS — Fair Lending Act anti-discrimination compliance + SHAP audit alignment
+- node_type: generation
   primary_domains:
   - 3.0 Misinformation
   - 1.0 Discrimination & Toxicity
@@ -359,9 +359,9 @@ node_type_x_domain_heuristics:
   - '3.1'
   - '3.2'
   - '7.3'
-  rationale: LLM 생성 노드 — hallucination + 정보생태계 오염 + robustness 부족이 핵심. Air Canada 판례, KoFIU 보고용 LLM narrator 위험.
-  korean_anchor: loan_underwriting_kr.N6 LLM Risk Narrator — 약관·법령 인용 강제로 hallucination 차단
-- node_type: RAG (검색 증강)
+  rationale: LLM generation nodes — hallucination + information ecosystem pollution + lack of robustness are the core risks. Air Canada precedent; KoFIU reporting LLM narrator risk.
+  korean_anchor: loan_underwriting_kr.N6 LLM Risk Narrator — mandatory T&C/statutory citation to suppress hallucination
+- node_type: RAG
   primary_domains:
   - 2.0 Privacy & Security
   - 3.0 Misinformation
@@ -369,9 +369,9 @@ node_type_x_domain_heuristics:
   - '2.1'
   - '2.2'
   - '3.1'
-  rationale: RAG — 검색 corpus 유출 + 잘못된 retrieval 후 hallucination. K-PIPA Art 22-2 정합.
-  korean_anchor: legal_contract_review.N2 Clause Extraction — corpus 접근권한 격리 + retrieval 정확도 audit
-- node_type: tool_invocation (도구 호출)
+  rationale: RAG — retrieval corpus leakage + hallucination following incorrect retrieval. K-PIPA Art 22-2 aligned.
+  korean_anchor: legal_contract_review.N2 Clause Extraction — corpus access-permission isolation + retrieval accuracy audit
+- node_type: tool_invocation
   primary_domains:
   - 2.0 Privacy & Security
   - 4.0 Malicious actors
@@ -380,9 +380,9 @@ node_type_x_domain_heuristics:
   - '2.2'
   - '4.2'
   - '7.2'
-  rationale: Tool call — Excessive Agency + 권한 escalation. MITRE ATLAS Execution(TA0005) tactic 정합.
-  korean_anchor: loan_underwriting_kr.N3 KoFIU AML 호출 — least-privilege scope + audit log
-- node_type: human_review (휴먼 검수)
+  rationale: Tool call — Excessive Agency + permission escalation. MITRE ATLAS Execution (TA0005) tactic aligned.
+  korean_anchor: loan_underwriting_kr.N3 KoFIU AML call — least-privilege scope + audit log
+- node_type: human_review
   primary_domains:
   - 5.0 Human-Computer Interaction
   - '7.0'
@@ -390,9 +390,9 @@ node_type_x_domain_heuristics:
   - '5.1'
   - '5.2'
   - '7.4'
-  rationale: 검수 노드 — overreliance + autonomy 상실. '자동화 신뢰 편향' (reviewer atrophy) 휴리스틱 핵심.
-  korean_anchor: loan_underwriting_kr.N5 인간 승인 — HITL_bypass / reviewer_atrophy cell 정합
-- node_type: handoff (노드 간 전이)
+  rationale: Review nodes — overreliance + loss of autonomy. "Automation trust bias" (reviewer atrophy) is the core heuristic.
+  korean_anchor: loan_underwriting_kr.N5 human approval — HITL_bypass / reviewer_atrophy cell aligned
+- node_type: handoff
   primary_domains:
   - 7.0 AI safety/failures
   - '5.0'
@@ -401,10 +401,10 @@ node_type_x_domain_heuristics:
   - '7.3'
   - '7.6'
   - '3.1'
-  rationale: Handoff — 의미·context drift (schema_contract_drift, weighting_loss). Multi-agent 위험. ★ FDE Agent의 본인
-    IP 핵심.
-  korean_anchor: loan_underwriting_kr.N3→N4 AML→ACS, N4→N6 ACS→LLM — IPS metric 정합
-- node_type: decision (의사결정)
+  rationale: Handoff — semantic/context drift (schema_contract_drift, weighting_loss). Multi-agent risk. ★ Core proprietary
+    IP of FDE Agent.
+  korean_anchor: loan_underwriting_kr.N3→N4 AML→ACS, N4→N6 ACS→LLM — IPS metric aligned
+- node_type: decision
   primary_domains:
   - 1.0 Discrimination & Toxicity
   - '5.0'
@@ -413,9 +413,9 @@ node_type_x_domain_heuristics:
   - '1.1'
   - '5.2'
   - '6.5'
-  rationale: 자동 의사결정 — 차별 + autonomy 상실 + 거버넌스 실패. EU AI Act high-risk 분류 정합.
-  korean_anchor: loan_underwriting_kr.N7 자동 승인 — false_negative_cascade cell + 금감원 고시
-- node_type: external_send (외부 통보·전송)
+  rationale: Automated decision-making — discrimination + loss of autonomy + governance failure. EU AI Act high-risk classification aligned.
+  korean_anchor: loan_underwriting_kr.N7 auto-approval — false_negative_cascade cell + FSS regulatory notice
+- node_type: external_send
   primary_domains:
   - 2.0 Privacy & Security
   - 4.0 Malicious actors
@@ -424,8 +424,8 @@ node_type_x_domain_heuristics:
   - '2.1'
   - '4.3'
   - '6.5'
-  rationale: 외부 통신 — PII 유출 + 사기 노출 + governance failure. external_communication_risk cell 정합.
-  korean_anchor: loan_underwriting_kr.N7→External — Risk Disclosure + 이의신청 channel + KoFIU 보고
+  rationale: External communication — PII leakage + fraud exposure + governance failure. external_communication_risk cell aligned.
+  korean_anchor: loan_underwriting_kr.N7→External — Risk Disclosure + appeal channel + KoFIU reporting
 coverage_stats:
   causal_dimensions: 3
   causal_levels_total: 9

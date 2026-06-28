@@ -1,14 +1,14 @@
 """
-FDE Agent — Side-by-Side workflow diff viz (Mermaid 정적)
+FDE Agent — Side-by-Side workflow diff viz (Mermaid static)
 
-Phase 1 Devpost 영상 capture 용. 단일 HTML page에 좌/우 2 pane:
-  - Left  (Before): 원본 Mermaid BPMN — color overlay 없음, 진단 전 상태
-  - Right (After):  Must Fix mitigation 적용 — RED 노드 fill GREEN으로 전환 +
-                    노드 label에 ✓ + must_fix one-liner 박음
+For Phase 1 Devpost video capture. A single HTML page with left/right 2 panes:
+  - Left  (Before): Original Mermaid BPMN — no color overlay, pre-diagnosis state
+  - Right (After):  Must Fix mitigation applied — RED node fill switched to GREEN +
+                    node label prefixed with ✓ + must_fix one-liner appended
 
-본인 시각 비교 선호 (single-pane, tab/page 분리 회피) [feedback_visual-comparison-preference] 정합.
+Aligned with single-pane visual comparison preference (avoiding tab/page separation) [feedback_visual-comparison-preference].
 
-산출: scripts/output/{legal,loan}-side-by-side-v0.1.html
+Output: scripts/output/{legal,loan}-side-by-side-v0.1.html
 """
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ from ..agents import NodeMitigationDossier
 
 
 def _pick_must_fix_one_liner(dossier: NodeMitigationDossier) -> str | None:
-    """RED 노드 dossier에서 가장 강한 must_fix 1건 (axis 우선순위 + placeholder skip)."""
+    """Return the strongest must_fix action from a RED node dossier (axis priority order, placeholder skipped)."""
     for axis in ("general_failure", "handoff", "security"):
         for c in dossier.cells_by_axis.get(axis, []):
             for o in c.options:
@@ -33,10 +33,10 @@ def _pick_must_fix_one_liner(dossier: NodeMitigationDossier) -> str | None:
 
 def apply_must_fix_to_mermaid(mermaid_src: str, dossiers: list[NodeMitigationDossier]) -> tuple[str, dict[str, str]]:
     """
-    원본 Mermaid에서 RED 노드의:
-      1. style fill을 #ffcccc → #ccffcc 로 변경 (mitigation applied 시각화)
-      2. 노드 label에 ✓ MITIGATED prefix + must_fix one-liner suffix 박음
-    return: (변경된 mermaid_src, {node_id: applied_action})
+    For each RED node in the original Mermaid source:
+      1. Change style fill from #ffcccc → #ccffcc (visualize mitigation applied)
+      2. Prefix the node label with ✓ MITIGATED + append the must_fix one-liner as suffix
+    return: (modified mermaid_src, {node_id: applied_action})
     """
     out = mermaid_src
     applied: dict[str, str] = {}
@@ -47,14 +47,14 @@ def apply_must_fix_to_mermaid(mermaid_src: str, dossiers: list[NodeMitigationDos
         if not action:
             continue
         applied[d.node_id] = action
-        # (1) style fill 변경 — RED → GREEN
+        # (1) Change style fill — RED → GREEN
         out = re.sub(
             rf"(style\s+{re.escape(d.node_id)}\s+fill\s*:\s*)#ffcccc",
             r"\1#ccffcc",
             out,
         )
-        # (2) 노드 label 갱신 — trapezoid `Nxx[/"..."/]` 안의 텍스트 앞뒤에 ✓ + fix 박음
-        #     Mermaid는 동일 노드 정의가 한 번만 등장한다고 가정 (sample 검증됨)
+        # (2) Update node label — prepend ✓ and append fix text inside trapezoid `Nxx[/"..."/]`
+        #     Assumes each node definition appears only once in Mermaid source (verified in samples)
         snippet_fix = action[:80].replace('"', "'").replace("\n", " ")
         out = re.sub(
             rf'({re.escape(d.node_id)}\[/")(.+?)("/\])',
@@ -81,7 +81,7 @@ def render_side_by_side_html(
         for nid, action in applied.items()
     )
     if not applied_lines:
-        applied_lines = "<li><i>(RED 노드에 Must Fix 옵션이 정의된 ontology cell이 없음)</i></li>"
+        applied_lines = "<li><i>(No ontology cell with a Must Fix option defined for this RED node)</i></li>"
 
     return _TEMPLATE.format(
         title=html.escape(title),
@@ -168,15 +168,15 @@ _TEMPLATE = """<!DOCTYPE html>
 </header>
 <main>
   <section class="before">
-    <h2>Before <span class="badge">진단 전 — 원본 BPMN</span></h2>
-    <div class="caption">고객사가 제출한 워크플로우. AI 노드에 어떤 risk가 있는지 모름.</div>
+    <h2>Before <span class="badge">Pre-diagnosis — Original BPMN</span></h2>
+    <div class="caption">Workflow submitted by the client. Risk in AI nodes unknown.</div>
     <div class="mermaid">
 {before_mermaid}
     </div>
   </section>
   <section class="after">
     <h2>After <span class="badge">Must Fix Applied</span></h2>
-    <div class="caption">FDE Agent 진단 결과 RED 노드에 Must Fix 1개씩 적용. RED → GREEN 전환.</div>
+    <div class="caption">FDE Agent diagnosis applied one Must Fix per RED node. RED → GREEN transition.</div>
     <div class="mermaid">
 {after_mermaid}
     </div>
@@ -188,8 +188,8 @@ _TEMPLATE = """<!DOCTYPE html>
     {applied_lines}
   </ul>
   <div class="video-hint">
-    Devpost capture hint: Before/After 두 pane을 single shot으로 capture. RED → GREEN 색 변화 + ✓ MITIGATED 라벨이 한눈에 비교됨.
-    Recommend + Optional 옵션은 interactive heatmap HTML의 dossier panel에서 추가 시연.
+    Devpost capture hint: Capture both Before/After panes in a single shot. RED → GREEN color change + ✓ MITIGATED label visible at a glance.
+    Recommend + Optional options can be further demonstrated in the dossier panel of the interactive heatmap HTML.
   </div>
 </footer>
 <script>
@@ -215,14 +215,14 @@ if __name__ == "__main__":
             "sample_source": "legal",
             "md_path": SAMPLES_DIR / "legal-contract-review-v0.1.md",
             "title": "FDE Agent — Vendor Contract Review · Before / After",
-            "subtitle": "Phase 1 Devpost capture · Must Fix 적용 시각화",
+            "subtitle": "Phase 1 Devpost capture · Must Fix mitigation visualization",
         },
         {
             "key": "loan",
             "sample_source": "korean_loan",
             "md_path": SAMPLES_DIR / "loan-underwriting-kr-v0.1.md",
             "title": "FDE Agent — Korean Loan Underwriting · Before / After",
-            "subtitle": "한국 금융 vertical · K-PIPA / 공정대출법 / Article 22-2 Must Fix 적용",
+            "subtitle": "Korean financial vertical · K-PIPA / Fair Lending Act / Article 22-2 Must Fix applied",
         },
     ]
 

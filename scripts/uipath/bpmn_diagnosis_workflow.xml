@@ -3,10 +3,10 @@
   FDE Agent — Pre-Deployment Diagnosis Workflow (BPMN 2.0)
   =================================================================
   Phase 2 UiPath AgentHack Track 2 artifact.
-  Hero Moment scene 정합 (scripts/output/hero-moment-scene-v0.1.md, 5 beats).
-  Maestro BPMN import 대상. UiPath Labs access 수령 후 Maestro Studio에 import.
+  Hero Moment scene alignment (scripts/output/hero-moment-scene-v0.1.md, 5 beats).
+  Target for Maestro BPMN import. Import into Maestro Studio once UiPath Labs access is received.
 
-  9-step pipeline (Hero Moment scene 정합 보존):
+  9-step pipeline (preserving Hero Moment scene alignment):
     Start
     => Task: BPMN Parser (UiPath Document Understanding IDP)
     => Exclusive Gateway: AI intervention nodes >= 1?
@@ -65,7 +65,7 @@
       <bpmn:outgoing>Flow_Parse_to_AIGate</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <bpmn:exclusiveGateway id="Gateway_AI_Intervention" name="AI 개입 노드 ≥ 1?" default="Flow_AI_None">
+    <bpmn:exclusiveGateway id="Gateway_AI_Intervention" name="AI Intervention Nodes ≥ 1?" default="Flow_AI_None">
       <bpmn:incoming>Flow_Parse_to_AIGate</bpmn:incoming>
       <bpmn:outgoing>Flow_AI_Yes</bpmn:outgoing>
       <bpmn:outgoing>Flow_AI_None</bpmn:outgoing>
@@ -102,7 +102,7 @@
       <bpmn:outgoing>Flow_Security_to_Join</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <bpmn:serviceTask id="Task_RiskDiag_Handoff" name="Risk Diagnosis — handoff (★ 본인 IP)">
+    <bpmn:serviceTask id="Task_RiskDiag_Handoff" name="Risk Diagnosis — handoff (★ Proprietary IP)">
       <bpmn:documentation>
         Sub-Agent 2 axis 3 — Handoff Quantification Framework moat.
         Runtime metrics: IPS (Intent Preservation Score), Confidence Decay, LLM-as-a-Judge alignment.
@@ -133,9 +133,9 @@
     <bpmn:serviceTask id="Task_Mitigation" name="Mitigation Recommend (Multi-Option)">
       <bpmn:documentation>
         Sub-Agent 5. Per RED node × 3 options (Must Fix / Recommend / Optional) +
-        5-dim trade-off matrix (Risk Δ / Cost / Speed Δ / Op복잡도 / Impl effort) +
-        Cumulative Scenario 3종 (Minimum / Balanced / Maximum Safety).
-        Knowledge: MIT Mitigation Taxonomy (831 항목) + OWASP prevention + 산업 best practice.
+        5-dim trade-off matrix (Risk Δ / Cost / Speed Δ / Op Complexity / Impl effort) +
+        Cumulative Scenario — 3 types (Minimum / Balanced / Maximum Safety).
+        Knowledge: MIT Mitigation Taxonomy (831 items) + OWASP prevention + industry best practices.
       </bpmn:documentation>
       <bpmn:incoming>Flow_RAG_to_Mitigation</bpmn:incoming>
       <bpmn:outgoing>Flow_Mitigation_to_HITLGate</bpmn:outgoing>
@@ -161,14 +161,14 @@
       Action Center renders hitl_mockup.html template:
         - RED node dossier (failure mode + AIID citation + standard mapping)
         - Multi-Option mitigation table (3 options × 5-dim trade-off)
-        - K-PIPA Article 22-2 (AI 거부권) text 명시
+        - K-PIPA Article 22-2 (AI right to object) text disclosed
         - Approve / Modify buttons → BPMN re-deploy (Loop B-Symbolic)
     -->
     <bpmn:userTask id="Task_ActionCenter_HITL" name="Action Center HITL (Consultant Review)">
       <bpmn:documentation>
-        Hero Moment scene Beat d~e 시각화.
+        Hero Moment scene Beat d~e visualization.
         Form: hitl_mockup.html (3-column Multi-Option + K-PIPA §22-2 disclosure).
-        Approver role: consultant / domain SME (legal: 변호사, loan: 심사역 / 컴플라이언스 담당자).
+        Approver role: consultant / domain SME (legal: attorney, loan: underwriter / compliance officer).
         Audit trail: approver_id + applied_options + timestamp → EU AI Act Annex III evidence.
       </bpmn:documentation>
       <bpmn:incoming>Flow_HITL_Yes</bpmn:incoming>
@@ -197,7 +197,7 @@
       <bpmn:outgoing>Flow_Join_to_Render</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
-    <bpmn:serviceTask id="Task_Heatmap_Render" name="Heatmap + Report 생성">
+    <bpmn:serviceTask id="Task_Heatmap_Render" name="Heatmap + Report Generation">
       <bpmn:documentation>
         scripts/heatmap/render.py + scripts/output/executive_summary.py.
         Outputs: {sample}-heatmap-v0.1.html (D3.js + Mermaid CDN, dossier popup)
@@ -210,9 +210,9 @@
 
     <bpmn:serviceTask id="Task_RPA_Email" name="RPA: Email Report (audit trail)">
       <bpmn:documentation>
-        UiPath RPA send-email step. Recipient: client CDO/CIO + 컴플라이언스 담당자.
+        UiPath RPA send-email step. Recipient: client CDO/CIO + compliance officer.
         Attachments: heatmap.html, executive-summary.md, side-by-side-diff.html.
-        Audit trail: 금감원 검사 / EU AI Act Annex III evidence 영구 보존 (UiPath Action Center log).
+        Audit trail: FSS inspection / EU AI Act Annex III evidence permanently retained (UiPath Action Center log).
       </bpmn:documentation>
       <bpmn:incoming>Flow_Render_to_Email</bpmn:incoming>
       <bpmn:outgoing>Flow_Email_to_End</bpmn:outgoing>

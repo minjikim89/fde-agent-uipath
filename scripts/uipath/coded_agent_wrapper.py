@@ -11,7 +11,7 @@ reloaded BGE-M3 every call, broke silently on report-format drift, and needed
 subprocess-spawn rights inside the UiPath container. The Coded Agent and the
 ADK/Rapid path now share the SAME core; only the brain policy differs.
 
-UiPath Python SDK 표준 entry point:
+UiPath Python SDK standard entry point:
     def run(input_payload: dict) -> dict
 
 Input payload schema:

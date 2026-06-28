@@ -1,24 +1,24 @@
 """
 FDE Agent — Sub-Agent 5: Mitigation Recommender (v0.1)
 
-본 모듈은 mapping-ontology-v0.1.yaml (v0.3c, 36 cells) 위에 작동.
-RED 노드 input → axis별 cell lookup → Multi-Option mitigation (Must Fix / Recommend / Optional) + 5차원 trade-off score (0~5) emit.
+This module operates on mapping-ontology-v0.1.yaml (v0.3c, 36 cells).
+RED node input → per-axis cell lookup → Multi-Option mitigation (Must Fix / Recommend / Optional) + 5-dimension trade-off score (0~5) emit.
 
-5차원 trade-off:
-  - risk_delta        (negative = risk 감소량의 absolute 크기, 0~5)
-  - cost              (운영·구현 비용, 1=낮음 5=높음)
-  - speed_delta       (throughput 영향, 1=무시 5=큰 영향)
-  - op_complexity     (운영 복잡도, 1=낮음 5=높음)
-  - impl_effort       (구현 effort, 1=낮음 5=높음)
+5-dimension trade-off:
+  - risk_delta        (negative = absolute magnitude of risk reduction, 0~5)
+  - cost              (operational/implementation cost, 1=low 5=high)
+  - speed_delta       (throughput impact, 1=negligible 5=significant)
+  - op_complexity     (operational complexity, 1=low 5=high)
+  - impl_effort       (implementation effort, 1=low 5=high)
 
-한국 컨텍스트 우선:
-  - loan 노드: sample_source=korean_loan cells 우선 retrieval (KoFIU / 공정대출법 / K-PIPA)
-  - legal 노드: sample_source=legal cells 우선
+Korean context priority:
+  - loan node: prioritize sample_source=korean_loan cells (KoFIU / Fair Loan Act / K-PIPA)
+  - legal node: prioritize sample_source=legal cells
 
-설계 결정 (ontology cell schema 정합 유지):
-  - mitigation_options 의 (must_fix / recommend / optional) key 그대로 emit
-  - 각 옵션에 action / rationale / scores 첨부
-  - heuristic_source / risk_score 등 ontology field 보존 → audit trail 가능
+Design decisions (maintaining ontology cell schema consistency):
+  - emit mitigation_options (must_fix / recommend / optional) keys as-is
+  - attach action / rationale / scores to each option
+  - preserve heuristic_source / risk_score and other ontology fields → enables audit trail
 """
 from __future__ import annotations
 
@@ -30,13 +30,15 @@ from typing import Iterable
 import yaml
 
 
-# 기본 ontology 경로 (repo 상대)
+# Default ontology path (relative to repo)
 DEFAULT_ONTOLOGY = Path(__file__).parent.parent / "data" / "mapping-ontology-v0.1.yaml"
 
 
 AXES = ("general_failure", "security", "handoff")
 
-# 한국 컨텍스트 우선 키워드 (한국 영업 wedge 강화)
+# Korean context priority keywords (strengthens Korean business wedge)
+# Intentional Korean: regulatory-term matchers for the Korean financial vertical;
+# matched against ontology cell text. Must stay Korean to match Korean input.
 KOREAN_PRIORITY_KEYWORDS = (
     "KoFIU", "K-PIPA", "공정대출법", "신용정보법", "외환관리법", "자금세탁",
     "보이스피싱", "오픈뱅킹", "주민등록", "한글", "KCB", "NICE", "금감원",
@@ -48,9 +50,9 @@ KOREAN_PRIORITY_KEYWORDS = (
 # Trade-off scoring heuristics
 # =============================================================
 #
-# ontology에 정량값이 없으므로, tier (must_fix/recommend/optional) 기본값 +
-# action 텍스트 keyword로 보정. 추후 sample markdown의 실제 trade-off matrix
-# (legal v0.2 § Multi-Option Mitigations)를 ground-truth로 fine-tune 가능.
+# No quantitative values in the ontology, so tier (must_fix/recommend/optional) baselines
+# are nudged by action text keywords. Future: fine-tune against the actual trade-off matrix
+# in sample markdown (legal v0.2 § Multi-Option Mitigations) as ground truth.
 
 _TIER_BASELINE = {
     "must_fix":  dict(risk_delta=3.0, cost=2, speed_delta=2, op_complexity=2, impl_effort=2),
@@ -58,9 +60,9 @@ _TIER_BASELINE = {
     "optional":  dict(risk_delta=1.0, cost=4, speed_delta=2, op_complexity=4, impl_effort=4),
 }
 
-# action 텍스트 keyword에 따른 ± 보정 (각 차원별 nudge)
+# ± adjustment by action text keyword (per-dimension nudge)
 _KEYWORD_NUDGES: list[tuple[str, dict]] = [
-    # 비용·effort up
+    # cost/effort up
     ("ensemble",            dict(cost=+1, impl_effort=+1, risk_delta=+0.5)),
     ("fine-tune",           dict(cost=+1, impl_effort=+2, risk_delta=+0.5)),
     ("retrain",             dict(cost=+1, impl_effort=+1)),
@@ -68,7 +70,7 @@ _KEYWORD_NUDGES: list[tuple[str, dict]] = [
     ("durable workflow",    dict(impl_effort=+1, op_complexity=+1)),
     ("federated",           dict(cost=+1, impl_effort=+2, op_complexity=+2)),
     ("multi-factor",        dict(cost=+1, impl_effort=+1, risk_delta=+0.5)),
-    # 사람 개입 → cost+speed
+    # human involvement → cost+speed
     ("attorney",            dict(cost=+1, speed_delta=+1)),
     ("심사역",              dict(cost=+1, speed_delta=+1)),
     ("변호사",              dict(cost=+1, speed_delta=+1)),
@@ -84,7 +86,7 @@ _KEYWORD_NUDGES: list[tuple[str, dict]] = [
     ("monitor",             dict(risk_delta=-0.5)),
     ("sample",              dict(risk_delta=-0.5, cost=-1)),
     ("dashboard",           dict(impl_effort=+1, op_complexity=+1)),
-    # 한국 규제 컨텍스트 → risk Δ↑ (compliance value 큼)
+    # Korean regulatory context → risk Δ↑ (high compliance value)
     ("K-PIPA",              dict(risk_delta=+0.5)),
     ("공정대출법",          dict(risk_delta=+0.5)),
     ("KoFIU",               dict(risk_delta=+0.5)),
@@ -93,7 +95,7 @@ _KEYWORD_NUDGES: list[tuple[str, dict]] = [
 
 
 # =============================================================
-# Data classes (HTML renderer + e2e wiring과 호환)
+# Data classes (compatible with HTML renderer + e2e wiring)
 # =============================================================
 
 @dataclass
@@ -101,9 +103,9 @@ class MitigationOption:
     tier: str                       # must_fix / recommend / optional
     action: str
     rationale: str
-    risk_delta: float               # 0~5 (감소량 크기)
+    risk_delta: float               # 0~5 (magnitude of risk reduction)
     cost: int                       # 1~5
-    speed_delta: int                # 1~5 (throughput 영향)
+    speed_delta: int                # 1~5 (throughput impact)
     op_complexity: int              # 1~5
     impl_effort: int                # 1~5
 
@@ -140,7 +142,7 @@ class NodeMitigationDossier:
     node_id: str
     sample_source: str              # legal / korean_loan
     color: str                      # RED / YELLOW
-    aggregate_risk: float           # axis별 risk_score 평균
+    aggregate_risk: float           # average risk_score across axes
     cells_by_axis: dict[str, list[CellDiagnosis]] = field(default_factory=dict)
     summary: dict = field(default_factory=dict)
 
@@ -170,7 +172,7 @@ class NodeMitigationDossier:
 
 class SubAgent5MitigationRecommender:
     """
-    Lookup-based recommender. ontology v0.3c의 mitigation_options 그대로 emit + 5차원 score 부여.
+    Lookup-based recommender. Emits mitigation_options from ontology v0.3c as-is and assigns a 5-dimension score.
     """
 
     def __init__(self, ontology_path: str | Path | None = None):
@@ -189,8 +191,8 @@ class SubAgent5MitigationRecommender:
     def diagnose_node(self, node_id: str, sample_source: str, color: str = "RED") -> NodeMitigationDossier:
         """
         Single node → NodeMitigationDossier.
-        sample_source: 'legal' or 'korean_loan'. 한국 컨텍스트 우선 retrieval은
-        sample_source 기반.
+        sample_source: 'legal' or 'korean_loan'. Korean context priority retrieval
+        is based on sample_source.
         """
         cells = self._cells_for_node(node_id, sample_source)
         cells_by_axis: dict[str, list[CellDiagnosis]] = {a: [] for a in AXES}
@@ -222,16 +224,16 @@ class SubAgent5MitigationRecommender:
 
     def raw_cells_for_node(self, node_id: str, sample_source: str) -> list[dict]:
         """
-        Aggregator (scripts/agents/aggregator.py)는 raw ontology cell dict 형태를 input으로
-        받는다 (primary_failure_mode / primary_handoff_risk / primary_threats 등 ontology field).
-        본 헬퍼는 graph node id + sample_source → 매칭 raw cells을 그대로 노출 — aggregator wiring 용.
+        The aggregator (scripts/agents/aggregator.py) takes raw ontology cell dicts as input
+        (primary_failure_mode / primary_handoff_risk / primary_threats and other ontology fields).
+        This helper exposes matched raw cells for a given graph node id + sample_source — for aggregator wiring.
         """
         return self._cells_for_node(node_id, sample_source)
 
     def diagnosis_dict_for_node(self, node, sample_source: str) -> dict:
         """
-        aggregator.aggregate_node()가 기대하는 diagnosis dict shape으로 변환.
-        node: parser.Node (id, label, ai_mode 등)
+        Converts to the diagnosis dict shape expected by aggregator.aggregate_node().
+        node: parser.Node (id, label, ai_mode, etc.)
         """
         raw_cells = self.raw_cells_for_node(node.id, sample_source)
         cells_by_axis: dict[str, list[dict]] = {a: [] for a in AXES}
@@ -248,16 +250,16 @@ class SubAgent5MitigationRecommender:
 
     def _cells_for_node(self, node_id: str, sample_source: str) -> list[dict]:
         """
-        node_id 매칭 + sample_source 우선 retrieval.
-        ontology cell의 `node` field는 형태가 다양함:
+        Matches node_id and retrieves with sample_source priority.
+        The ontology cell `node` field has various forms:
           - 'N2_clause_extraction', 'N5a_auto_approve' (legal)
           - 'N6_llm_risk_analysis', 'loan_N6_handoff' (loan)
-        매칭 규칙:
-          1. node id가 cell.node 의 leading id token과 일치
-          2. sample_source field가 일치하거나 (없으면 default 'legal')
-        한국 우선:
-          - sample_source='korean_loan' 요청 시: korean_loan cells만 (없으면 fallback unspecified)
-          - 'legal' 요청 시: legal cells (sample_source 없으면 default legal)
+        Matching rules:
+          1. node id matches the leading id token of cell.node
+          2. sample_source field matches (defaults to 'legal' if absent)
+        Korean priority:
+          - if sample_source='korean_loan': korean_loan cells only (fallback to unspecified if none)
+          - if 'legal': legal cells (default legal if sample_source absent)
         """
         target_id = self._normalize_node_id(node_id)
         out: list[dict] = []
@@ -271,12 +273,12 @@ class SubAgent5MitigationRecommender:
                 continue
             out.append(c)
 
-        # 정렬: axis 우선순위 (general_failure → security → handoff) — 한국 컨텍스트는
-        # 통상 handoff에 더 강하므로 마지막에 spotlight되도록 (presentation order)
+        # Sort by axis priority (general_failure → security → handoff) — Korean context
+        # typically stronger in handoff, so it's spotlighted last (presentation order)
         axis_rank = {a: i for i, a in enumerate(AXES)}
         out.sort(key=lambda c: axis_rank.get(c.get("axis", ""), 99))
 
-        # Korean 우선 — 동일 axis 내에서는 한국 키워드가 description에 있는 cell을 위로
+        # Korean priority — within the same axis, cells with Korean keywords in their description float to top
         if sample_source == "korean_loan":
             out.sort(key=lambda c: 0 if self._has_korean_keyword(c) else 1)
         return out
@@ -284,16 +286,16 @@ class SubAgent5MitigationRecommender:
     @staticmethod
     def _extract_cell_node_id(cell_node_field: str) -> str:
         """
-        Ontology cell.node field → graph node id 형태로 정규화.
+        Normalizes an ontology cell.node field to graph node id form.
 
-        예시:
+        Examples:
           'N2_clause_extraction'      → 'N2'
           'N2_eKYC'                   → 'N2'   (mixed-case suffix OK)
           'N3_AML_screening'          → 'N3'   (uppercase token suffix OK)
           'N4_credit_scoring_ACS'     → 'N4'   (trailing uppercase token OK)
-          'N5a_auto_approve'          → 'N5A'  (numeric+alpha id 보존)
+          'N5a_auto_approve'          → 'N5A'  (numeric+alpha id preserved)
           'loan_N6_handoff'           → 'N6'
-        규칙: 'loan_' prefix 제거 + 첫 '_' 전 토큰만 추출. case-insensitive.
+        Rule: strip 'loan_' prefix + extract only the first token before '_'. case-insensitive.
         """
         if not cell_node_field:
             return ""
@@ -305,7 +307,7 @@ class SubAgent5MitigationRecommender:
 
     @staticmethod
     def _normalize_node_id(node_id: str) -> str:
-        """parser의 node id (e.g., 'N2', 'D1')를 cell lookup용으로 normalize."""
+        """Normalizes a parser node id (e.g., 'N2', 'D1') for cell lookup."""
         s = node_id.strip()
         if s.startswith("loan_"):
             s = s[len("loan_"):]
@@ -369,9 +371,9 @@ class SubAgent5MitigationRecommender:
     def _cell_mitigation_options(self, cell: dict) -> list[MitigationOption]:
         """
         cell.mitigation_options (must_fix/recommend/optional) → MitigationOption × N.
-        ontology cell에 mitigation_options가 없으면 (mitigation_options_ref만 있으면)
-        cell.risk_score 기반 placeholder option 1건 emit (해당 셀의 ontology refresh가
-        outstanding함을 표시).
+        If the ontology cell has no mitigation_options (only mitigation_options_ref),
+        emit one placeholder option based on cell.risk_score (indicating that the ontology
+        refresh for this cell is outstanding).
         """
         mit = cell.get("mitigation_options", {}) or {}
         out: list[MitigationOption] = []
@@ -389,7 +391,7 @@ class SubAgent5MitigationRecommender:
                 **scores,
             ))
         if not out and cell.get("mitigation_options_ref"):
-            # cell schema 정합 — placeholder
+            # cell schema alignment — placeholder
             ref = cell["mitigation_options_ref"]
             out.append(MitigationOption(
                 tier="must_fix",
@@ -402,12 +404,12 @@ class SubAgent5MitigationRecommender:
     @staticmethod
     def _compute_scores(tier: str, action: str, cell: dict) -> dict:
         """
-        tier baseline + action keyword nudge로 5차원 score 도출.
-        cell의 risk_score가 높을수록 must_fix의 risk_delta↑ (high-risk cell 강한 mitigation 가정).
+        Derives a 5-dimension score from tier baseline + action keyword nudge.
+        Higher cell risk_score → higher must_fix risk_delta (assumes stronger mitigation for high-risk cells).
         """
         base = dict(_TIER_BASELINE.get(tier, _TIER_BASELINE["recommend"]))
 
-        # cell risk_score 기반 risk_delta 보정
+        # risk_delta adjustment based on cell risk_score
         risk = cell.get("risk_score")
         if isinstance(risk, (int, float)):
             if risk >= 4.5 and tier == "must_fix":

@@ -7,36 +7,36 @@ formula:
   Under-Use Gap   = max(0, -ConfDecay)  when node_a.confidence > 0.9
 
 thresholds (ontology spec):
-  Over-Trust Gap > 0.2 → ALERT: downstream이 upstream uncertainty 무시
-  Under-Use Gap  > 0.2 → WARNING: downstream이 confident upstream을 underuse
+  Over-Trust Gap > 0.2 → ALERT: downstream ignores upstream uncertainty
+  Under-Use Gap  > 0.2 → WARNING: downstream underuses a confident upstream
   abs(decay) ≤ 0.1     → healthy
 
-requirement: 각 sub-agent output에 confidence score attach 필수
+requirement: each sub-agent output must attach a confidence score
 
-v0.2 — 4-source confidence aggregation (외부 review 채택):
+v0.2 — 4-source confidence aggregation (adopted from external review):
   effective_conf = 0.3 * logprobs_proxy
                  + 0.3 * self_reflection
                  + 0.2 * tool_exec_clarity
                  + 0.2 * (1.0 - timeout_signal)
-  단일 logprobs 대신 4-source weighted sum → single-point fragility 회피.
-  Phoenix span attribute로 4개 분리 emit 가능 (disagreement 시각화 자료).
+  4-source weighted sum instead of single logprobs → avoids single-point fragility.
+  Can emit all 4 sources as separate Phoenix span attributes (visualization for disagreement).
 """
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
 
-OVER_TRUST_UPSTREAM_MAX = 0.8     # over-trust gap만 적용되는 upstream conf 상한
-UNDER_USE_UPSTREAM_MIN = 0.9      # under-use gap만 적용되는 upstream conf 하한
+OVER_TRUST_UPSTREAM_MAX = 0.8     # upstream conf upper bound for over-trust gap only
+UNDER_USE_UPSTREAM_MIN = 0.9      # upstream conf lower bound for under-use gap only
 GAP_ALERT_THRESHOLD = 0.2
 HEALTHY_DECAY_MAX = 0.1
 
-# 4-source weighted sum (외부 review 채택)
+# 4-source weighted sum (adopted from external review)
 SOURCE_WEIGHTS = {
-    'logprobs_proxy':    0.3,    # exp(avg_token_logprob) — LLM 자체 신뢰 신호
-    'self_reflection':   0.3,    # "How confident are you? 0~1" 프롬프트 응답
-    'tool_exec_clarity': 0.2,    # tool 호출 return code 0 + structured output presence
-    'timeout_signal':    0.2,    # 호출 시간 임계 초과 정도 — 1.0=full timeout (분리 적용 시 1-x로 반전)
+    'logprobs_proxy':    0.3,    # exp(avg_token_logprob) — LLM self-confidence signal
+    'self_reflection':   0.3,    # response to "How confident are you? 0~1" prompt
+    'tool_exec_clarity': 0.2,    # tool call return code 0 + structured output presence
+    'timeout_signal':    0.2,    # degree of timeout exceedance — 1.0=full timeout (inverted as 1-x when applied)
 }
 
 
@@ -63,8 +63,8 @@ class ConfDecayResult:
 
 @dataclass
 class ConfidenceSources:
-    """4-source confidence inputs per node. 각 source는 [0,1] normalized.
-       timeout_signal만 inverse semantics (높을수록 신뢰 낮음 → 1-x 반전 후 가중)."""
+    """4-source confidence inputs per node. Each source is [0,1] normalized.
+       timeout_signal has inverse semantics (higher = less confidence → inverted as 1-x before weighting)."""
     logprobs_proxy: float = 0.0
     self_reflection: float = 0.0
     tool_exec_clarity: float = 0.0
@@ -77,7 +77,7 @@ class ConfidenceSources:
                 raise ValueError(f"{k} must be in [0,1]: {v}")
 
     def breakdown(self) -> dict:
-        """Phoenix span attribute로 박을 수 있는 dict 형태."""
+        """Dict form suitable for Phoenix span attributes."""
         return {
             'logprobs_proxy':    self.logprobs_proxy,
             'self_reflection':   self.self_reflection,
@@ -88,7 +88,7 @@ class ConfidenceSources:
 
 def combine_confidence_sources(sources: ConfidenceSources) -> tuple[float, dict]:
     """4-source weighted sum → effective confidence + per-source contribution dict.
-       timeout은 (1 - timeout_signal)로 반전 후 가중."""
+       timeout is inverted as (1 - timeout_signal) before weighting."""
     contrib = {
         'logprobs_proxy':    SOURCE_WEIGHTS['logprobs_proxy']    * sources.logprobs_proxy,
         'self_reflection':   SOURCE_WEIGHTS['self_reflection']   * sources.self_reflection,
@@ -103,13 +103,13 @@ def combine_confidence_sources(sources: ConfidenceSources) -> tuple[float, dict]
 
 @dataclass
 class ConfDecaySourcesResult:
-    """compute_confdecay_from_sources 결과 — base ConfDecayResult + 4-source breakdown."""
+    """Result of compute_confdecay_from_sources — base ConfDecayResult + 4-source breakdown."""
     base: 'ConfDecayResult'
     upstream_sources: ConfidenceSources
     downstream_sources: ConfidenceSources
     upstream_breakdown: dict
     downstream_breakdown: dict
-    source_disagreement: dict          # per-source: abs(up - dn) — 어느 source가 큰 변동 보이는지
+    source_disagreement: dict          # per-source: abs(up - dn) — which source shows the largest variation
 
     def to_breakdown_row(self) -> str:
         b = self.base
@@ -125,8 +125,8 @@ def compute_confdecay_from_sources(upstream_sources: ConfidenceSources,
                                    downstream_sources: ConfidenceSources,
                                    upstream_label: str,
                                    downstream_label: str) -> ConfDecaySourcesResult:
-    """4-source 입력 → effective conf weighted sum → 기존 compute_confdecay 위임.
-       Phoenix attribute로 박을 수 있는 per-source breakdown 동시 반환."""
+    """4-source inputs → effective conf weighted sum → delegates to compute_confdecay.
+       Also returns a per-source breakdown suitable for Phoenix span attributes."""
     up_eff, up_contrib = combine_confidence_sources(upstream_sources)
     dn_eff, dn_contrib = combine_confidence_sources(downstream_sources)
     base = compute_confdecay(up_eff, dn_eff, upstream_label, downstream_label)
@@ -184,11 +184,11 @@ def compute_confdecay(upstream_conf: float,
 
 
 # -----------------------------------------------------------------------------
-# unit test — ontology의 loan_N6→N7 핵심 사례 (low LLM conf → high auto-decision conf)
+# unit test — key loan_N6→N7 case from ontology spec (low LLM conf → high auto-decision conf)
 # -----------------------------------------------------------------------------
 if __name__ == "__main__":
-    # case 1: ontology spec의 silent escalation 시그니처
-    #         N6 LLM 위험 분석 0.70 → N7 자동 결정 0.99 = over-trust
+    # case 1: silent escalation signature from ontology spec
+    #         N6 LLM risk analysis 0.70 → N7 auto-decision 0.99 = over-trust
     r1 = compute_confdecay(0.70, 0.99, "loan_N6", "loan_N7")
     assert r1.band == "over_trust_alert", r1
     assert r1.alert
@@ -199,13 +199,13 @@ if __name__ == "__main__":
     assert r2.band == "healthy", r2
     assert not r2.alert
 
-    # case 3: under-use — confident upstream을 downstream이 underuse
+    # case 3: under-use — downstream underuses a confident upstream
     r3 = compute_confdecay(0.95, 0.60, "N3", "N5b")
     assert r3.band == "under_use_warning", r3
     assert r3.alert
     assert abs(r3.under_use_gap - 0.35) < 1e-6
 
-    # case 4: mild drift — alert는 아니지만 not healthy
+    # case 4: mild drift — not an alert but not healthy
     r4 = compute_confdecay(0.70, 0.85, "N4", "N5a")
     assert r4.band == "mild_drift", r4
     assert not r4.alert
@@ -217,11 +217,11 @@ if __name__ == "__main__":
     except ValueError:
         pass
 
-    # ----- v0.2 4-source 케이스 -----
+    # ----- v0.2 4-source cases -----
     print()
     print("--- 4-source confidence aggregation ---")
 
-    # case A: 모든 source healthy (0.9 effective)
+    # case A: all sources healthy (0.9 effective)
     src_healthy = ConfidenceSources(
         logprobs_proxy=0.90, self_reflection=0.90,
         tool_exec_clarity=0.95, timeout_signal=0.05)
@@ -230,26 +230,26 @@ if __name__ == "__main__":
     assert 0.85 <= eff_a <= 0.95, eff_a
     print(f"  case A — all healthy:      effective={eff_a:.3f} contrib={ {k: round(v,3) for k,v in contrib_a.items()} }")
 
-    # case B: logprobs 낮은데 self-reflection은 over-confident — single source fragility 시연
+    # case B: logprobs low but self-reflection over-confident — demonstrates single-source fragility
     src_disagree = ConfidenceSources(
         logprobs_proxy=0.50, self_reflection=0.95,
         tool_exec_clarity=0.80, timeout_signal=0.0)
     eff_b, contrib_b = combine_confidence_sources(src_disagree)
-    # 0.15 + 0.285 + 0.16 + 0.2 = 0.795 — single logprobs 0.50보다 robust한 0.79
+    # 0.15 + 0.285 + 0.16 + 0.2 = 0.795 — 0.79 is more robust than single-source logprobs 0.50
     assert 0.70 <= eff_b <= 0.85, eff_b
-    print(f"  case B — logprobs vs self-reflection 불일치: effective={eff_b:.3f}  "
-          f"(logprobs 0.50 단일 source보다 +{eff_b-0.50:.2f} robust)")
+    print(f"  case B — logprobs vs self-reflection mismatch: effective={eff_b:.3f}  "
+          f"(+{eff_b-0.50:.2f} more robust than single-source logprobs 0.50)")
 
-    # case C: tool execution 실패 — clarity 0.0
+    # case C: tool execution failure — clarity 0.0
     src_tool_fail = ConfidenceSources(
         logprobs_proxy=0.85, self_reflection=0.85,
         tool_exec_clarity=0.00, timeout_signal=0.05)
     eff_c, _ = combine_confidence_sources(src_tool_fail)
     # 0.255 + 0.255 + 0.0 + 0.19 = 0.70
     assert eff_c < 0.75, eff_c
-    print(f"  case C — tool 실패 (clarity=0): effective={eff_c:.3f}")
+    print(f"  case C — tool failure (clarity=0): effective={eff_c:.3f}")
 
-    # case D: timeout 발생 — timeout_signal=1.0
+    # case D: timeout occurred — timeout_signal=1.0
     src_timeout = ConfidenceSources(
         logprobs_proxy=0.85, self_reflection=0.85,
         tool_exec_clarity=0.85, timeout_signal=1.0)
@@ -258,7 +258,7 @@ if __name__ == "__main__":
     assert eff_d < 0.75, eff_d
     print(f"  case D — timeout (signal=1.0): effective={eff_d:.3f}")
 
-    # case E: loan_N6 → loan_N7 silent escalation w/ 4-source — over_trust_alert 재현
+    # case E: loan_N6 → loan_N7 silent escalation with 4-source — reproduces over_trust_alert
     up_src = ConfidenceSources(
         logprobs_proxy=0.65, self_reflection=0.72,
         tool_exec_clarity=0.80, timeout_signal=0.15)

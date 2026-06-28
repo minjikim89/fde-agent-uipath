@@ -1,13 +1,13 @@
 """
 FDE Agent — BPMN 2.0 XML Parser → TopologicalGraph
 
-본 모듈은 BPMN 2.0 XML 입력을 TopologicalGraph dataclass로 정규화한다.
-8 노드 유형 (분류 / 생성 / RAG / 도구호출 / 휴먼검수 / handoff / 의사결정 / 외부전송)으로 분류.
-ontology v0.3c (mapping-ontology-v0.1.yaml)의 node_type field와 호환되도록 설계.
+This module normalizes BPMN 2.0 XML input into a TopologicalGraph dataclass.
+Classifies into 8 node types (classification / generation / RAG / tool_call / human_review / handoff / decision / external_send).
+Designed for compatibility with the node_type field in ontology v0.3c (mapping-ontology-v0.1.yaml).
 
-핵심 export:
+Key exports:
   - Node, Edge, TopologicalGraph (dataclass)
-  - NODE_CATEGORIES (8 카테고리 정의)
+  - NODE_CATEGORIES (8-category definitions)
   - NodeCategory enum-like Literal
   - categorize_from_ontology_type(ontology_node_type: str) -> str
   - parse_bpmn_xml(xml_string: str) -> TopologicalGraph
@@ -22,19 +22,19 @@ from typing import Optional
 
 
 NODE_CATEGORIES = (
-    "classification",   # 분류 — LLM/ML classifier, OCR, name matching, scoring
-    "generation",       # 생성 — LLM free-text generation (letter, draft, summary)
+    "classification",   # classification — LLM/ML classifier, OCR, name matching, scoring
+    "generation",       # generation — LLM free-text generation (letter, draft, summary)
     "rag",              # RAG — vector retrieval over external corpus
-    "tool_call",        # 도구호출 — external API, deterministic tool, function call
-    "human_review",     # 휴먼검수 — HITL (Action Center, attorney review, manual underwriting)
+    "tool_call",        # tool_call — external API, deterministic tool, function call
+    "human_review",     # human_review — HITL (Action Center, attorney review, manual underwriting)
     "handoff",          # handoff — explicit transfer/edge node (rare as node, mostly as edge attribute)
-    "decision",         # 의사결정 — auto-decision engine, gateway with criteria
-    "external_send",    # 외부전송 — outbound communication (email, e-sign, rejection letter dispatch)
+    "decision",         # decision — auto-decision engine, gateway with criteria
+    "external_send",    # external_send — outbound communication (email, e-sign, rejection letter dispatch)
 )
 
 
 def categorize_from_ontology_type(ontology_node_type: str) -> str:
-    """Ontology의 node_type을 본 모듈의 8 카테고리로 정규화."""
+    """Normalize an ontology node_type into one of this module's 8 categories."""
     if not ontology_node_type:
         return "tool_call"
     t = ontology_node_type.lower()
@@ -57,27 +57,27 @@ def categorize_from_ontology_type(ontology_node_type: str) -> str:
 
 def infer_category_from_label(label: str, ai_mode: str) -> str:
     """
-    Mermaid·이미지 input은 ontology node_type metadata가 없으므로
-    label + ai_mode 휴리스틱으로 카테고리를 추정한다.
+    Mermaid and image inputs lack ontology node_type metadata,
+    so the category is inferred heuristically from label + ai_mode.
     """
     txt = f"{label} {ai_mode}".lower()
-    if "hitl" in txt or "action center" in txt or "변호사" in txt or "심사역" in txt or "human" in txt:
+    if "hitl" in txt or "action center" in txt or "attorney" in txt or "underwriter" in txt or "human" in txt:
         return "human_review"
-    if "rpa" in txt and ("send" in txt or "송부" in txt or "이메일" in txt or "통보" in txt):
+    if "rpa" in txt and ("send" in txt or "email" in txt or "notification" in txt):
         return "external_send"
-    if "e-signature" in txt or "약정" in txt or "송금" in txt or "sign-off" in txt:
+    if "e-signature" in txt or "agreement" in txt or "remittance" in txt or "sign-off" in txt:
         return "external_send"
     if "audit" in txt or "log" in txt or "rpa" in txt:
         return "tool_call"
-    if "거절" in txt or "letter" in txt or "draft" in txt or "counterproposal" in txt or "generation" in txt:
+    if "rejection" in txt or "letter" in txt or "draft" in txt or "counterproposal" in txt or "generation" in txt:
         return "generation"
-    if "decision" in txt or "심사 결정" in txt or "auto-approve" in txt or "approve" in txt:
+    if "decision" in txt or "review decision" in txt or "auto-approve" in txt or "approve" in txt:
         return "decision"
-    if "rag" in txt or "retrieve" in txt or "검색" in txt:
+    if "rag" in txt or "retrieve" in txt or "search" in txt:
         return "rag"
-    if "api" in txt or "도구" in txt or "redirect" in txt:
+    if "api" in txt or "tool" in txt or "redirect" in txt:
         return "tool_call"
-    if any(k in txt for k in ("classify", "분류", "ocr", "신원확인", "extract", "추출", "scoring", "평가", "risk flagging", "screening")):
+    if any(k in txt for k in ("classify", "ocr", "identity verification", "extract", "scoring", "evaluation", "risk flagging", "screening")):
         return "classification"
     return "tool_call"
 
@@ -142,7 +142,7 @@ class TopologicalGraph:
         return out
 
 
-# BPMN 2.0 XML namespaces (호환성 위해 다수 박음)
+# BPMN 2.0 XML namespaces (multiple included for compatibility)
 BPMN_NS = {
     "bpmn": "http://www.omg.org/spec/BPMN/20100524/MODEL",
     "bpmn2": "http://www.omg.org/spec/BPMN/20100524/MODEL",
@@ -150,7 +150,7 @@ BPMN_NS = {
 }
 
 
-# BPMN element → 8 카테고리 매핑
+# BPMN element → 8-category mapping
 BPMN_ELEMENT_CATEGORY = {
     "task": "tool_call",
     "userTask": "human_review",
@@ -176,8 +176,8 @@ def parse_bpmn_xml(xml_string: str, sample_id: str = "bpmn") -> TopologicalGraph
     """
     BPMN 2.0 XML → TopologicalGraph.
 
-    노드 타입을 8 카테고리로 직접 매핑. 색상 정보는 BPMN extensions
-    (`<bpmn:documentation>` 안의 "RED"/"YELLOW"/"GREEN" 키워드)에서 추출.
+    Maps node types directly to 8 categories. Color information is extracted from BPMN extensions
+    ("RED"/"YELLOW"/"GREEN" keywords inside `<bpmn:documentation>`).
     """
     root = ET.fromstring(xml_string)
     graph = TopologicalGraph(sample_id=sample_id, metadata={"source_format": "bpmn_xml"})
@@ -224,7 +224,7 @@ def parse_bpmn_xml(xml_string: str, sample_id: str = "bpmn") -> TopologicalGraph
                 label=child.attrib.get("name") or None,
             ))
         elif tag in ("startEvent", "endEvent"):
-            # event는 graph 외곽 marker로만 처리 (8 카테고리 외)
+            # events are treated as graph boundary markers only (outside the 8 categories)
             pass
 
     return graph
@@ -238,7 +238,7 @@ def parse_bpmn_file(path: str | Path, sample_id: Optional[str] = None) -> Topolo
 
 
 if __name__ == "__main__":
-    # 본 모듈은 stand-alone 실행 시 NODE_CATEGORIES + sample categorize 결과를 print.
+    # When run standalone, prints NODE_CATEGORIES + sample categorize results.
     print("NODE_CATEGORIES =", NODE_CATEGORIES)
     sample_ontology_types = [
         "llm_generation_structured",

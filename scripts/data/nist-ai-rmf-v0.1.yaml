@@ -43,8 +43,8 @@ functions:
         name: "Policies and Procedures for Third-Party AI"
         focus: "Vendor risk; supply-chain transparency; data provenance"
     fde_node_types:
-      - decision (의사결정)
-      - external_send (외부 통보)
+      - decision
+      - external_send
     typical_red_cells: ["loan_N7_general_failure", "loan_N9_general_failure"]
 
   - id: MAP
@@ -69,9 +69,9 @@ functions:
         name: "Impacts on Individuals, Groups, Communities, and Society"
         focus: "Disparate impact; vulnerable population effects; environmental"
     fde_node_types:
-      - classification (분류)
-      - generation (생성)
-      - RAG (검색 증강)
+      - classification
+      - generation
+      - RAG
     typical_red_cells: ["N1_general_failure", "N2_general_failure", "loan_N4_general_failure"]
 
   - id: MEASURE
@@ -93,8 +93,8 @@ functions:
         name: "Feedback Gathered and Assessed"
         focus: "End-user feedback; impacted community input"
     fde_node_types:
-      - human_review (휴먼 검수)
-      - handoff (노드 간 전이)
+      - human_review
+      - handoff
     typical_red_cells: ["N5a_general_failure", "loan_N6_general_failure"]
     handoff_metric_anchor: "axes.handoff.handoff_quantification_framework (IPS / Confidence Decay / LaaJ)"
 
@@ -117,9 +117,9 @@ functions:
         name: "Risk Treatment Activities Documented and Monitored"
         focus: "Incident response; rollback; continuous improvement"
     fde_node_types:
-      - tool_invocation (도구 호출)
-      - decision (의사결정)
-      - external_send (외부 통보)
+      - tool_invocation
+      - decision
+      - external_send
     typical_red_cells: ["loan_N7_general_failure", "loan_N9_general_failure", "N5a_general_failure"]
 
 # =============================================================
@@ -167,22 +167,23 @@ genai_profile_risks:
 # alongside Korean regulator-specific frameworks.
 
 korean_financial_anchor:
-  - korean_regulator: "금융감독원 (FSS)"
+  - korean_regulator: "Financial Supervisory Service (FSS)"
     rmf_alignment: ["GOVERN 1", "MAP 4", "MEASURE 3", "MANAGE 4"]
     note: |
-      금감원 'AI 모범규준' (2021) + 자동화 의사결정 분쟁 처리 framework이 NIST RMF 4 functions와
-      구조적으로 대응. FSS 검사 시 NIST RMF 정합 demonstrable 자산을 보유한 금융사는 due diligence
-      유리. FDE Agent 진단 deliverable에 NIST RMF function tagging 강제.
-  - korean_regulator: "금융위원회 (FSC) — 신용정보법/공정대출법"
+      FSS 'AI Best Practice Guidelines' (2021) + automated decision-making dispute resolution framework
+      aligns structurally with NIST RMF 4 functions. Financial institutions with demonstrable NIST RMF
+      alignment assets gain due diligence advantage during FSS audits. FDE Agent diagnostic deliverables
+      enforce NIST RMF function tagging.
+  - korean_regulator: "Financial Services Commission (FSC) — Credit Information Act / Fair Lending Act"
     rmf_alignment: ["GOVERN 6", "MAP 5", "MEASURE 2"]
     note: |
-      공정대출법 disparate impact 검증 → NIST MEASURE 2 fairness evaluation 정합.
-      신용정보법 Article 36-2 자동 의사결정 거부권 → GOVERN 1 정합.
-  - korean_regulator: "KoFIU (금융정보분석원)"
+      Fair Lending Act disparate impact validation → NIST MEASURE 2 fairness evaluation aligned.
+      Credit Information Act Article 36-2 automated decision-making opt-out right → GOVERN 1 aligned.
+  - korean_regulator: "KoFIU (Korea Financial Intelligence Unit)"
     rmf_alignment: ["GOVERN 6", "MANAGE 3"]
     note: |
-      AML pipeline의 vendor (KCB·NICE·NICEPay)에 대한 supply-chain risk 평가가 GOVERN 6 정합.
-      Real-time STR/CTR 보고 의무 → MANAGE 3 third-party monitoring 정합.
+      Supply-chain risk assessment for AML pipeline vendors (KCB, NICE, NICEPay) aligns with GOVERN 6.
+      Real-time STR/CTR reporting obligation → MANAGE 3 third-party monitoring aligned.
 
 coverage_stats:
   functions: 4

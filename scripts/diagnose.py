@@ -257,8 +257,8 @@ def _synth_diagnosis_text(diagnosis):
 
 
 def _synth_confidence(diagnosis, role):
-    # role: "upstream" -> LLM analytical node (낮은 conf realistic)
-    #       "downstream" -> auto-decision (높은 conf — over-trust pattern instantiation)
+    # role: "upstream" -> LLM analytical node (realistically low conf)
+    #       "downstream" -> auto-decision (high conf — over-trust pattern instantiation)
     risk_scores = []
     for cells in diagnosis['cells_by_axis'].values():
         for c in cells:
@@ -279,8 +279,8 @@ def _synth_confidence(diagnosis, role):
 
 
 def _build_handoff_pairs(diagnoses):
-    """diagnosis들의 handoff axis cells에서 upstream→current pair 추출.
-       upstream_dependency가 list면 각 원소마다 pair 생성."""
+    """Extracts upstream→current pairs from handoff axis cells of each diagnosis.
+       If upstream_dependency is a list, creates one pair per element."""
     pairs = []
     diag_by_node = {d['node']['id']: d for d in diagnoses}
     for d in diagnoses:
@@ -290,7 +290,7 @@ def _build_handoff_pairs(diagnoses):
                 continue
             ups = up_dep if isinstance(up_dep, list) else [up_dep]
             for up in ups:
-                # upstream_dependency는 노드 라벨 (e.g., "N2_clause_extraction" or "loan_N6_llm_risk_analysis")
+                # upstream_dependency is a node label (e.g., "N2_clause_extraction" or "loan_N6_llm_risk_analysis")
                 up_short = re.match(r'(?:loan_)?(N\w+?)(?:_|$)', up)
                 up_id = up_short.group(1) if up_short else up
                 pairs.append({
@@ -300,7 +300,7 @@ def _build_handoff_pairs(diagnoses):
                     'downstream_full': d['node']['function'][:50],
                     'cell': cell,
                     'downstream_diagnosis': d,
-                    'upstream_diagnosis': diag_by_node.get(up_id),  # 있을 수도 없을 수도
+                    'upstream_diagnosis': diag_by_node.get(up_id),  # may or may not exist
                 })
     return pairs
 
@@ -339,7 +339,7 @@ def _compute_metrics_for_pair(pair, sample_source):
         laaj_ctx,
         node_a={'id': pair['upstream_id'], 'type': 'upstream', 'output': upstream_text},
         node_b={'id': pair['downstream_id'], 'type': 'downstream', 'output': downstream_text},
-        backend='mock',   # production은 'auto' → claude CLI 자동 (sampling 10% 권장)
+        backend='mock',   # production: 'auto' → claude CLI automatic (10% sampling recommended)
     )
     return {'ips': ips_res, 'confdecay': cd_res, 'laaj': laaj_res, 'pair': pair}
 
@@ -387,7 +387,7 @@ def render_metrics_section(metric_rows, sample_name):
 
 def render_aggregated_section(aggregated):
     out = ['\n---\n# Aggregated Final Scores (Architecture §5 AGGREGATE)\n']
-    out.append('Weights: handoff=0.4 (본인 IP moat) · security=0.3 · general=0.3 · runtime metric boost (handoff axis) up to +1.5')
+    out.append('Weights: handoff=0.4 (proprietary IP moat) · security=0.3 · general=0.3 · runtime metric boost (handoff axis) up to +1.5')
     out.append('Color: ≥4.0 RED · 2.5–3.9 YELLOW · <2.5 GREEN\n')
     out.append('| Node | Final | Color | general | security | handoff_base | handoff+boost | Runtime alerts |')
     out.append('|---|---|---|---|---|---|---|---|')
