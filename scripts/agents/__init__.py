@@ -1,4 +1,4 @@
-"""FDE Agent — Sub-agents (Sub-Agent 5 Mitigation Recommender + Sub-Agent 6 Claude Peer Reviewer).
+"""FDE Agent — Sub-agents (Sub-Agent 5 Mitigation Recommender).
 
 Sub-agent re-exports are optional: a venue export build may strip a sub-agent
 (e.g. a lean build may omit an optional sub-agent). Guard each import so that

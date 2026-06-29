@@ -4,7 +4,7 @@ CrewAI 5-Role Wrap PoC (applying Blocker #5 conclusions).
 Decisions from Blocker #5 report (`_research/2026-05-25-crewai-phoenix-trace.md`):
   - Process.sequential primary, implicit parallel via async_execution=True
   - 5 fixed roles: BPMN Parser / Risk Diagnoser / Standards Mapper / AIID Retriever / Mitigation Recommender
-  - (optional) Sub-Agent 6 Peer Reviewer (Claude) — integrate after Phase 1 entry
+  - (optional) a peer-review pass — a possible future extension
   - Phoenix instrumentation: single line `phoenix.otel.register(auto_instrument=True)`
   - This PoC is an environment-agnostic skeleton — gracefully skips crewai/phoenix if not installed
 
@@ -125,7 +125,7 @@ tracer_provider = register(
 #   - openinference-instrumentation-crewai
 #   - openinference-instrumentation-litellm   (via LiteLLM in CrewAI ≥0.63)
 #   - (optional tracing instrumentation)
-#   - openinference-instrumentation-anthropic (Sub-Agent 6 Claude peer reviewer)
+#   - openinference-instrumentation-anthropic (optional tracing)
 """
 
 

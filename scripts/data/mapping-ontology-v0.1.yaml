@@ -121,7 +121,7 @@ handoff_quantification_framework:
       cost: "judge LLM call per handoff = $$ — recommend sampling rather than calling for every node (e.g., 10% spot-check)"
       output: "alignment score + reasoning + disagreement flags"
     use_in_diagnosis:
-      - "Natural extension of Sub-Agent 6 (Claude Peer Reviewer)"
+      - "Natural extension of an LLM peer-review pass"
       - "Arize Phoenix visualizes LaaJ score in Phase 1 Rapid Agent"
     arize_phoenix_integration:
       - "Embed all 3 types (IPS + ConfDecay + LaaJ) as Phoenix custom metrics"

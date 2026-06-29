@@ -279,7 +279,7 @@ that ships in this repo:
   ConfDecay **is** wired to the gateway boolean for this demo (the hero moment);
   IPS / LaaJ are design/offline and presented as such, not as live-path claims.
 - Phoenix/Arize observability is a **Rapid-track** layer; on this UiPath track the
-  Sub-Agent 6 critic verdict is surfaced directly and escalated to Action Center.
+  diagnosis engine's HITL gate (hitl_required) triggers the Action Center User Task; no separate LLM critic layer is shipped in this build.
 - We do **not** claim a multi-agent fan-out on the canvas (see §4). One governed
   Coded Agent computes three axes; the governance boundary is the platform story.
 - **The CrewAI crew does not run in the shipped demo.** A code review confirmed the

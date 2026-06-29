@@ -166,7 +166,7 @@ except ImportError:
 # is resolved by brain_factory.get_brain() from the BRAIN env var and is applied
 # ONLY at the orchestration layer (executive-summary narrative). The diagnosis
 # core itself is brain-agnostic. brain_factory is read-only reference here — we
-# do not modify it. NOTE: do NOT set FDE_RAPID on this path; the UiPath track is
+# do not modify it. NOTE: the UiPath track is
 # explicitly multi-model (Claude/OpenAI), selectable via the BRAIN env var.
 try:
     from agents.brain_factory import get_brain  # noqa: E402
@@ -238,7 +238,7 @@ def _resolve_brain(requested: str | None):
     Returns (brain_or_None, healthcheck_dict). Never raises — on any failure
     (factory absent, unknown selector, SDK missing) returns (None, {...}) so the
     deterministic diagnosis core still runs. The Rapid-path brain policy lives in
-    brain_factory; this UiPath path does NOT set FDE_RAPID, so Claude/OpenAI are
+    brain_factory; on this UiPath path Claude/OpenAI are
     legal selectors here.
     """
     if not BRAIN_FACTORY_AVAILABLE or get_brain is None:
@@ -246,7 +246,7 @@ def _resolve_brain(requested: str | None):
     try:
         brain = get_brain(requested) if requested else get_brain()
     except (ValueError, RuntimeError) as e:
-        # ValueError = unknown selector; RuntimeError = FDE_RAPID guard tripped.
+        # ValueError = unknown selector; otherwise falls back to MockBrain.
         return None, {"available": False, "reason": type(e).__name__}
     try:
         hc = brain.healthcheck()

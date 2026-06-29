@@ -46,7 +46,7 @@ SAMPLE_TITLES = {
 }
 
 # Module-level state populated by main(); module-level function defs below close
-# over these names. Stays None when the module is imported (e.g. by sub_agent_6
+# over these names. Stays None when the module is imported (e.g. by an importing module
 # for the red_nodes_from_diagnosis helper) so chroma / BGE-M3 are never loaded.
 ontology: dict = {}
 cells: list = []

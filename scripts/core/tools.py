@@ -312,7 +312,7 @@ def compute_handoff_metrics(diagnoses: list, sample_source: Optional[str], embed
 
 
 # =============================================================
-# 5) red_nodes — import-safe helper (kept stable for sub_agent_6)
+# 5) red_nodes — import-safe helper (kept import-safe)
 # =============================================================
 
 def red_nodes_from_diagnosis(diag_dict: dict, threshold: float = 4.0) -> list:
