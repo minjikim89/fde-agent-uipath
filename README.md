@@ -1,5 +1,8 @@
 # FDE Agent: Pre-Flight Check for Enterprise AI Workflows
 
+> 🏆 **3rd Prize — Maestro BPMN track, [UiPath AgentHack 2026](https://uipath-agenthack.devpost.com/)**
+> (333+ submissions from 104 countries; finalist presentation July 2026)
+
 > **UiPath AgentHack, Track 2: Maestro BPMN**
 > A BPMN-orchestrated agent that diagnoses *where an AI workflow will break*
 > before it ships, routes high-risk findings to a human via UiPath Action Center,
