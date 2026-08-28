@@ -1,19 +1,20 @@
 # FDE Agent: Pre-Flight Check for Enterprise AI Workflows
 
-> 🏆 **3rd Prize — Maestro BPMN track, [UiPath AgentHack 2026](https://uipath-agenthack.devpost.com/)**
-> (333+ submissions from 104 countries; finalist presentation July 2026)
-> · [Devpost submission](https://devpost.com/software/fde-agent-pre-flight-check-for-enterprise-ai-workflows)
+[![UiPath AgentHack 2026 — 3rd Prize](https://img.shields.io/badge/UiPath_AgentHack_2026-%F0%9F%8F%86_3rd_Prize_%C2%B7_Maestro_BPMN-D4A017?style=flat-square)](https://devpost.com/software/fde-agent-pre-flight-check-for-enterprise-ai-workflows)
+[![Devpost](https://img.shields.io/badge/Devpost-submission-003E54?style=flat-square&logo=devpost&logoColor=white)](https://devpost.com/software/fde-agent-pre-flight-check-for-enterprise-ai-workflows)
+[![UiPath Maestro](https://img.shields.io/badge/UiPath-Maestro_BPMN_+_Coded_Agent-FA4616?style=flat-square)](https://uipath-agenthack.devpost.com/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)](./scripts/uipath/pyproject.toml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-2ea44f?style=flat-square)](./LICENSE)
 
-> **UiPath AgentHack, Track 2: Maestro BPMN**
+> 🏆 **3rd Prize, Maestro BPMN track — [UiPath AgentHack 2026](https://uipath-agenthack.devpost.com/)**
+> (333+ submissions from 104 countries; finalist presentation, July 2026)
+
 > A BPMN-orchestrated agent that diagnoses *where an AI workflow will break*
 > before it ships, routes high-risk findings to a human via UiPath Action Center,
 > and emails an audit-trail report. **The thing we diagnose is a BPMN workflow
 > with AI inside it; the thing we ship is a BPMN workflow that performs that
 > diagnosis.** The diagnosis itself runs *as* a Maestro process. That isomorphism
 > is the whole idea.
-
-**License: MIT** (see [`LICENSE`](./LICENSE)). MIT is shown in the GitHub repo
-**About** sidebar (license visibility is a submission hard-requirement).
 
 ---
 
