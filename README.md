@@ -2,6 +2,7 @@
 
 > 🏆 **3rd Prize — Maestro BPMN track, [UiPath AgentHack 2026](https://uipath-agenthack.devpost.com/)**
 > (333+ submissions from 104 countries; finalist presentation July 2026)
+> · [Devpost submission](https://devpost.com/software/fde-agent-pre-flight-check-for-enterprise-ai-workflows)
 
 > **UiPath AgentHack, Track 2: Maestro BPMN**
 > A BPMN-orchestrated agent that diagnoses *where an AI workflow will break*
