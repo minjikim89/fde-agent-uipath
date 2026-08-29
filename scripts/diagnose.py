@@ -114,7 +114,11 @@ def parse_workflow(md_path):
 
 
 def retrieve_aiid(query, n=5):
-    """Side-effect: requires main() to have populated `model` and `inc_col`."""
+    """Side-effect: requires main() to have populated `model` and `inc_col`.
+
+    Returns [] in degraded mode (RAG stack or corpus unavailable)."""
+    if model is None or inc_col is None:
+        return []
     emb = model.encode([query], normalize_embeddings=True).tolist()[0]
     results = inc_col.query(query_embeddings=[emb], n_results=n)
     out = []
@@ -231,8 +235,19 @@ def render_dossier(d):
 # ontology v0.3 §handoff_quantification_framework
 # ---------------------------------------------------------------------------
 
+_degraded_embed_fn = None
+
+
 def _bge_embed_fn(text):
-    # BGE-M3 wrapper around the existing model object
+    # BGE-M3 wrapper around the existing model object; in degraded mode
+    # (no RAG stack) IPS falls back to the deterministic hash embed from
+    # metrics.ips so handoff metrics still compute.
+    global _degraded_embed_fn
+    if model is None:
+        if _degraded_embed_fn is None:
+            from metrics.ips import fallback_hash_embed_fn
+            _degraded_embed_fn = fallback_hash_embed_fn()
+        return _degraded_embed_fn(text)
     return model.encode([text], normalize_embeddings=True).tolist()[0]
 
 
@@ -431,16 +446,23 @@ def main():
 
     print(f'[2/5] Samples to process: {[name for name, _ in samples_to_run]}')
 
-    print('[3/5] Loading Chroma + BGE-M3...')
-    import chromadb
-    from sentence_transformers import SentenceTransformer
-    import torch
-    device = 'mps' if torch.backends.mps.is_available() else 'cpu'
-    t0 = time.time()
-    model = SentenceTransformer('BAAI/bge-m3', device=device)
-    client = chromadb.PersistentClient(path=str(CHROMA))
-    inc_col = client.get_collection('aiid_incidents')
-    print(f'  model + Chroma ready in {time.time()-t0:.1f}s')
+    print('[3/5] Loading Chroma + BGE-M3 (optional RAG)...')
+    try:
+        import chromadb
+        from sentence_transformers import SentenceTransformer
+        import torch
+        device = 'mps' if torch.backends.mps.is_available() else 'cpu'
+        t0 = time.time()
+        model = SentenceTransformer('BAAI/bge-m3', device=device)
+        client = chromadb.PersistentClient(path=str(CHROMA))
+        inc_col = client.get_collection('aiid_incidents')
+        print(f'  model + Chroma ready in {time.time()-t0:.1f}s')
+    except Exception as e:
+        # Degraded mode is a documented first-class path (requirements.txt):
+        # ontology scoring works without the optional RAG stack or a local corpus.
+        model = None
+        inc_col = None
+        print(f'  RAG unavailable ({type(e).__name__}: {e}) — ontology-only degraded mode')
 
     print('[4/5] Diagnosing RED nodes per sample...')
     all_results = []
@@ -449,6 +471,18 @@ def main():
         nodes = parse_workflow(sample_path)
         print(f'    parsed {len(nodes)} nodes')
         sample_source = 'korean_loan' if sample_name == 'loan' else 'legal'
+        # Anti-cheat: sample files carry structure only (no risk labels), so the
+        # color is derived here from ontology cell scores (risk_score >= 4.0 = RED
+        # banding), never read from the input document.
+        for n in nodes:
+            matched = cells_for_node(n['id'], sample_source_filter=sample_source)
+            top = 0.0
+            for c in matched:
+                try:
+                    top = max(top, float(c.get('risk_score', 0) or 0))
+                except (TypeError, ValueError):
+                    continue
+            n['predicted_color'] = 'RED' if top >= 4.0 else ('YELLOW' if top > 0 else 'GREEN')
         red_nodes = [n for n in nodes if n['predicted_color'] == 'RED']
         diagnoses = []
         for n in red_nodes:
