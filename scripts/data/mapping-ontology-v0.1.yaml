@@ -8,8 +8,8 @@
 #
 # v0.2 planned additions: YELLOW nodes + edge handoff diagnosis + Korean loan sample integration
 
-version: v0.4
-last_updated: 2026-05-25
+version: v0.5
+last_updated: 2026-08-29
 source_samples:
   - scripts/data/sample-workflows/legal-contract-review-v0.1.md (v0.2, RED N2/N3/N5a + YELLOW N1/N4/N6)
   - scripts/data/sample-workflows/loan-underwriting-kr-v0.1.md (v0.2, RED N6/N7/N9 + YELLOW N2/N3/N4)
@@ -22,18 +22,42 @@ v0_3c_added: 2026-05-25  # YELLOW nodes × 3 axes (legal N1/N4/N6 + loan N2/N3/N
 v0_4_added: 2026-05-25  # (1) Security axis mitigation_options 7 cells expanded + MITRE M-ID/OWASP/MIT 831 references
                         # (2) Agentic Failure Taxonomy 6 items on axes.handoff
                         # (3) NIST AI RMF + EU AI Act Annex III cross-mapping (legal/loan RED 6 cells)
+v0_5_added: 2026-08-29  # ★ Living-ontology cycle 1:
+                        # (1) Regulatory refresh — EU Digital Omnibus timeline (Annex III → 2027-12-02; Art 50 live since 2026-08-02)
+                        #     + Korea AI Basic Act (high-impact AI, live since 2026-01-22): korea_ai_act_mapping on 6 loan cells,
+                        #     explicit applicable:false on 3 legal cells, timeline_status header field
+                        # (2) OWASP Top 10 for Agentic Applications 2026 crosswalk — owasp_asi_refs on 24 security/handoff cells
+                        #     + agentic_failure_taxonomy ASI refs (ASI07/08/09 = external peer-reviewed corroboration of handoff axis)
+                        # (3) Verified 2026 incident evidence — incident_evidence_refs on 16 cells (6 incidents, 5 no-attacker)
+                        #     + threat_model_note on 3 excessive-agency security cells
+                        # (4) Fixed pre-existing gap: loan_N4 (ACS credit scoring) EU 5(b) anchor was missing
+                        # Companion additions: korea-ai-basic-act-v0.1.yaml, owasp-agentic-asi-2026-v0.1.yaml,
+                        # incident-evidence-2026-v0.1.yaml, mitre-atlas.yaml +11 agentic techniques (upstream 2026.07),
+                        # eu-ai-act-annex-iii v0.2, mit-risk v4_delta
 regulatory_anchors:
   primary_external_framework: "EU AI Act Annex III Point 5(b) Creditworthiness"
   primary_bpmn_anchor: "scripts/data/sample-workflows/loan-underwriting-kr-v0.1.md"
-  cross_mapped_frameworks: ["NIST AI RMF 1.0 + GenAI Profile (NIST AI 600-1)", "EU AI Act Annex III"]
+  cross_mapped_frameworks: ["NIST AI RMF 1.0 + GenAI Profile (NIST AI 600-1)", "EU AI Act Annex III", "Korea AI Basic Act (Framework Act on AI) — high-impact AI"]
   reference_yamls:
     - scripts/data/nist-ai-rmf-v0.1.yaml
-    - scripts/data/eu-ai-act-annex-iii-v0.1.yaml
+    - scripts/data/eu-ai-act-annex-iii-v0.1.yaml  # v0.2 — Digital Omnibus (Reg (EU) 2026/1744) timeline
+    - scripts/data/korea-ai-basic-act-v0.1.yaml   # cycle-1 addition (2026-08-29)
     - scripts/data/mitre-atlas.yaml         # session B v0.3 (170/170 mitigation coverage)
     - scripts/data/owasp-llm-top10-v2025.yaml
     - scripts/data/mit-mitigation-taxonomy.yaml  # session B v0.2
-    - scripts/data/mit-risk-causal-domain-v0.1.yaml  # session B v0.1
-  korean_regulatory_overlap_frames: 4  # EU AI Act + Fair Lending Act + Credit Information Act + K-PIPA
+    - scripts/data/mit-risk-causal-domain-v0.1.yaml  # session B v0.1 + cycle-1 v4_delta
+    - scripts/data/owasp-agentic-asi-2026-v0.1.yaml  # cycle-1 addition (2026-08-29)
+    - scripts/data/incident-evidence-2026-v0.1.yaml  # cycle-1 addition (2026-08-29)
+  korean_regulatory_overlap_frames: 5  # EU AI Act + Fair Lending Act + Credit Information Act + K-PIPA + Korea AI Basic Act
+  timeline_status:  # cycle-1 (2026-08-29) — the field deliverables must read before quoting any deadline
+    eu_annex_iii_standalone: "enforceable 2027-12-02 (deferred from 2026-08-02 by Digital Omnibus, Reg (EU) 2026/1744, in force 2026-07-27)"
+    eu_annex_i_embedded: "enforceable 2028-08-02 (deferred from 2027-08-02)"
+    eu_art50_transparency: "enforceable since 2026-08-02 (NOT postponed by the Omnibus)"
+    korea_high_impact_ai: "enforceable since 2026-01-22 (Act + Enforcement Decree; MSIT grace-period posture on fines, not a statutory suspension)"
+  classification_disclaimer: >-
+    Korea high-impact AI status is determined by the operator's own advance review
+    (Art 33), optionally confirmed by MSIT. Deliverables must phrase Korean scope as
+    "likely in scope — verify under Art 33", never as a legal conclusion.
 
 # =============================================================
 # v0.3 — Handoff Quantification Framework (★ Technical moat of this concept)
@@ -158,10 +182,10 @@ axes:
     sources: [AIID corpus, MIT Risk Repository, NANDA qualitative findings]
   security:
     description: "Attack surface (OWASP LLM Top 10 + MITRE ATLAS)"
-    sources: [OWASP LLM Top 10 v2025, MITRE ATLAS v5.4.0]
+    sources: [OWASP LLM Top 10 v2025, "OWASP Top 10 for Agentic Applications 2026 (ASI01-ASI10)", "MITRE ATLAS v5.4.0 snapshot + 2026.07 agentic additions"]
   handoff:
     description: "Inter-node context loss, responsibility boundaries, human-AI trust bias, etc. (core area of proprietary consulting IP, missing in public data)"
-    sources: [proprietary heuristics, NANDA "GenAI Divide" learning gap insight]
+    sources: [proprietary heuristics, NANDA "GenAI Divide" learning gap insight, "OWASP ASI07/ASI08/ASI09 (2026) — external peer-reviewed corroboration of the handoff axis"]
     # ─────────────────────────────────────────────────────────
     # Agentic Failure Taxonomy (v0.4 — added in this sprint, incorporating external review feedback)
     # ─────────────────────────────────────────────────────────
@@ -170,38 +194,44 @@ axes:
     # a 1st-class concept in FDE Agent diagnosis. Agentic extension of proprietary IP.
     agentic_failure_taxonomy:
       - id: agent_handoff_misalignment
+        owasp_asi_ref: 'ASI07'  # cycle-1 (2026-08-29)
         description: "Agent A's output format, meaning, and confidence misalign with Agent B's input assumptions — silent drift"
         external_reference: "Liu et al. (2024) — AgentBench multi-agent error traces 18% misalignment rate (https://arxiv.org/abs/2308.03688)"
         diagnostic_signal: "downstream agent diverges to a different task from upstream intent, but no error is raised (silent)"
         fde_cells_applicable: [N2_handoff, loan_N4_handoff, loan_N6_handoff]
         runtime_metric: "IPS (Information Preservation Score) < 0.5"
       - id: rag_retrieval_poisoning_by_agent
+        owasp_asi_ref: 'ASI06'  # cycle-1 (2026-08-29)
         description: "Agent reinforces RAG results with its own hallucination and propagates to downstream agents — false information amplification"
         external_reference: "Zou et al. (2024) — PoisonedRAG attack on LLM RAG pipelines (https://arxiv.org/abs/2402.07867)"
         diagnostic_signal: "result variance increases across N inferences on the same retrieval source + missing source citations in reasoning trace"
         fde_cells_applicable: [N2_handoff, N3_handoff, loan_N6_handoff]
         runtime_metric: "Confidence Decay > 0.3 across N hops"
       - id: tool_execution_loop
+        owasp_asi_ref: 'ASI02'  # cycle-1 (2026-08-29)
         description: "Agent repeatedly calls the same tool with incorrect inputs — token budget exhaustion + side effect risk"
         external_reference: "WebArena (Zhou et al., 2024) — agent webhook recursion failure cases (https://arxiv.org/abs/2307.13854)"
         diagnostic_signal: "tool call frequency within a single task is N× the baseline, repeated with the same parameter signature"
         fde_cells_applicable: [N5a_handoff, loan_N7_handoff]
         runtime_metric: "tool_call_depth > threshold (default 5)"
       - id: cascading_failure
+        owasp_asi_ref: 'ASI08'  # near-verbatim match  # cycle-1 (2026-08-29)
         description: "Silent failure of a single upstream node is amplified across the entire chain path — agentic expansion of 'cascade_amplification' from Phase 0 v0.3c"
-        external_reference: "Anthropic agentic safety blog (2024) — chain fault propagation taxonomy"
+        external_reference: "Anthropic agentic safety blog (2024) — chain fault propagation taxonomy; HARD 2026 INSTANCE: baidu-apollo-go-wuhan-fleet-freeze (regulator-confirmed, nationwide permit suspension 2026-04-29) — see incident-evidence-2026-v0.1.yaml"
         diagnostic_signal: "N+1 node error rate is N node error rate × M (M ≥ 2)"
         fde_cells_applicable: [N5a_handoff, loan_N7_handoff, loan_N9_handoff]
         runtime_metric: "downstream/upstream error correlation > 0.7"
       - id: infinite_loop_between_agents
+        owasp_asi_ref: 'ASI08'  # oscillating-retries detection hook  # cycle-1 (2026-08-29)
         description: "Agent A → B → A → B ping-pong, termination condition unmet. Infinite loop in the absence of a human escalation rule"
         external_reference: "CrewAI agentic framework error logs (2025 Q1 incidents)"
         diagnostic_signal: "same (agent_a, agent_b) edge traversed 5 or more times within a single task graph"
         fde_cells_applicable: [N6_handoff, loan_N6_handoff]
         runtime_metric: "edge_revisit_count > 5"
       - id: trust_collapse_in_chain
+        owasp_asi_ref: 'ASI09'  # near-verbatim match  # cycle-1 (2026-08-29)
         description: "When 1 agent in the chain outputs a high-confidence falsehood, the downstream agent trusts it without verification → reasoning corruption"
-        external_reference: "MIT NANDA — 'GenAI Divide' learning gap (2025) trust calibration findings"
+        external_reference: "MIT NANDA — 'GenAI Divide' learning gap (2025) trust calibration findings; HARD 2026 INSTANCE: amazon-retail-genai-advice-outage (human WAS in the loop and still acted on stale-reference advice — Fortune 2026-03-12) — see incident-evidence-2026-v0.1.yaml"
         diagnostic_signal: "Confidence increases monotonically as the chain progresses (without verification)"
         fde_cells_applicable: [N3_handoff, loan_N6_handoff, loan_N7_handoff]
         runtime_metric: "tail_confidence > head_confidence by margin > 0.2"
@@ -266,10 +296,18 @@ cells:
         - "Legal contract review workflow automatically classified as 8(a) high-risk when deployed to law firms or corporate legal teams"
         - "Article 15 accuracy: hallucinated clause extraction = direct violation risk"
       korean_regulatory_overlap: ["K-PIPA Article 22-2 (right regarding AI automated decision-making)"]
+    korea_ai_act_mapping:  # cycle-1 (2026-08-29)
+      applicable: false
+      reasoning: >-
+        Korea's AI Basic Act high-impact domains have NO analogue to EU Annex III 8(a)
+        (administration of justice / legal-services context). Only Article 31 generative
+        transparency applies. Recording the negative prevents over-claiming and is itself
+        a client talking point for firms comparing EU vs Korea scope.
 
   - cell_id: N2_security
     node: N2_clause_extraction
     axis: security
+    owasp_asi_refs: ["ASI01", "ASI06"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     primary_threats:
       - id: LLM09
@@ -315,6 +353,7 @@ cells:
   - cell_id: N2_handoff
     node: N2_clause_extraction
     axis: handoff
+    owasp_asi_refs: ["ASI07"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     upstream_dependency: N1_intake_classify
     downstream_dependents: [N3_risk_flagging, N4_compare_playbook]
@@ -387,10 +426,18 @@ cells:
         - "Article 9: register false negative patterns in risk register + quarterly re-evaluation"
         - "Article 14: mandatory attorney review (HITL) for high-risk flag results"
       korean_regulatory_overlap: ["K-PIPA Article 22-2"]
+    korea_ai_act_mapping:  # cycle-1 (2026-08-29)
+      applicable: false
+      reasoning: >-
+        Korea's AI Basic Act high-impact domains have NO analogue to EU Annex III 8(a)
+        (administration of justice / legal-services context). Only Article 31 generative
+        transparency applies. Recording the negative prevents over-claiming and is itself
+        a client talking point for firms comparing EU vs Korea scope.
 
   - cell_id: N3_security
     node: N3_risk_flagging
     axis: security
+    owasp_asi_refs: ["ASI01"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     primary_threats:
       - id: LLM09
@@ -428,6 +475,8 @@ cells:
   - cell_id: N3_handoff
     node: N3_risk_flagging
     axis: handoff
+    incident_evidence_refs: ["amazon-retail-genai-advice-outage"]  # cycle-1 (2026-08-29), see incident-evidence-2026-v0.1.yaml
+    owasp_asi_refs: ["ASI08"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     upstream_dependency: N2_clause_extraction
     downstream_dependents: [N4_compare_playbook, N5b_attorney_review]
@@ -466,6 +515,7 @@ cells:
     node_type: decision_automation
     ai_mode: full_automation
     axis: general_failure
+    incident_evidence_refs: ["aws-kiro-cost-explorer-outage", "baidu-apollo-go-wuhan-fleet-freeze", "waymo-school-bus-software-recall", "olg-hamm-chatbot-liability"]  # cycle-1 (2026-08-29), see incident-evidence-2026-v0.1.yaml
 
     primary_failure_mode: false_positive_approval  # risky contract auto-approved
     secondary_failure_modes:
@@ -498,10 +548,20 @@ cells:
         - "★ Article 14 deficit risk: 'auto-approve' poses risk of violating human oversight obligation — N5b attorney escalation mandatory"
         - "Article 26: audit log retention of 6 months or more"
       korean_regulatory_overlap: ["K-PIPA Article 22-2", "Credit Information Act Article 36-2 (aligned with right to opt out of automated decision-making)"]
+    korea_ai_act_mapping:  # cycle-1 (2026-08-29)
+      applicable: false
+      reasoning: >-
+        Korea's AI Basic Act high-impact domains have NO analogue to EU Annex III 8(a)
+        (administration of justice / legal-services context). Only Article 31 generative
+        transparency applies. Recording the negative prevents over-claiming and is itself
+        a client talking point for firms comparing EU vs Korea scope.
 
   - cell_id: N5a_security
     node: N5a_auto_approve
     axis: security
+    incident_evidence_refs: ["pocketos-production-db-deletion", "aws-kiro-cost-explorer-outage"]  # cycle-1 (2026-08-29), see incident-evidence-2026-v0.1.yaml
+    threat_model_note: "no_attacker — the dominant 2026 excessive-agency failure shape is attack-free (Cyera: 188 of 344 verified agent incidents had no adversary); do not scope mitigations to adversarial controls only"
+    owasp_asi_refs: ["ASI02", "ASI03"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     primary_threats:
       - id: LLM06
@@ -544,6 +604,8 @@ cells:
   - cell_id: N5a_handoff
     node: N5a_auto_approve
     axis: handoff
+    incident_evidence_refs: ["pocketos-production-db-deletion"]  # cycle-1 (2026-08-29), see incident-evidence-2026-v0.1.yaml
+    owasp_asi_refs: ["ASI09", "ASI08"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     upstream_dependency: N4_compare_playbook
     downstream_dependents: [N7_signoff, N8_audit]
@@ -640,11 +702,23 @@ cells:
         - "Special Act on Prevention of Financial Fraud via Telecommunications (voice phishing)"
         - "KoFIU Notice FIU2024-3 (AML reporting obligation)"
         - "Credit Information Act (incorrect fraud flag = violation of data subject rights)"
+    korea_ai_act_mapping:  # cycle-1 (2026-08-29)
+      high_impact_domain: "HI-06 (by chain effect into loan_N7 decision)"
+      articles: ["Article 31"]
+      obligations:
+        - "Article 31 transparency for generative AI in the analysis path (advance notification / labelling where output reaches users)"
+      divergence_note: >-
+        Korea's AI Basic Act has NO analogue to the EU Recital 58 fraud-detection
+        carve-out anchored above — a genuine EU/KR divergence worth surfacing in
+        deliverables for firms operating in both jurisdictions.
+      candidate_classification: true
+      enforceable_since: "2026-01-22"
 
   - cell_id: loan_N6_security
     node: N6_llm_risk_analysis
     sample_source: korean_loan
     axis: security
+    owasp_asi_refs: ["ASI01", "ASI06"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     primary_threats:
       - id: LLM09
@@ -680,10 +754,24 @@ cells:
           mitre_atlas: ["AML.M0005", "AML.M0006"]   # Adversarial Training + Generative AI Model Alignment
           mit_831: ["3.1", "3.5"]                    # Testing & Auditing + Post-Deployment Monitoring
 
+    # cycle-1 (2026-08-29): live transparency obligations where generated analysis reaches users.
+    eu_ai_act_mapping:
+      articles: ["Article 50"]
+      obligations:
+        - "Article 50 transparency — applies where LLM-generated analysis output is surfaced to a person"
+      timeline_note: "Enforceable since 2026-08-02 — NOT deferred by the Digital Omnibus"
+    korea_ai_act_mapping:
+      articles: ["Article 31"]
+      obligations:
+        - "Article 31 generative-AI transparency — notification/labelling where analysis output reaches users"
+      enforceable_since: "2026-01-22"
+
   - cell_id: loan_N6_handoff
     node: N6_llm_risk_analysis
     sample_source: korean_loan
     axis: handoff
+    incident_evidence_refs: ["amazon-retail-genai-advice-outage"]  # cycle-1 (2026-08-29), see incident-evidence-2026-v0.1.yaml
+    owasp_asi_refs: ["ASI08", "ASI01"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     upstream_dependency: loan_N5_income_verification
     downstream_dependents: [loan_N7_auto_decision, loan_N8_manual_review]
@@ -720,6 +808,7 @@ cells:
     node_type: decision_automation
     ai_mode: full_automation
     axis: general_failure
+    incident_evidence_refs: ["aws-kiro-cost-explorer-outage", "baidu-apollo-go-wuhan-fleet-freeze"]  # cycle-1 (2026-08-29), see incident-evidence-2026-v0.1.yaml
 
     primary_failure_mode: false_positive_approval
     secondary_failure_modes:
@@ -779,11 +868,24 @@ cells:
         are automatically subject to 5(b) high-risk classification. FDE Agent quantifies the compliance gap across
         the Fair Lending Act + Credit Information Act + K-PIPA 4-framework simultaneously in a single deliverable —
         a differentiated sales wedge compared to Big 4 consulting (₩hundreds of millions).
+    korea_ai_act_mapping:  # cycle-1 (2026-08-29)
+      high_impact_domain: "HI-06"
+      domain_name: "Judgement or evaluation that materially affects individual rights — loan screening (automated decision)"
+      articles: ["Article 34(1)3", "Article 34(1)4", "Article 34(1)5"]
+      obligations:
+        - "Article 34(1)4 human oversight and intervention — pairs with the Credit Information Act Art 36-2 opt-out overlap already anchored on this cell"
+        - "Article 34(1)3 user protection measures"
+        - "Article 34(1)5 documentation and retention"
+      candidate_classification: true
+      enforceable_since: "2026-01-22"
 
   - cell_id: loan_N7_security
     node: N7_auto_decision
     sample_source: korean_loan
     axis: security
+    incident_evidence_refs: ["pocketos-production-db-deletion", "aws-kiro-cost-explorer-outage"]  # cycle-1 (2026-08-29), see incident-evidence-2026-v0.1.yaml
+    threat_model_note: "no_attacker — the dominant 2026 excessive-agency failure shape is attack-free (Cyera: 188 of 344 verified agent incidents had no adversary); do not scope mitigations to adversarial controls only"
+    owasp_asi_refs: ["ASI02", "ASI03"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     primary_threats:
       - id: LLM06
@@ -828,6 +930,8 @@ cells:
     node: N7_auto_decision
     sample_source: korean_loan
     axis: handoff
+    incident_evidence_refs: ["pocketos-production-db-deletion", "amazon-retail-genai-advice-outage"]  # cycle-1 (2026-08-29), see incident-evidence-2026-v0.1.yaml
+    owasp_asi_refs: ["ASI08", "ASI09"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     upstream_dependency: [loan_N4_credit_scoring_ACS, loan_N6_llm_risk_analysis]
     downstream_dependents: [loan_N9_rejection_letter, loan_N10_contract_execution]
@@ -864,6 +968,7 @@ cells:
     node_type: llm_generation_freetext
     ai_mode: full_automation
     axis: general_failure
+    incident_evidence_refs: ["olg-hamm-chatbot-liability"]  # cycle-1 (2026-08-29), see incident-evidence-2026-v0.1.yaml
 
     primary_failure_mode: hallucination
     secondary_failure_modes:
@@ -915,11 +1020,21 @@ cells:
         - "Credit Information Act — incorrect reason = direct violation of data subject rights"
         - "Fair Lending Act — violation upon stating discriminatory reasons"
         - "K-PIPA — minimization obligation when PII is included in the letter"
+    korea_ai_act_mapping:  # cycle-1 (2026-08-29)
+      high_impact_domain: "HI-06 (output channel of loan screening)"
+      articles: ["Article 31(1)", "Article 31(2)", "Article 34(1)2"]
+      obligations:
+        - "Article 31(1)/(2) generative-output transparency — notification/labelling for the AI-generated letter"
+        - "Article 34(1)2 explanation plan — the direct Korean twin of the EU Article 86 right-to-explanation note anchored above"
+      candidate_classification: true
+      enforceable_since: "2026-01-22"
 
   - cell_id: loan_N9_security
     node: N9_rejection_letter
     sample_source: korean_loan
     axis: security
+    incident_evidence_refs: ["sears-home-services-ai-assistant-data-exposure"]  # cycle-1 (2026-08-29), see incident-evidence-2026-v0.1.yaml
+    owasp_asi_refs: ["ASI01"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     primary_threats:
       - id: LLM09
@@ -956,10 +1071,24 @@ cells:
           mit_831: ["3.5", "4.3"]                    # Post-Deployment Monitoring + Incident Reporting
           korean_regulator: ["Credit Information Act", "FSS"]
 
+    # cycle-1 (2026-08-29): the ONLY obligations in this repo a regulator could act on TODAY —
+    # EU Art 50 transparency (since 2026-08-02, not postponed) + Korea Art 31 (since 2026-01-22).
+    eu_ai_act_mapping:
+      articles: ["Article 50"]
+      obligations:
+        - "Article 50 transparency — AI-generated content directed at a person must be disclosed/marked"
+      timeline_note: "Enforceable since 2026-08-02 — NOT deferred by the Digital Omnibus"
+    korea_ai_act_mapping:
+      articles: ["Article 31(1)", "Article 31(2)"]
+      obligations:
+        - "Article 31 advance notification + generative-output labelling for the rejection letter"
+      enforceable_since: "2026-01-22"
+
   - cell_id: loan_N9_handoff
     node: N9_rejection_letter
     sample_source: korean_loan
     axis: handoff
+    owasp_asi_refs: ["ASI09"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     upstream_dependency: [loan_N7_auto_decision, loan_N8_manual_review]
     downstream_dependents: [loan_N11_audit_log]
@@ -1043,6 +1172,8 @@ cells:
     node: N1_intake_classify
     sample_source: legal
     axis: security
+    incident_evidence_refs: ["sears-home-services-ai-assistant-data-exposure"]  # cycle-1 (2026-08-29), see incident-evidence-2026-v0.1.yaml
+    owasp_asi_refs: ["ASI01"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     primary_threats:
       - id: LLM01
@@ -1082,6 +1213,7 @@ cells:
     node: N1_intake_classify
     sample_source: legal
     axis: handoff
+    owasp_asi_refs: ["ASI08"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     upstream_dependency: external_intake
     downstream_dependents: [N2_clause_extraction, N4_compare_playbook]
@@ -1122,6 +1254,7 @@ cells:
     node_type: llm_comparison_scoring
     ai_mode: decision_support
     axis: general_failure
+    incident_evidence_refs: ["amazon-retail-genai-advice-outage"]  # cycle-1 (2026-08-29), see incident-evidence-2026-v0.1.yaml
 
     primary_failure_mode: playbook_interpretation_error
     secondary_failure_modes:
@@ -1154,6 +1287,7 @@ cells:
     node: N4_compare_playbook
     sample_source: legal
     axis: security
+    owasp_asi_refs: ["ASI03"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     primary_threats:
       - id: LLM02
@@ -1181,6 +1315,8 @@ cells:
     node: N4_compare_playbook
     sample_source: legal
     axis: handoff
+    incident_evidence_refs: ["amazon-retail-genai-advice-outage"]  # cycle-1 (2026-08-29), see incident-evidence-2026-v0.1.yaml
+    owasp_asi_refs: ["ASI09"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     upstream_dependency: [N2_clause_extraction, N3_risk_flagging]
     downstream_dependents: [N5a_auto_approve, N5b_attorney_review]
@@ -1221,6 +1357,7 @@ cells:
     node_type: llm_generation_freetext
     ai_mode: decision_support
     axis: general_failure
+    incident_evidence_refs: ["olg-hamm-chatbot-liability"]  # cycle-1 (2026-08-29), see incident-evidence-2026-v0.1.yaml
 
     primary_failure_mode: hallucination
     secondary_failure_modes:
@@ -1257,6 +1394,7 @@ cells:
     node: N6_counterproposal
     sample_source: legal
     axis: security
+    owasp_asi_refs: ["ASI01"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     primary_threats:
       - id: LLM09
@@ -1287,6 +1425,7 @@ cells:
     node: N6_counterproposal
     sample_source: legal
     axis: handoff
+    owasp_asi_refs: ["ASI09"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     upstream_dependency: [N3_risk_flagging, N4_compare_playbook, N5b_attorney_review]
     downstream_dependents: [N7_signoff, vendor_external]
@@ -1359,10 +1498,21 @@ cells:
         action: "Propagation of both OCR confidence + face match score to downstream nodes"
         rationale: "Low confidence IDs are used as input to N6 LLM risk analysis"
 
+    korea_ai_act_mapping:  # cycle-1 (2026-08-29)
+      high_impact_domain: "HI-05 — WEAK / likely out of scope (HI-05 is scoped to biometric analysis for criminal investigation/arrest, not commercial eKYC)"
+      articles: ["Article 31(1)", "Article 34(1)3", "Article 34(1)4"]
+      obligations:
+        - "In-boundary as a gate feeding an HI-06 loan-screening process (chain effect), not as HI-05 itself"
+        - "Article 31(1) notification where AI-driven verification interacts with the applicant"
+      candidate_classification: true
+      enforceable_since: "2026-01-22"
+
   - cell_id: loan_N2_security
     node: N2_eKYC
     sample_source: korean_loan
     axis: security
+    incident_evidence_refs: ["sears-home-services-ai-assistant-data-exposure"]  # cycle-1 (2026-08-29), see incident-evidence-2026-v0.1.yaml
+    owasp_asi_refs: ["ASI01", "ASI03"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     primary_threats:
       - id: LLM01
@@ -1396,6 +1546,7 @@ cells:
     node: N2_eKYC
     sample_source: korean_loan
     axis: handoff
+    owasp_asi_refs: ["ASI08", "ASI03"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     upstream_dependency: loan_N1_application_intake
     downstream_dependents: [loan_N3_AML, loan_N4_credit_scoring, loan_N6_llm_risk]
@@ -1468,6 +1619,9 @@ cells:
     node: N3_AML_screening
     sample_source: korean_loan
     axis: security
+    incident_evidence_refs: ["pocketos-production-db-deletion"]  # cycle-1 (2026-08-29), see incident-evidence-2026-v0.1.yaml
+    threat_model_note: "no_attacker — the dominant 2026 excessive-agency failure shape is attack-free (Cyera: 188 of 344 verified agent incidents had no adversary); do not scope mitigations to adversarial controls only"
+    owasp_asi_refs: ["ASI06", "ASI04"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     primary_threats:
       - id: LLM04
@@ -1495,6 +1649,7 @@ cells:
     node: N3_AML_screening
     sample_source: korean_loan
     axis: handoff
+    owasp_asi_refs: ["ASI08"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     upstream_dependency: loan_N2_eKYC
     downstream_dependents: [loan_N4_credit_scoring, loan_N7_auto_decision]
@@ -1565,10 +1720,37 @@ cells:
         action: "ACS feature blacklist — automatic exclusion of protected class proxies (use of specific telecom carriers, etc.)"
         rationale: "Long-term fair lending"
 
+    # cycle-1 (2026-08-29): fixed pre-existing gap — the ACS credit-scoring node itself
+    # carried no EU anchor even though it is the strongest 5(b) candidate in the repo.
+    eu_ai_act_mapping:
+      annex_iii_point: "5(b)"
+      point_name: "Evaluating creditworthiness / establishing credit score"
+      bpmn_anchor: "scripts/data/sample-workflows/loan-underwriting-kr-v0.1.md"
+      articles: ["Article 9", "Article 10", "Article 13", "Article 15"]
+      obligations:
+        - "Article 9 risk management — ACS bias risk identification and monitoring"
+        - "Article 10 data governance — alternative-data (telecom/e-commerce) representativeness and proxy screening"
+        - "Article 13 transparency — meaningful information on scoring logic"
+        - "Article 15 accuracy/robustness — disparate impact testing on protected classes"
+      timeline_note: "Standalone Annex III enforceable 2027-12-02 (Digital Omnibus deferral) — see regulatory_anchors.timeline_status"
+    korea_ai_act_mapping:
+      high_impact_domain: "HI-06"
+      domain_name: "Judgement or evaluation that materially affects individual rights — loan screening"
+      articles: ["Article 33", "Article 34(1)1", "Article 34(1)2", "Article 34(1)5", "Article 35"]
+      obligations:
+        - "Article 33 advance self-review of high-impact status — prime candidate for optional MSIT confirmation request"
+        - "Article 34(1)1 risk management plan"
+        - "Article 34(1)2 explanation plan incl. key outcome criteria + training-data overview"
+        - "Article 34(1)5 documentation and retention"
+        - "Article 35 fundamental-rights impact assessment (effort duty; public-procurement preference)"
+      candidate_classification: true  # phrase as "likely in scope — verify under Art 33"
+      enforceable_since: "2026-01-22"
+
   - cell_id: loan_N4_security
     node: N4_credit_scoring_ACS
     sample_source: korean_loan
     axis: security
+    owasp_asi_refs: ["ASI04"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     primary_threats:
       - id: LLM02
@@ -1599,6 +1781,7 @@ cells:
     node: N4_credit_scoring_ACS
     sample_source: korean_loan
     axis: handoff
+    owasp_asi_refs: ["ASI08"]  # cycle-1 (2026-08-29) — OWASP Top 10 for Agentic Applications 2026, see owasp-agentic-asi-2026-v0.1.yaml
 
     upstream_dependency: [loan_N2_eKYC, loan_N3_AML]
     downstream_dependents: [loan_N6_llm_risk, loan_N7_auto_decision, loan_N9_rejection_letter]

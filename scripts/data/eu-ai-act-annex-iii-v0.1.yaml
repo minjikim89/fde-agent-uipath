@@ -1,16 +1,37 @@
 id: EU_AI_ACT_ANNEX_III
 name: EU AI Act — Annex III (High-Risk AI Systems)
+version: v0.2
 regulation_full_name: "Regulation (EU) 2024/1689 of the European Parliament and of the Council laying down harmonised rules on artificial intelligence (Artificial Intelligence Act)"
 adopted_date: "2024-08-01"
 official_journal: "OJ L 1689, 12 July 2024"
+
+# v0.2 — the AI Act as amended by the Digital Omnibus on AI.
+amended_by:
+  - id: DIGITAL_OMNIBUS_AI
+    regulation: "Regulation (EU) 2026/1744"
+    full_name: "Regulation (EU) 2026/1744 of the European Parliament and of the Council of 8 July 2026 amending Regulations (EU) 2024/1689, (EU) 2018/1139 and (EU) 2023/1230 regarding simplification of harmonised AI rules (Digital Omnibus on AI)"
+    adopted_date: "2026-07-08"
+    published_oj: "2026-07-24"        # OJ L, 2026/1744
+    entry_into_force: "2026-07-27"    # third day following publication
+    effect_summary: |
+      Does NOT repeal or narrow Annex III. It postpones the application dates of the
+      high-risk obligations and adds a new Article 5 prohibition. Substantive duties
+      (Art 9/10/11/12/13/14/15/26, FRIA) are unchanged — only the hard stop moved.
+
 source:
   primary: https://eur-lex.europa.eu/eli/reg/2024/1689/oj
   annex_iii: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689#anx_III
+  digital_omnibus_ai: https://eur-lex.europa.eu/eli/reg/2026/1744/oj/eng
+  digital_omnibus_oj_html: https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=OJ%3AL_202601744
 license: "EU regulation — public, attribution requested"
-last_updated: "2026-05-25"
+last_updated: "2026-08-29"
 status: |
-  v0.1 — Annex III 8 high-risk categories + key sub-points. Special focus on Point 5(b)
-  Credit scoring (alignment scope for Korean Loan Underwriting sample BPMN).
+  v0.2 — Annex III 8 high-risk categories + key sub-points (unchanged from v0.1), plus the
+  compliance_timeline section reflecting the Digital Omnibus on AI (Regulation (EU) 2026/1744,
+  in force 2026-07-27). Special focus on Point 5(b) Credit scoring (alignment scope for the
+  Korean Loan Underwriting sample BPMN).
+  IMPORTANT for diagnostics: the classification is live today; the enforcement deadline is not.
+  See compliance_timeline.advisory_framing before writing any client-facing deadline claim.
 
 # =============================================================
 # Risk-Class Framework Context
@@ -32,8 +53,172 @@ risk_classification_context:
     - Article 26-27: Deployer obligations
     - Article 79-87: Penalties (up to 7% global turnover for prohibited; 3% for high-risk non-compliance)
 
+# ============================================================================
+# ★ COMPLIANCE TIMELINE — AS AMENDED BY THE DIGITAL OMNIBUS ON AI (v0.2 NEW)
+# ============================================================================
+#
+# Added 2026-08-29. The ontology (v0.4) was authored 2026-05-25, BEFORE
+# Regulation (EU) 2026/1744 entered into force on 2026-07-27. Any deliverable
+# generated from the pre-v0.2 data that told a client "Annex III high-risk
+# obligations apply from 2 August 2026" is now WRONG and must be regenerated.
+#
+# Verification policy for this section: every date below was checked against at
+# least two independent reputable sources (EUR-Lex official text + law-firm /
+# specialist briefings). Source URLs are inline. Anything that could not be
+# double-sourced carries status: to_verify.
+
+compliance_timeline:
+
+  amending_instrument: "Regulation (EU) 2026/1744 (Digital Omnibus on AI)"
+  baseline_note: |
+    Under the original AI Act, Annex III high-risk obligations were to apply from
+    2026-08-02 and Annex I embedded-product high-risk obligations from 2027-08-02.
+    The Digital Omnibus moved both. It did not repeal any Annex III category.
+  verification_method: "Each date cross-checked against >= 2 independent sources; see sources_checked."
+
+  milestones:
+
+    - date: "2026-07-27"
+      status: verified
+      event: "Digital Omnibus on AI enters into force"
+      detail: |
+        Regulation (EU) 2026/1744 of 8 July 2026, published in the OJ on 2026-07-24,
+        entered into force on the third day following publication. Entry into force was
+        deliberately compressed ("as a matter of urgency") because it amends an
+        application date falling on 2 August.
+      sources:
+        - https://eur-lex.europa.eu/eli/reg/2026/1744/oj/eng   # official — adoption 8 July 2026, OJ 24 July 2026, in force 27 July 2026
+        - https://www.praxikon.com/en/posts/digital-omnibus-high-risk-postponement-december-2027
+        - https://www.whitecase.com/insight-alert/eu-ai-omnibus-enters-force-amending-ai-act
+        - https://www.hunton.com/privacy-and-cybersecurity-law-blog/eu-digital-omnibus-on-ai-enters-into-force
+
+    - date: "2026-08-02"
+      status: verified
+      event: "Article 50 transparency obligations apply — UNCHANGED, NOT postponed"
+      applies_now: true
+      detail: |
+        Art 50 transparency duties took effect on the original schedule and are live today:
+          - Art 50(1) disclose to a natural person that they are interacting with an AI system
+          - Art 50(2) machine-readable marking of synthetic (AI-generated/manipulated) output
+          - Art 50(4) deepfake and AI-generated text disclosure
+        This is the ONLY AI Act obligation layer in this file that is enforceable at the
+        current date (2026-08-29) for the sample workflows in this repo.
+      fde_impact: |
+        The LLM-authored artefacts in the sample BPMNs — loan N9 rejection-letter generation,
+        loan N6 LLM risk analysis narrative, legal-contract-review N3/N6 generated text — sit
+        under a LIVE obligation, while the Annex III duties around them do not apply until
+        2027-12-02. Diagnostics should split findings into "enforceable now" vs "deadline 2027".
+      sources:
+        - https://www.gibsondunn.com/eu-ai-act-omnibus-agreement-postponed-high-risk-deadlines-and-other-key-changes/
+        - https://www.praxikon.com/en/posts/digital-omnibus-high-risk-postponement-december-2027
+
+    - date: "2026-12-02"
+      status: verified
+      event: "Art 50(2) legacy-system grace period ends + new Art 5 prohibition becomes applicable"
+      detail: |
+        Two distinct items land on this date:
+          (a) Art 50(2) marking of AI-generated content — generative systems already placed on
+              the market before 2026-08-02 got a short transitional window running to 2026-12-02
+              to implement machine-readable marking.
+          (b) The Digital Omnibus inserted a NEW prohibited practice into Article 5 targeting AI
+              systems producing non-consensual intimate imagery (NCII) / child sexual abuse
+              material, with a transitional period to 2026-12-02.
+      note: |
+        (b) does not intersect any sample workflow in this repo, but it changes the Article 5
+        prohibited-practices list that risk_classification_context.unacceptable_risk summarises.
+      sources:
+        - https://eur-lex.europa.eu/eli/reg/2026/1744/oj/eng   # transitional period for Art 50(2) generative AI marking
+        - https://www.gibsondunn.com/eu-ai-act-omnibus-agreement-postponed-high-risk-deadlines-and-other-key-changes/
+        - https://www.praxikon.com/en/posts/digital-omnibus-high-risk-postponement-december-2027
+
+    - date: "2027-12-02"
+      status: verified
+      event: "★ Annex III STANDALONE high-risk obligations apply (Art 6(2)) — deferred from 2026-08-02"
+      deferred_from: "2026-08-02"
+      deferral_length: "~16 months"
+      scope: |
+        All 8 Annex III categories below, including Point 5(b) creditworthiness/credit scoring —
+        the primary FDE Agent anchor. Obligations reaching their hard stop on this date:
+        risk management (Art 9), data governance (Art 10), technical documentation (Art 11),
+        record-keeping/logging (Art 12), transparency to deployers (Art 13), human oversight
+        (Art 14), accuracy/robustness/cybersecurity (Art 15), conformity assessment +
+        registration, deployer duties (Art 26) and the FRIA (Art 27) where required.
+      not_changed: |
+        The substance of every obligation is unchanged. Nothing in Annex III was repealed.
+        A provider/deployer still needs the same risk management system, data governance,
+        technical file, human oversight procedures and FRIA — with a later hard stop.
+      sources:
+        - https://eur-lex.europa.eu/eli/reg/2026/1744/oj/eng   # Art 6(2) / Annex III high-risk requirements from 2 December 2027
+        - https://www.gibsondunn.com/eu-ai-act-omnibus-agreement-postponed-high-risk-deadlines-and-other-key-changes/
+        - https://www.praxikon.com/en/posts/digital-omnibus-high-risk-postponement-december-2027
+        - https://labs.cloudsecurityalliance.org/research/csa-research-note-eu-ai-act-high-risk-deadline-omnibus-20260/
+
+    - date: "2028-08-02"
+      status: verified
+      event: "Annex I EMBEDDED-PRODUCT high-risk obligations apply (Art 6(1)) — deferred from 2027-08-02"
+      deferred_from: "2027-08-02"
+      deferral_length: "~12 months"
+      scope: |
+        AI as a safety component of, or itself a product covered by, the Union harmonisation
+        legislation listed in Annex I (machinery, medical devices, aviation, vehicles, etc.).
+        Out of scope for the loan-underwriting and legal-contract-review samples; recorded here
+        so the timeline is complete for manufacturing/mobility client conversations.
+      sources:
+        - https://eur-lex.europa.eu/eli/reg/2026/1744/oj/eng   # Art 6(1) / Annex I high-risk requirements from 2 August 2028
+        - https://www.gibsondunn.com/eu-ai-act-omnibus-agreement-postponed-high-risk-deadlines-and-other-key-changes/
+        - https://www.praxikon.com/en/posts/digital-omnibus-high-risk-postponement-december-2027
+
+  unchanged_by_omnibus:
+    - "Article 5 prohibited practices — applicable since 2025-02-02 (plus the new NCII/CSAM prohibition, see 2026-12-02)"
+    - "Chapter V GPAI model obligations — applicable since 2025-08-02"
+    - "Article 50 transparency obligations — applicable since 2026-08-02"
+    - "Annex III category list — NOT repealed, NOT narrowed"
+    - "Substantive content of Articles 9/10/11/12/13/14/15/26/27"
+
+  advisory_framing:
+    # How FDE Agent deliverables should phrase this. Deadline slippage is not risk removal.
+    correct: |
+      "Your credit-scoring workflow IS an Annex III Point 5(b) high-risk AI system today.
+       The classification did not change — the enforcement deadline moved to 2 December 2027.
+       Article 50 transparency already applies to your LLM-generated customer communications."
+    incorrect:
+      - "EU AI Act high-risk rules were cancelled / repealed"
+      - "Annex III no longer covers credit scoring"
+      - "Nothing applies until December 2027"   # false — Art 5, GPAI and Art 50 are live
+    consulting_note: |
+      The deferral LENGTHENS the FDE Agent sales runway rather than removing it: clients now
+      have a ~15-month window (from 2026-08-29) to remediate before 2027-12-02, which makes a
+      diagnostic-then-remediate engagement easier to sell than a pre-Omnibus panic buy.
+      Korean overlaps (Fair Lending Act, Credit Information Act Art 36-2, K-PIPA Art 22-2) and
+      the Korean AI Basic Act are NOT deferred — see korea-ai-basic-act-v0.1.yaml.
+
+  sources_checked:
+    official:
+      - https://eur-lex.europa.eu/eli/reg/2026/1744/oj/eng
+      - https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=OJ%3AL_202601744
+    briefings:
+      - https://www.gibsondunn.com/eu-ai-act-omnibus-agreement-postponed-high-risk-deadlines-and-other-key-changes/
+      - https://www.praxikon.com/en/posts/digital-omnibus-high-risk-postponement-december-2027
+      - https://www.whitecase.com/insight-alert/eu-ai-omnibus-enters-force-amending-ai-act
+      - https://www.hunton.com/privacy-and-cybersecurity-law-blog/eu-digital-omnibus-on-ai-enters-into-force
+      - https://labs.cloudsecurityalliance.org/research/csa-research-note-eu-ai-act-high-risk-deadline-omnibus-20260/
+    to_verify:
+      - item: "Article-level citation inside Reg (EU) 2026/1744 for each new application date"
+        status: to_verify
+        note: |
+          Dates confirmed from the EUR-Lex record and multiple briefings, but the exact amending
+          article/paragraph numbers of Reg (EU) 2026/1744 were not read line-by-line in this pass.
+          Read the OJ text before quoting an article number in a client deliverable.
+      - item: "Whether any Member State has adopted an earlier national application date"
+        status: to_verify
+      - item: "Other Digital Omnibus changes beyond the timeline (registration relief, SME easements, GPAI adjustments)"
+        status: to_verify
+        note: "Out of scope for v0.2, which is timeline-only. Candidate for v0.3."
+
 # =============================================================
 # Annex III — 8 High-Risk Categories
+# (NOT repealed by the Digital Omnibus — only the application date moved.
+#  See compliance_timeline above before quoting a deadline.)
 # =============================================================
 
 high_risk_categories:
@@ -89,8 +274,9 @@ high_risk_categories:
       - id: "5(b)"
         name: "Evaluating creditworthiness of natural persons / establishing credit score (excluding fraud detection)"
         ★_fde_priority: PRIMARY
-        fde_cell_anchors:
+        fde_cell_anchors:  # cycle-1 (2026-08-29): reconciled with mapping-ontology — N6 added (chain-effect 5(b), Recital 58 carve-out noted in-cell)
           - loan_N4_general_failure
+          - loan_N6_general_failure
           - loan_N7_general_failure
           - loan_N9_general_failure
         article_obligations:
@@ -173,4 +359,45 @@ coverage_stats:
   high_risk_categories: 8
   total_sub_points: 25
   fde_priority_anchor_node_count: 6
-  korean_regulatory_overlap_frames: 4  # EU AI Act + Fair Lending Act + Credit Information Act + K-PIPA
+  korean_regulatory_overlap_frames: 5  # EU AI Act + Fair Lending Act + Credit Information Act + K-PIPA + Korea AI Basic Act (v0.2)
+  timeline_milestones: 5               # v0.2
+
+related_data_files:
+  - path: scripts/data/korea-ai-basic-act-v0.1.yaml
+    relation: |
+      Korean counterpart regime. Korea's AI Basic Act "high-impact AI" (고영향 인공지능) is the
+      functional analogue of Annex III high-risk and — unlike the EU high-risk layer — has been
+      in force since 2026-01-22. Loan screening is an enumerated high-impact domain there.
+
+# =============================================================
+# Changelog
+# =============================================================
+
+changelog:
+  - version: v0.2
+    date: "2026-08-29"
+    author: "FDE Agent regulatory data layer refresh"
+    summary: "Digital Omnibus on AI timeline integration. No Annex III content removed."
+    changes:
+      - "Added top-level `version: v0.2` and `amended_by` block for Regulation (EU) 2026/1744 (Digital Omnibus on AI), in force 2026-07-27."
+      - "Added `compliance_timeline` section: 5 verified milestones (2026-07-27, 2026-08-02, 2026-12-02, 2027-12-02, 2028-08-02)."
+      - "Recorded that standalone Annex III high-risk obligations (Art 6(2)) are deferred from 2026-08-02 to 2027-12-02."
+      - "Recorded that Annex I embedded-product high-risk obligations (Art 6(1)) are deferred from 2027-08-02 to 2028-08-02."
+      - "Recorded that Article 50 transparency obligations applied 2026-08-02 as originally scheduled and are enforceable NOW."
+      - "Recorded the 2026-12-02 Art 50(2) legacy-system marking grace-period end and the new Art 5 NCII/CSAM prohibition transitional date."
+      - "Added `unchanged_by_omnibus` and `advisory_framing` so deliverables do not misreport the deferral as a repeal."
+      - "Added `sources_checked` with official EUR-Lex + 4 briefing URLs, and a `to_verify` list."
+      - "Added `related_data_files` cross-link to the new korea-ai-basic-act-v0.1.yaml."
+      - "coverage_stats.korean_regulatory_overlap_frames 4 -> 5 (Korea AI Basic Act added)."
+    not_changed:
+      - "All 8 Annex III categories and 25 sub-points — retained verbatim."
+      - "fde_cell_anchors, korean_overlap, sales_wedge_note on Point 5(b)."
+      - "risk_classification_context obligation list (Articles 9-27, 79-87)."
+    downstream_action_required: |
+      mapping-ontology-v0.1.yaml (v0.4, dated 2026-05-25) still carries pre-Omnibus assumptions in
+      `regulatory_anchors`. It was NOT edited in this pass. Recommended additions are reported
+      separately; apply them in an ontology v0.5 bump.
+
+  - version: v0.1
+    date: "2026-05-25"
+    summary: "Initial extraction — Annex III 8 high-risk categories + sub-points, Point 5(b) focus."

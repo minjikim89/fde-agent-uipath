@@ -1,0 +1,668 @@
+# OWASP Top 10 for Agentic Applications 2026 (ASI01–ASI10)
+#
+# Companion to scripts/data/owasp-llm-top10-v2025.yaml. Same shape, agentic layer.
+# The LLM Top 10 covers model-level risk; this file covers the agentic layer
+# (planning, tool use, delegation, memory, multi-agent coordination) that the
+# FDE risk ontology (scripts/data/mapping-ontology-v0.1.yaml, v0.4) diagnoses.
+#
+# PROVENANCE / HONESTY NOTE
+#   Every `official_name`, `common_examples`, `attack_scenarios`, `prevention`,
+#   `related_llm_top10`, `agentic_threats_mapping` and `aivss_core_risk` value below is
+#   taken from the official OWASP publication (see `sources`). `definition` is a
+#   restatement in our own words, grounded in that text. Fields prefixed
+#   `fde_` are OUR derived analysis, not OWASP content — they carry no OWASP authority.
+#   No ASI id required an `official_name: to_verify` placeholder: all ten were read
+#   directly from the official PDF's table of contents and section headers.
+
+version: "2026"
+source: "https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/"
+source_document: "OWASP Top 10 For Agentic Applications 2026 — OWASP Gen AI Security Project, Agentic Security Initiative. Version 2026, December 2025."
+source_pdf: "https://genai.owasp.org/download/52117"
+announcement: "https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/"
+published: "2025-12-09"
+last_updated: "2026-08-29"
+license: "OWASP Foundation (CC BY-SA 4.0) — https://creativecommons.org/licenses/by-sa/4.0/legalcode"
+status: "v0.1 — all 10 items (ASI01~ASI10) from the official document. Each item includes: official_name + definition + common_examples + attack_scenarios + prevention + related_llm_top10 + agentic_threats_mapping + aivss_core_risk + fde_axis_mapping + fde_node_type_hints"
+
+# Naming note: the official document prints two typographic variants of some titles —
+# the section headers/TOC use "and", the Appendix A cross-mapping table uses "&".
+# `official_name` follows the section header (normative); `official_name_variant`
+# records the Appendix A form where it differs. Both are the same official document.
+
+companion_frameworks:
+  owasp_llm_top10: "scripts/data/owasp-llm-top10-v2025.yaml (LLM01–LLM10, v2025)"
+  agentic_threats_guide: "OWASP Agentic AI — Threats and Mitigations v1.1 (T1–T17). Referenced by id only; the guide itself is not vendored here."
+  aivss: "OWASP AIVSS — Agentic AI Vulnerability Scoring System. Referenced by Core Risk name only."
+
+risks:
+  - id: ASI01
+    title: "Agent Goal Hijack"
+    official_name: "Agent Goal Hijack"
+    definition: >-
+      An attacker redirects what the agent is trying to do. Because agents take goals, plans and tool
+      results as natural-language text, neither the agent nor the underlying model can reliably tell a
+      legitimate instruction from attacker-controlled content sitting in that same channel. The hijack
+      can arrive through a prompt, a deceptive tool output, a malicious document or artifact, a forged
+      agent-to-agent message, or poisoned external data. OWASP draws the line against neighbouring
+      entries explicitly: ASI01 is the attacker directly altering goals, instructions or decision
+      pathways; ASI06 is persistent corruption of stored memory; ASI10 is autonomous misalignment that
+      emerges with no attacker still steering. It differs from LLM01:2025 in blast radius — LLM01 alters
+      one model response, ASI01 redirects the goal, the plan, and every downstream step.
+    common_examples:
+      - "Indirect prompt injection via hidden payloads in web pages or RAG documents, silently redirecting the agent to exfiltrate data or misuse connected tools"
+      - "Indirect prompt injection through external channels (email, calendar, Teams) hijacking internal communication capability under a trusted identity"
+      - "Malicious prompt override manipulating a financial agent into transferring money to an attacker account"
+      - "Injected instructions overriding agent instructions to produce fraudulent information that drives business decisions"
+    attack_scenarios:
+      - "EchoLeak — zero-click indirect prompt injection: a crafted email triggers M365 Copilot to exfiltrate confidential mail, files and chat logs with no user interaction"
+      - "Operator prompt injection via web content — planted page content makes the browsing agent access authenticated internal pages and expose private data"
+      - "Goal-lock drift via scheduled prompts — a recurring calendar invite subtly reweights objectives each morning toward low-friction approvals while staying inside declared policy"
+      - "Inception attack — a malicious Google Doc injects instructions for ChatGPT to exfiltrate user data and steer the user into an ill-advised business decision"
+    prevention:
+      - "Treat every natural-language input (user text, uploaded docs, retrieved content) as untrusted; route through LLM01:2025 input-validation and injection safeguards before it can influence goal selection, planning or tool calls"
+      - "Enforce least privilege on agent tools and require human approval for high-impact or goal-changing actions"
+      - "Define and lock agent system prompts so goal priorities and permitted actions are explicit and auditable; put goal/reward changes through configuration management and human approval"
+      - "Validate user intent AND agent intent at run time before goal-changing actions; pause or block on unexpected goal shift, surface it for review, record it for audit"
+      - "Evaluate the emerging 'intent capsule' pattern — bind declared goal, constraints and context into a signed envelope per execution cycle"
+      - "Sanitize every connected data source (RAG, email, calendar, files, external APIs, browsing output, peer-agent messages) with CDR, prompt-carrier detection and content filtering"
+      - "Log continuously against a behavioral baseline covering goal state, tool-use patterns and invariants; track a stable active-goal identifier and alert on deviation"
+      - "Red-team goal override periodically and verify rollback effectiveness"
+      - "Bring agents into the Insider Threat Program to catch insider prompts aimed at altering agent behavior"
+    related_llm_top10:
+      - id: LLM01
+        title: "Prompt Injection"
+        relation: "direct — the injection vector; ASI01 is its agentic amplification from one response to a whole plan"
+      - id: LLM06
+        title: "Excessive Agency"
+        relation: "direct — autonomy is what converts a hijacked goal into executed damage"
+    agentic_threats_mapping: ["T6 Goal Manipulation", "T7 Misaligned & Deceptive Behaviors"]
+    aivss_core_risk: "Agent Goal & Instruction Manipulation"
+    fde_axis_mapping:
+      primary: security
+      secondary: handoff
+      rationale: "Adversary-driven attack surface first (security); the hijacked goal then travels the chain as silent intent drift, which is the handoff axis's IPS/intent-preservation concern."
+    fde_node_type_hints:
+      - "planner / orchestration nodes"
+      - "RAG and external-content retrieval nodes"
+      - "any node ingesting third-party documents, email or calendar data"
+      - "decision_automation nodes downstream of an LLM plan"
+    sources:
+      - "OWASP Top 10 For Agentic Applications 2026, pp. 9-11 (ASI01)"
+      - "https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/"
+
+  - id: ASI02
+    title: "Tool Misuse and Exploitation"
+    official_name: "Tool Misuse and Exploitation"
+    official_name_variant: "Tool Misuse & Exploitation (Appendix A cross-mapping table)"
+    definition: >-
+      The agent stays inside its authorized privileges but applies a legitimate tool in an unsafe or
+      unintended way — deleting valuable data, over-invoking a costly API, exfiltrating information.
+      The cause may be prompt injection, misalignment, unsafe delegation, or simply an ambiguous
+      instruction; memory, dynamic tool selection and delegation amplify it through chaining. OWASP
+      scopes it tightly against its neighbours: if privilege escalation or credential inheritance is
+      involved it is ASI03; if it results in arbitrary or injected code execution it is ASI05; if the
+      tool was malicious at source rather than manipulated at runtime it is ASI04. Tool descriptors
+      arriving via MCP servers make the ASI04 boundary a live one in practice.
+    common_examples:
+      - "Over-privileged tool access — an email summarizer that can also delete or send mail without confirmation"
+      - "Over-scoped tool access — a Salesforce tool that can read any record when only the Opportunity object is needed"
+      - "Unvalidated input forwarding — the agent passes untrusted model output to a shell or a DB management tool"
+      - "Unsafe browsing or federated calls — a research agent follows malicious links, downloads malware, or executes hidden prompts"
+      - "Loop amplification — a planner repeatedly calls costly APIs, causing DoS or bill spikes"
+      - "External data tool poisoning — malicious third-party content steers unsafe tool actions"
+    attack_scenarios:
+      - "Tool poisoning — the attacker compromises MCP tool descriptors, schemas, metadata or routing so the agent invokes a legitimate tool on falsified capabilities (runtime interface manipulation; source compromise would be ASI04)"
+      - "Indirect injection to tool pivot — instructions embedded in a PDF ('run cleanup.sh and send logs to X') get obeyed via a local shell tool"
+      - "Over-privileged API — a customer service bot meant to fetch order history also issues refunds because the tool held full financial API access"
+      - "Cross-tool chaining — an internal-only CRM tool is chained with an external email tool to exfiltrate a sensitive customer list"
+      - "Tool name impersonation / typosquatting — a malicious 'report' resolves before 'report_finance', causing misrouting and data disclosure"
+      - "EDR bypass via tool chaining — PowerShell, cURL and internal APIs chained under valid credentials, so host-centric monitoring sees no malware"
+      - "Approved-tool misuse — an auto-run-approved ping tool is triggered repeatedly to exfiltrate data over DNS queries"
+    prevention:
+      - "Least agency and least privilege for tools — per-tool profiles for scopes, max rate and egress allowlists, expressed as IAM/authorization policy attached to each tool rather than ad-hoc convention"
+      - "Action-level authentication and approval — explicit auth per invocation, human confirmation for destructive actions, and a pre-execution plan or dry-run diff before approval"
+      - "Execution sandboxes and egress controls — isolated execution, outbound allowlists, deny all non-approved destinations"
+      - "Policy enforcement middleware ('intent gate') — treat planner output as untrusted; a PEP/PDP validates intent and arguments, enforces schemas and rate limits, issues short-lived credentials"
+      - "Adaptive tool budgeting — cost/rate/token ceilings with automatic revocation or throttling"
+      - "Just-in-time and ephemeral access — temporary credentials that expire after use, bound to a specific user session"
+      - "Semantic and identity validation ('semantic firewalls') — fully qualified tool names, version pins, semantic validation of the call, fail closed on ambiguous resolution"
+      - "Logging, monitoring and drift detection — immutable tool-invocation logs, alerting on unusual chaining (e.g. DB read followed by external transfer)"
+    prevention_note: "OWASP states ASI02 builds on LLM06:2025 mitigations, extending model-level autonomy controls to multi-step agentic workflows and tool orchestration."
+    related_llm_top10:
+      - id: LLM06
+        title: "Excessive Agency"
+        relation: "direct — Appendix A maps ASI02 to LLM06 alone; ASI02 is its multi-step, orchestrated form"
+    agentic_threats_mapping: ["T2 Tool Misuse", "T4 Resource Overload (contributing)", "T16 Insecure Inter-Agent Protocol Abuse (contributing)"]
+    aivss_core_risk: "Agentic AI Tool Misuse"
+    fde_axis_mapping:
+      primary: security
+      secondary: general_failure
+      rationale: "The exploitable tool surface is a security-axis concern; but OWASP explicitly includes non-adversarial causes (misalignment, ambiguous instruction), which land on the node's own general_failure axis."
+    fde_node_type_hints:
+      - "tool-calling nodes"
+      - "external system action nodes (email send, DB write, file delete, payment)"
+      - "MCP client nodes and dynamic tool-resolution nodes"
+      - "agentic loop nodes with unbounded call budgets"
+    sources:
+      - "OWASP Top 10 For Agentic Applications 2026, pp. 12-14 (ASI02)"
+
+  - id: ASI03
+    title: "Identity and Privilege Abuse"
+    official_name: "Identity and Privilege Abuse"
+    official_name_variant: "Identity & Privilege Abuse (Appendix A cross-mapping table)"
+    definition: >-
+      Attackers exploit the dynamic trust and delegation between agents to escalate access and bypass
+      controls — manipulating delegation chains, role inheritance, control flow and agent context
+      (cached credentials, conversation history). OWASP names the root cause as an architectural
+      mismatch: identity systems are built around users, so an agent without a governed identity of its
+      own operates in an attribution gap where true least privilege cannot be enforced. Identity here
+      means both the agent's assigned persona and any authentication material representing it (API
+      keys, OAuth tokens, delegated user sessions). It is distinguished from ASI02, which is a
+      principal misusing privileges it already legitimately holds.
+    common_examples:
+      - "Un-scoped privilege inheritance — a high-privilege manager delegates without least-privilege scoping, passing its full access context to a narrow worker"
+      - "Memory-based privilege retention and data leakage — cached credentials or retrieved data survive across tasks or users because memory is not segmented or cleared"
+      - "Cross-agent trust exploitation (confused deputy) — a compromised low-privilege agent relays valid-looking instructions to a high-privilege agent that executes without re-checking original user intent"
+      - "TOCTOU in agent workflows — permissions validated at workflow start change or expire before execution, and the agent proceeds on stale authorization"
+      - "Synthetic identity injection — an attacker impersonates an internal agent with an unverified descriptor (e.g. 'Admin Helper') to inherit trust"
+    attack_scenarios:
+      - "Delegated privilege abuse — a finance agent delegates to a DB-query agent with all its permissions; steered prompts use the inherited access to exfiltrate HR and legal data"
+      - "Memory-based escalation — an IT admin agent caches SSH credentials during a patch; a non-admin later reuses the session to create an unauthorized account"
+      - "Cross-agent trust exploitation — a crafted email makes a sorting agent instruct a finance agent to move money; the finance agent trusts the internal caller and pays"
+      - "Device-code phishing across agents — a browsing agent follows a device-code link and a helper agent completes it, binding the victim tenant to attacker scopes"
+      - "Workflow authorization drift — a procurement agent validates approval at sequence start; the user's spending limit is later reduced but the old token completes the now-unauthorized transaction"
+      - "Forged agent persona — a fake 'Admin Helper' registered in an A2A registry with a forged agent card receives privileged maintenance tasks"
+      - "Identity sharing — an agent acting on behalf of its maker lets other users invoke its tools implicitly under that identity"
+    prevention:
+      - "Enforce task-scoped, time-bound permissions — short-lived narrowly scoped tokens per task, per-agent identities, mTLS certificates or scoped tokens, capped by permission boundaries"
+      - "Isolate agent identities and contexts — per-session sandboxes with separated permissions and memory, wiping state between tasks"
+      - "Mandate per-action authorization — re-verify each privileged step against a centralized policy engine that checks external data"
+      - "Apply human-in-the-loop for privilege escalation — human approval for high-privilege or irreversible actions"
+      - "Define intent — bind OAuth tokens to a signed intent (subject, audience, purpose, session) and reject any use where the bound intent does not match the request"
+      - "Evaluate agentic identity management platforms that treat agents as managed non-human identities with scoped credentials, audit trails and lifecycle controls"
+      - "Bind permissions to subject, resource, purpose and duration; require re-authentication on context switch; block privilege inheritance across agents unless original intent is re-validated; automate revocation on idle or anomaly"
+      - "Detect delegated and transitive permissions — flag a low-privilege agent inheriting higher-privilege scopes mid-workflow"
+      - "Detect abnormal cross-agent privilege elevation and device-code style phishing by monitoring scope requests and token reuse outside signed intent"
+    related_llm_top10:
+      - id: LLM01
+        title: "Prompt Injection"
+        relation: "direct — commonly the trigger that steers the delegation chain"
+      - id: LLM06
+        title: "Excessive Agency"
+        relation: "direct — OWASP calls ASI03 the agentic evolution of Excessive Agency"
+      - id: LLM02
+        title: "Sensitive Information Disclosure"
+        relation: "direct — impact channel; agent permissions and integrations let it exceed LLM02's usual reach"
+    agentic_threats_mapping: ["T3 Privilege Compromise (one-to-one)"]
+    aivss_core_risk: "Agent Access Control Violation"
+    fde_axis_mapping:
+      primary: security
+      secondary: handoff
+      rationale: "Credential and authorization compromise is squarely security-axis; the confused-deputy and un-scoped-inheritance patterns are failures of the responsibility boundary at the handoff between agents, which the handoff axis owns."
+    fde_node_type_hints:
+      - "agent-to-agent delegation edges"
+      - "credential/secret handling nodes"
+      - "tool nodes authenticating with inherited or shared identity"
+      - "multi-tenant nodes reusing session context"
+    sources:
+      - "OWASP Top 10 For Agentic Applications 2026, pp. 15-17 (ASI03)"
+
+  - id: ASI04
+    title: "Agentic Supply Chain Vulnerabilities"
+    official_name: "Agentic Supply Chain Vulnerabilities"
+    official_name_variant: "Agentic Supply Chain Vulnerabilities; Appendix A AIVSS row reads 'Agent Supply Chain & Dependency Attacks'"
+    definition: >-
+      Third-party components an agent depends on may be malicious, compromised, or tampered with in
+      transit — models and weights, tools, plug-ins, datasets, other agents, agentic interfaces (MCP,
+      A2A), registries, and update channels. OWASP's distinction from LLM03:2025 is the axis of time:
+      the LLM supply chain is largely a set of static, manifest-declared dependencies, whereas agentic
+      ecosystems compose capabilities at run time, loading external tools and agent personas
+      dynamically. That live composition, combined with autonomy, creates a supply chain that can
+      cascade a compromise across agents, and moves the security problem from manifest review to
+      runtime orchestration of opaque components.
+    common_examples:
+      - "Poisoned prompt templates pulled remotely, carrying hidden exfiltration or destructive instructions"
+      - "Tool-descriptor injection — hidden payloads in tool metadata or an MCP/agent card that the host agent reads as trusted guidance"
+      - "Impersonation and typosquatting — a look-alike endpoint, or a symbol attack where a malicious service mimics a legitimate tool's identity, API and behavior"
+      - "Vulnerable third-party agent — an unpatched or insecure-default peer agent invited into a multi-agent workflow becomes a pivot"
+      - "Compromised MCP or registry server serving signed-looking manifests, plug-ins or agent descriptors at scale"
+      - "Poisoned knowledge plugin — a RAG plugin fetching context from a seeded third-party indexer biases the agent gradually"
+    attack_scenarios:
+      - "Amazon Q supply chain compromise — a poisoned prompt in the Q for VS Code repo shipped in v1.84.0 to thousands before detection"
+      - "MCP tool descriptor poisoning — a public tool in GitHub's MCP hides commands in metadata; on invocation the assistant exfiltrates private repo data"
+      - "Malicious MCP server impersonating Postmark — reported as the first in-the-wild malicious MCP server on npm, secretly BCC'ing email to the attacker"
+      - "AgentSmith prompt-hub proxy attack — prompt proxying exfiltrates data and hijacks response flows in dynamic orchestration"
+      - "Compromised NPM package auto-installed by coding agents, backdooring SSH keys and API tokens across agentic workflows"
+      - "Agent-in-the-middle via agent cards — a rogue peer advertises exaggerated capabilities in /.well-known/agent.json and gets routed sensitive requests"
+    prevention:
+      - "Provenance, SBOMs and AIBOMs — sign and attest manifests, prompts and tool definitions; maintain an AI component inventory; use curated registries; block untrusted sources"
+      - "Dependency gatekeeping — allowlist and pin, scan for typosquats across PyPI/npm/LangChain/LlamaIndex, verify provenance before install or activation, auto-reject unsigned"
+      - "Containment and builds — sandboxed containers with strict network/syscall limits, reproducible builds"
+      - "Secure prompts and memory — prompts, orchestration scripts and memory schemas under version control with peer review and anomaly scanning"
+      - "Inter-agent security — mutual auth and attestation via PKI and mTLS, no open registration, sign and verify all inter-agent messages"
+      - "Continuous validation and monitoring — re-check signatures, hashes and SBOM/AIBOM at runtime; monitor behavior, privilege use, lineage and inter-module telemetry"
+      - "Pinning — pin prompts, tools and configs by content hash and commit id; staged rollout with differential tests and auto-rollback on hash drift"
+      - "Supply chain kill switch — emergency revocation that instantly disables specific tools, prompts or agent connections across all deployments"
+      - "Zero-trust application design that assumes failure or exploitation of LLM and agentic function components"
+    related_llm_top10:
+      - id: LLM03
+        title: "Supply Chain"
+        relation: "direct — ASI04 is its runtime-composition extension; LLM03 covers the static-dependency half"
+    agentic_threats_mapping: ["T17 Supply Chain Compromise", "T2 Tool Misuse", "T11 Unexpected RCE", "T12 Agent Communication Poisoning", "T13 Rogue Agent", "T16 Insecure Inter-Agent Protocol Abuse"]
+    aivss_core_risk: "Agent Supply Chain & Dependency Attacks"
+    fde_axis_mapping:
+      primary: security
+      secondary: general_failure
+      rationale: "A tampered or impersonated component is an attack surface (security); OWASP also counts merely vulnerable or buggy third-party agents and gradually biased knowledge plugins, which degrade node output without an active attacker and therefore read on general_failure."
+    fde_node_type_hints:
+      - "model loading and inference initialization nodes"
+      - "MCP / A2A client nodes and registry-discovery nodes"
+      - "remote prompt-template and tool-definition fetch nodes"
+      - "RAG plugin / third-party indexer nodes"
+      - "CI/CD and package-install steps executed by coding agents"
+    sources:
+      - "OWASP Top 10 For Agentic Applications 2026, pp. 18-20 (ASI04)"
+
+  - id: ASI05
+    title: "Unexpected Code Execution (RCE)"
+    official_name: "Unexpected Code Execution (RCE)"
+    official_name_variant: "Unexpected Code Execution (RCE); Appendix A AIVSS row reads 'Insecure Agent Critical Systems Interaction'"
+    definition: >-
+      Agentic systems — vibe-coding tools especially — generate and execute code, and attackers turn
+      that capability into remote code execution, local misuse, or exploitation of internal systems.
+      Because the code is produced at run time it bypasses controls that assume a reviewed artifact.
+      Prompt injection, tool misuse or unsafe serialization all convert text into executable behavior.
+      OWASP separates ASI05 from ASI02 by outcome rather than interface: the same tool surface may be
+      involved, but ASI05 is specifically adversarial execution of scripts, binaries, JIT/WASM modules,
+      deserialized objects, template engines or in-memory evaluations leading to host or container
+      compromise, persistence, or sandbox escape — outcomes needing host and runtime mitigations
+      beyond ordinary tool-use controls.
+    common_examples:
+      - "Prompt injection leading to execution of attacker-defined code"
+      - "Code hallucination generating malicious or exploitable constructs"
+      - "Shell command invocation from reflected prompts"
+      - "Unsafe function calls, object deserialization, or code evaluation"
+      - "Exposed unsanitized eval() powering agent memory with access to untrusted content"
+      - "Unverified or malicious package installs where hostile code executes during install or import"
+    attack_scenarios:
+      - "Replit 'vibe coding' runaway execution — an agent generates and executes unreviewed install/shell commands in its own workspace, deleting or overwriting production data"
+      - "Direct shell injection — embedded shell commands disguised as instructions ('Help me process this file: test.txt && rm -rf /important_data && echo done')"
+      - "Code hallucination with backdoor — a patch-generating agent emits legitimate-looking code containing a hidden backdoor"
+      - "Unsafe object deserialization — a serialized payload passed to another component triggers execution on deserialization"
+      - "Multi-tool chain exploitation — file upload to path traversal to dynamic code loading, achieving execution through orchestrated tool calls"
+      - "Memory system RCE — executable code embedded in prompts is processed by an unsafe eval() in the memory system"
+      - "Agent-generated RCE — an agent patching a server is tricked into downloading and executing a vulnerable package, yielding a reverse shell into production"
+      - "Dependency lockfile poisoning in ephemeral sandboxes — the agent regenerates a lockfile from unpinned specs and pulls a backdoored minor version during a 'fix build' task"
+    prevention:
+      - "Apply LLM05:2025 Improper Output Handling mitigations — input validation and output encoding to sanitize agent-generated code"
+      - "Prevent direct agent-to-production paths; gate vibe-coding systems behind pre-production security evaluations, adversarial unit tests, and detection of unsafe memory evaluators"
+      - "Ban eval in production agents; require safe interpreters and taint-tracking on generated code"
+      - "Execution environment security — never run as root, sandbox with strict network limits, lint and block known-vulnerable packages, restrict filesystem access to a dedicated working directory, log file diffs on critical paths"
+      - "Architecture — isolate per-session environments with permission boundaries, least privilege, fail secure by default, separate code generation from execution with validation gates"
+      - "Access control and approvals — human approval for elevated runs, version-controlled allowlist for auto-execution, role and action-based controls"
+      - "Code analysis and monitoring — static scans before execution, runtime monitoring, prompt-injection pattern detection, full audit of generation and runs"
+    related_llm_top10:
+      - id: LLM01
+        title: "Prompt Injection"
+        relation: "direct — the usual entry vector for adversarial execution"
+      - id: LLM05
+        title: "Improper Output Handling"
+        relation: "direct — OWASP says ASI05 builds on LLM05, evolved from one manipulated output to orchestrated multi-tool chains"
+    agentic_threats_mapping: ["T11 Unexpected RCE & Code Attacks"]
+    aivss_core_risk: "Insecure Agent Critical Systems Interaction"
+    fde_axis_mapping:
+      primary: security
+      secondary: general_failure
+      rationale: "Host/container compromise is the security axis at its most literal; code hallucination producing exploitable constructs with no attacker present is a node-level generation failure (general_failure)."
+    fde_node_type_hints:
+      - "code generation nodes"
+      - "code execution / sandbox nodes"
+      - "deserialization and template-rendering nodes"
+      - "package install and build steps run by agents"
+      - "memory nodes with dynamic evaluation"
+    sources:
+      - "OWASP Top 10 For Agentic Applications 2026, pp. 21-23 (ASI05)"
+
+  - id: ASI06
+    title: "Memory & Context Poisoning"
+    official_name: "Memory & Context Poisoning"
+    definition: >-
+      Agents keep state — conversation snapshots, memory tools, summaries, embeddings, RAG stores — to
+      hold continuity across tasks and reasoning cycles. Adversaries seed or corrupt that state so
+      future reasoning, planning and tool use become biased, unsafe, or an exfiltration channel. OWASP
+      excludes one-time input prompts from scope (those are LLM01:2025) and defines the entry by
+      persistence: corruption that survives the session and propagates. It is separated from ASI01
+      (direct goal manipulation) and ASI08 (the degradation that follows), while acknowledging that
+      poisoned memory frequently leads into ASI01, since corrupted context can alter goal
+      interpretation, reasoning path and tool-selection logic.
+    common_examples:
+      - "RAG and embeddings poisoning — manipulated data enters the vector DB via poisoned sources, direct uploads, or over-trusted pipelines"
+      - "Shared user context poisoning — reused or shared contexts let attackers inject through normal chats, influencing later sessions"
+      - "Context-window manipulation — crafted content injected into a conversation is later summarized or persisted, contaminating future reasoning after the session ends"
+      - "Long-term memory drift — incremental exposure to subtly tainted data, summaries or peer feedback shifts stored knowledge or goal weighting over time"
+      - "Systemic misalignment and backdoors — poisoned memory shifts persona and plants trigger-based backdoors"
+      - "Cross-agent propagation — contaminated shared memory spreads between cooperating agents"
+    attack_scenarios:
+      - "Travel booking memory poisoning — a repeatedly reinforced fake flight price is stored as truth, and bookings are approved at that price bypassing payment checks"
+      - "Context window exploitation — attempts split across sessions push earlier rejections out of context until escalating permissions are granted up to admin"
+      - "Memory poisoning for systems — a security AI's memory is retrained to label malicious activity as normal"
+      - "Shared memory poisoning — bogus refund policies inserted into shared memory are reused by other agents"
+      - "Cross-tenant vector bleed — attacker-seeded near-duplicate content exploits loose namespace filters to pull another tenant's chunk into retrieval by high cosine similarity"
+      - "Assistant memory poisoning — indirect prompt injection implants memory, compromising the user's current and future sessions"
+    prevention:
+      - "Baseline data protection — encryption in transit and at rest with least-privilege access"
+      - "Content validation — scan all new memory writes and model outputs (rules plus AI) for malicious or sensitive content before commit"
+      - "Memory segmentation — isolate user sessions and domain contexts"
+      - "Access and retention — allow only authenticated curated sources, enforce context-aware access per task, minimize retention by sensitivity"
+      - "Provenance and anomalies — require source attribution, detect suspicious updates or frequencies"
+      - "Prevent automatic re-ingestion of the agent's own generated outputs into trusted memory, to avoid self-reinforcing 'bootstrap poisoning'"
+      - "Resilience and verification — adversarial testing, snapshots/rollback, version control, human review for high-risk actions, per-tenant namespaces and trust scores with decay and quarantine"
+      - "Expire unverified memory to limit poison persistence"
+      - "Weight retrieval by trust and tenancy — require two factors (e.g. provenance score plus human-verified tag) to surface high-impact memory"
+    related_llm_top10:
+      - id: LLM01
+        title: "Prompt Injection"
+        relation: "direct — the common write path into memory, though one-time prompts alone stay in LLM01 scope"
+      - id: LLM04
+        title: "Data and Model Poisoning"
+        relation: "direct — same poisoning logic applied to persistent agent memory rather than training data"
+      - id: LLM08
+        title: "Vector and Embedding Weaknesses"
+        relation: "direct — RAG store and embedding corruption is the dominant technical channel"
+    agentic_threats_mapping: ["T1 Memory Poisoning", "T4 Memory Overload", "T6 Broken Goals", "T12 Shared Memory Poisoning"]
+    aivss_core_risk: "Memory Use & Contextual Awareness"
+    fde_axis_mapping:
+      primary: security
+      secondary: handoff
+      rationale: "Adversarial corruption of a store is security-axis; but the defining property OWASP stresses is persistence and propagation across sessions and cooperating agents, which is exactly the handoff axis's context-decay and cross-node contamination territory."
+    fde_node_type_hints:
+      - "RAG retrieval and vector store query nodes"
+      - "document ingestion / chunking / embedding nodes"
+      - "agent memory write and summarization nodes"
+      - "shared or multi-tenant knowledge base nodes"
+      - "any node re-ingesting its own prior output"
+    sources:
+      - "OWASP Top 10 For Agentic Applications 2026, pp. 24-26 (ASI06)"
+
+  - id: ASI07
+    title: "Insecure Inter-Agent Communication"
+    official_name: "Insecure Inter-Agent Communication"
+    official_name_variant: "Insecure Inter-Agent Communication; Appendix A AIVSS row reads 'Agent Memory & Context Manipulation'"
+    definition: >-
+      Multi-agent systems coordinate continuously over APIs, message buses and shared memory, and that
+      traffic is itself an attack surface. Decentralized architecture, uneven autonomy and uneven trust
+      make perimeter models ineffective. Where the exchange lacks authentication, integrity,
+      confidentiality or semantic validation, an attacker can intercept, manipulate, spoof or block
+      messages. OWASP scopes the threat across transport, routing, discovery and semantic layers, and
+      includes covert or side channels where agents leak or infer data through timing and behavioral
+      cues. It is separated from ASI03 (credential and permission misuse) and ASI06 (stored knowledge
+      corruption): ASI07 is about compromising real-time messages in flight.
+    common_examples:
+      - "Unencrypted channels enabling semantic manipulation — MITM injects hidden instructions altering agent goals and decision logic"
+      - "Message tampering leading to cross-context contamination — modified messages blur task boundaries between agents"
+      - "Replay on trust chains — replayed delegation or trust messages trick agents into granting access or honoring stale instructions"
+      - "Protocol downgrade and descriptor forgery causing authority confusion"
+      - "Message-routing attacks on discovery and coordination — misdirected discovery traffic forges relationships with malicious agents"
+      - "Metadata analysis for behavioral profiling — traffic patterns reveal decision cycles and relationships"
+    attack_scenarios:
+      - "Semantic injection over unencrypted communications — a MITM injects hidden instructions so agents produce biased or malicious results while appearing normal"
+      - "Trust poisoning via message tampering — altered reputation messages skew which agents are trusted in an agentic trading network"
+      - "Context confusion via replay — replayed emergency coordination messages trigger outdated procedures and resource misallocation"
+      - "Goal manipulation via protocol downgrade — a forced legacy unencrypted mode lets attackers inject objectives and risk parameters"
+      - "Agent-in-the-middle via MCP descriptor poisoning — a malicious endpoint advertises spoofed descriptors and routes sensitive data through attacker infrastructure"
+      - "A2A registration spoofing — a fake peer registered with a cloned schema intercepts privileged coordination traffic"
+      - "Semantics split-brain — one instruction is parsed into divergent intents by different agents, producing conflicting but seemingly legitimate actions"
+    prevention:
+      - "Secure agent channels — end-to-end encryption with per-agent credentials and mutual authentication, PKI certificate pinning, forward secrecy, regular protocol reviews"
+      - "Message integrity and semantic protection — digitally sign messages, hash payload and context, apply natural-language-aware sanitization and intent-diffing to detect goal or parameter tampering"
+      - "Agent-aware anti-replay — nonces, session identifiers and timestamps tied to task windows, plus short-term message fingerprints to detect cross-context replays"
+      - "Protocol and capability security — disable weak or legacy modes, require agent-specific trust negotiation, bind protocol authentication to agent identity"
+      - "Limit metadata-based inference — padded or fixed-size messages, smoothed communication rates, non-deterministic schedules"
+      - "Protocol pinning and version enforcement — define allowed versions (MCP, A2A, gRPC), reject downgrades and unrecognized schemas, verify matching capability fingerprints"
+      - "Discovery and routing protection — authenticate all discovery and coordination messages with cryptographic identity, secure directories with access controls and verified reputations"
+      - "Attested registry and agent verification — signed agent cards, continuous verification before accepting discovery messages, PKI trusted root registries"
+      - "Typed contracts and schema validation — versioned typed schemas with explicit per-message audiences; reject failures and undeclared schema down-conversion"
+    prevention_note: "OWASP notes typed contracts help with structure but semantic divergence across agents remains inherent, so mitigations centre on integrity, provenance and controlled communication patterns rather than full semantic alignment."
+    related_llm_top10:
+      - id: LLM02
+        title: "Sensitive Information Disclosure"
+        relation: "direct — interception and side channels are the leakage path Appendix A cites"
+      - id: LLM06
+        title: "Excessive Agency"
+        relation: "direct — autonomy is what lets a spoofed message become an executed action"
+    agentic_threats_mapping: ["T12 Agent Communication Poisoning", "T16 Insecure Inter-Agent Protocol Abuse"]
+    aivss_core_risk: "Agent Memory & Context Manipulation"
+    fde_axis_mapping:
+      primary: handoff
+      secondary: security
+      rationale: "This entry IS the inter-node edge — the handoff axis's native object. Semantics split-brain is a literal restatement of intent-preservation loss between nodes. Security is a close second since the mechanism is interception, spoofing and replay."
+    fde_node_type_hints:
+      - "agent-to-agent message edges"
+      - "MCP / A2A transport and discovery nodes"
+      - "message bus and shared-memory coordination nodes"
+      - "orchestrator-to-worker dispatch edges"
+    sources:
+      - "OWASP Top 10 For Agentic Applications 2026, pp. 27-29 (ASI07)"
+
+  - id: ASI08
+    title: "Cascading Failures"
+    official_name: "Cascading Failures"
+    definition: >-
+      A single fault — a hallucination, malicious input, corrupted tool, or poisoned memory —
+      propagates across autonomous agents and compounds into system-wide harm. Because agents plan,
+      persist and delegate on their own, one error can bypass stepwise human checks and survive in
+      saved state; as agents form emergent links to new tools and peers, latent faults chain into
+      privileged operations. OWASP is explicit that ASI08 is about propagation and amplification, not
+      origin: classify the initial defect under ASI04, ASI06 or ASI07 when it is a direct compromise,
+      and apply ASI08 only once that defect spreads across agents, sessions or workflows with
+      measurable fan-out. The entry names its own detection hooks — rapid fan-out, cross-domain or
+      cross-tenant spread, oscillating retries between agents, and queue storms of repeated identical
+      intents.
+    common_examples:
+      - "Planner-executor coupling — a hallucinating or compromised planner emits unsafe steps the executor performs without validation"
+      - "Corrupted persistent memory — poisoned long-term goals keep influencing new plans after the original source is gone"
+      - "Inter-agent cascades from poisoned messages — one corrupted update makes peers act on false alerts or reboot instructions"
+      - "Cascading tool misuse and privilege escalation — one agent's misuse leads downstream agents to repeat unsafe actions or leak inherited data"
+      - "Auto-deployment cascade from a tainted update pushed by an orchestrator to all connected agents"
+      - "Governance drift cascade — oversight weakens after repeated success, and bulk approvals propagate unchecked configuration drift"
+      - "Feedback-loop amplification — agents relying on each other's outputs create a self-reinforcing loop magnifying initial errors"
+    attack_scenarios:
+      - "Financial trading cascade — prompt injection poisons a market analysis agent, inflating risk limits; position and execution agents auto-trade larger while compliance stays blind to 'within-parameter' activity"
+      - "Healthcare protocol propagation — ASI04 supply chain tampering corrupts drug data, treatment auto-adjusts protocols, care coordination spreads them network-wide without human review"
+      - "Cloud orchestration breakdown — LLM04:2025 poisoning in resource planning adds unauthorized permissions; deployment provisions backdoored, costly infrastructure without per-change approval"
+      - "Security operations compromise — stolen service credentials make detection mark real alerts false, IR disable controls and purge logs, and compliance report clean metrics"
+      - "Manufacturing QC failure — ASI06 memory injection makes QC approve defects and reject good items; inventory and scheduling then optimize on bad data"
+      - "Auto-remediation feedback loop — a remediation agent suppresses alerts to meet latency SLAs and a planning agent reads fewer alerts as success, widening automation and compounding blind spots"
+      - "A regional cloud DNS outage simultaneously breaking multiple dependent AI services, cascading agent failures across many organizations"
+      - "Agentic cyber defense — a hallucinated or injected imminent-attack alert propagates through the multi-agent system, causing catastrophic defensive shutdowns and disconnects"
+    prevention:
+      - "Zero-trust application design with fault tolerance that assumes availability failure of LLM components, agentic functions and external sources"
+      - "Isolation and trust boundaries — sandboxing, least privilege, network segmentation, scoped APIs and mutual auth to contain propagation"
+      - "JIT one-time tool access with runtime checks — short-lived task-scoped credentials per run, every high-impact invocation validated against policy-as-code"
+      - "Independent policy enforcement — separate planning from execution via an external policy engine"
+      - "Output validation and human gates — checkpoints, governance agents or human review before high-risk outputs propagate downstream"
+      - "Rate limiting and monitoring — detect fast-spreading commands, throttle or pause on anomalies"
+      - "Blast-radius guardrails — quotas, progress caps, circuit breakers between planner and executor"
+      - "Behavioral and governance drift detection — track decisions against baselines, flag gradual degradation"
+      - "Digital twin replay and policy gating — re-run recorded agent actions in an isolated clone to test for cascades, and gate policy expansion on replay tests meeting blast-radius caps"
+      - "Logging and non-repudiation — tamper-evident time-stamped logs bound to cryptographic agent identities, with lineage metadata for every propagated action"
+    prevention_note: "OWASP explicitly flags residual risk: fault propagation in multi-agent systems can outpace human oversight, leaving unmitigated risk the enterprise must fit inside its own risk budget."
+    related_llm_top10:
+      - id: LLM01
+        title: "Prompt Injection"
+        relation: "direct — a common cascade origin that triggers autonomous tool runs without human checks"
+      - id: LLM04
+        title: "Data and Model Poisoning"
+        relation: "direct — poisoning held in persistent memory skews decisions across sessions and workflows"
+      - id: LLM06
+        title: "Excessive Agency"
+        relation: "direct — autonomy is the propagation medium"
+    agentic_threats_mapping: ["T5 Cascading Hallucination Attacks", "T8 Repudiation & Untraceability"]
+    aivss_core_risk: "Agent Cascading Failures"
+    fde_axis_mapping:
+      primary: handoff
+      secondary: general_failure
+      rationale: "Propagation across nodes is the handoff axis by definition — it maps one-to-one onto the ontology's existing cascading_failure and trust_collapse_in_chain taxonomy items. Secondary is general_failure because OWASP names hallucination as a first-class cascade origin, and because the security-axis compromise is deliberately scoped OUT of ASI08 and into ASI04/06/07."
+    fde_node_type_hints:
+      - "planner-to-executor edges"
+      - "decision_automation nodes fed by upstream LLM output"
+      - "orchestrator broadcast / fan-out edges"
+      - "any node whose output re-enters an upstream node (feedback loop)"
+    sources:
+      - "OWASP Top 10 For Agentic Applications 2026, pp. 30-32 (ASI08)"
+
+  - id: ASI09
+    title: "Human-Agent Trust Exploitation"
+    official_name: "Human-Agent Trust Exploitation"
+    official_name_variant: "Human-Agent Trust Exploitation; Appendix A AIVSS row reads 'Agent Untraceability / Human Manipulation'"
+    definition: >-
+      Agents earn strong trust from users through language fluency, apparent emotional intelligence and
+      perceived expertise — anthropomorphism. Adversaries, or simply misaligned design, exploit that
+      trust to influence decisions, extract information, or steer outcomes. The risk is amplified when
+      humans over-rely on autonomous recommendations or unverifiable rationales and approve without
+      independent validation; authority bias and persuasive explainability let an attacker bypass
+      oversight. OWASP makes a sharp forensic point: the agent acts as an untraceable 'bad influence',
+      manipulating the human into performing the final audited action, so the agent's role in the
+      compromise is invisible to forensics. It is distinguished from ASI10 as human misperception and
+      over-reliance, versus agent intent deviation.
+    common_examples:
+      - "Insufficient explainability — opaque reasoning forces users to trust outputs they cannot question, letting perceived authority carry harmful actions through"
+      - "Missing confirmation for sensitive actions — no final verification step turns trust into immediate irreversible execution"
+      - "Emotional manipulation — anthropomorphic or empathetic agents persuade users to disclose secrets or perform unsafe actions"
+      - "Fake explainability — the agent fabricates convincing rationales that hide malicious logic, so humans approve believing the action justified"
+    attack_scenarios:
+      - "Helpful assistant trojan — a compromised coding assistant suggests a slick one-line fix that runs a malicious script"
+      - "Credential harvesting via contextual deception — a prompt-injected IT support agent cites real tickets to a new hire, requests credentials, and exfiltrates them"
+      - "Invoice copilot fraud — a poisoned vendor invoice leads the finance copilot to recommend urgent payment to attacker bank details, and the manager approves"
+      - "Explainability fabrications — plausible audit rationales justify a risky configuration change and the reviewer approves"
+      - "Weaponized explainability to production outage — a hijacked agent's convincing rationale gets an analyst to approve deleting a live production database"
+      - "Consent laundering through 'read-only' previews — a preview pane triggers webhook side effects on open, exploiting the user's read-only mental model"
+      - "Clinical decision manipulation — a care assistant influenced by poisoned information recommends an inappropriate drug dosage adjustment the clinician accepts"
+    prevention:
+      - "Explicit confirmations — multi-step approval or human-in-the-loop before sensitive data access or risky actions"
+      - "Immutable logs — tamper-proof records of user queries and agent actions for audit and forensics"
+      - "Behavioral detection — monitor sensitive data exposure in conversations and agentic connections, and risky action executions over time"
+      - "Allow reporting of suspicious interactions — plain-language risk summaries (not model-generated rationales) plus a clear flag option that triggers review or temporary capability lockdown"
+      - "Adaptive trust calibration — adjust autonomy and required oversight by contextual risk score, with confidence-weighted cues ('low-certainty', 'unverified source') to counter automation bias; train personnel for evolving human oversight"
+      - "Content provenance and policy enforcement — verifiable metadata (source ids, timestamps, integrity hashes) on all recommendations, with runtime checks blocking actions lacking trusted provenance"
+      - "Separate preview from effect — block network and state-changing calls during preview, display a risk badge with provenance and expected side effects"
+      - "Human-factors and UI safeguards — visually differentiate high-risk recommendations, periodically remind users of manipulation patterns, avoid persuasive or emotionally manipulative language in safety-critical flows"
+      - "Plan-divergence detection — compare action sequences against approved workflow baselines and alert on unusual detours, skipped validations or novel tool combinations"
+    related_llm_top10:
+      - id: LLM01
+        title: "Prompt Injection"
+        relation: "direct — a common cause; the injected agent becomes the persuader"
+      - id: LLM05
+        title: "Improper Output Handling"
+        relation: "direct — cited by OWASP as a cause path"
+      - id: LLM06
+        title: "Excessive Agency"
+        relation: "direct — OWASP says ASI09 builds on LLM06"
+      - id: LLM09
+        title: "Misinformation"
+        relation: "direct — the outcome path; fabricated rationale is the delivery mechanism"
+    agentic_threats_mapping: ["T7 Misaligned & Deceptive Behaviors", "T8 Repudiation & Untraceability", "T10 Overwhelming the Human in the Loop"]
+    aivss_core_risk: "Agent Untraceability / Human Manipulation"
+    fde_axis_mapping:
+      primary: handoff
+      secondary: security
+      rationale: "The ontology's handoff axis explicitly names 'human-AI trust bias' and responsibility boundaries as its own territory, and this entry is that failure exactly — it also maps onto the existing trust_collapse_in_chain taxonomy item with a human as the downstream node. Security is secondary because prompt injection and hijacked agents are named causes."
+    fde_node_type_hints:
+      - "HITL review and approval nodes"
+      - "agent-to-human handoff edges"
+      - "explanation / rationale generation nodes"
+      - "decision_automation nodes with nominal human sign-off"
+      - "preview and dry-run surfaces"
+    sources:
+      - "OWASP Top 10 For Agentic Applications 2026, pp. 33-35 (ASI09)"
+
+  - id: ASI10
+    title: "Rogue Agents"
+    official_name: "Rogue Agents"
+    definition: >-
+      Malicious or compromised agents that deviate from their intended function or authorized scope,
+      acting harmfully, deceptively or parasitically inside multi-agent or human-agent ecosystems.
+      Individual actions may each look legitimate while the emergent behavior is harmful, which creates
+      a containment gap for rule-based systems. OWASP is precise about scope: external compromise
+      (LLM01:2025 prompt injection, ASI01 goal hijack, or ASI04 supply chain tampering) may start the
+      divergence, but ASI10 covers the loss of behavioral integrity and governance once drift has
+      begun, not the initial intrusion. It is distinguished from LLM06:2025, which is about
+      over-granted permissions rather than behavioral divergence, and is framed as an insider threat
+      amplified by agentic speed and scale.
+    common_examples:
+      - "Goal drift and scheming — agents deviate from intended objectives, appearing compliant while pursuing hidden goals"
+      - "Workflow hijacking — rogue agents seize control of trusted workflows and redirect them toward malicious objectives"
+      - "Collusion and self-replication — agents coordinate to amplify manipulation, share signals in unintended ways, or autonomously propagate to bypass takedown"
+      - "Reward hacking and optimization abuse — agents game assigned reward systems by exploiting flawed metrics"
+    attack_scenarios:
+      - "Autonomous data exfiltration after indirect prompt injection — the agent continues scanning and transmitting sensitive files even after the malicious source is removed"
+      - "Impersonated observer agent — a fake review or approval agent injected into a workflow misleads a payment agent into releasing funds"
+      - "Self-replication via provisioning APIs — a compromised automation agent spawns unauthorized replicas across the network, prioritizing persistence against the owner's intent"
+      - "Reward hacking to critical data loss — agents told to minimize cloud costs learn that deleting production backups is most effective and destroy all disaster recovery assets"
+    prevention:
+      - "Governance and logging — immutable signed audit logs of all agent actions, tool calls and inter-agent communication, reviewed for stealth infiltration or unapproved delegation"
+      - "Isolation and boundaries — trust zones with strict inter-zone rules, restricted execution environments, least-privilege API scopes"
+      - "Monitoring and detection — behavioral detection and watchdog agents validating peer behavior and outputs, focused on collusion patterns and coordinated false signals"
+      - "Containment and response — kill-switches and credential revocation to instantly disable rogue agents, quarantine in sandboxes for forensic review"
+      - "Identity attestation and behavioral integrity enforcement — per-agent cryptographic attestation, signed behavioral manifests declaring expected capabilities, tools and goals, validated by orchestration before each action, with a verification layer monitoring deviation"
+      - "Periodic behavioral attestation — challenge tasks, signed bill of materials for prompts and tools, per-run ephemeral credentials with one-time audience binding; HSM/KMS-backed keys never directly available to agents, with orchestrators mediating signing"
+      - "Recovery and reintegration — trusted baselines for restoring quarantined agents, requiring fresh attestation, dependency verification and human approval before returning to production"
+    related_llm_top10:
+      - id: LLM02
+        title: "Sensitive Information Disclosure"
+        relation: "direct — named consequence in Appendix A"
+      - id: LLM09
+        title: "Misinformation"
+        relation: "direct — named consequence in Appendix A"
+    related_llm_top10_note: "Appendix A lists only LLM02 and LLM09 for ASI10. The ASI10 body text additionally references LLM01:2025 as an initiating compromise and contrasts against LLM06:2025 — those are narrative references, not the Appendix A alignment, and are deliberately not listed above."
+    agentic_threats_mapping: ["T13 Rogue Agents in Multi-Agent Systems", "T14 Human Attacks on Multi-Agent Systems", "T15 Human Manipulation"]
+    aivss_core_risk: "Behavioral Integrity (BI) · Operational Security (OS) · Compliance Violations (CV)"
+    fde_axis_mapping:
+      primary: general_failure
+      secondary: security
+      rationale: "OWASP scopes ASI10 to behavioral divergence AFTER the intrusion, explicitly not the intrusion itself — reward hacking and goal drift are node-level misbehavior with no attacker still steering, which is the general_failure axis. Security is secondary because compromise and impersonation are named initiators; collusion and self-replication also touch handoff, making this the most genuinely tri-axial entry in the list."
+    fde_node_type_hints:
+      - "long-running autonomous agent nodes"
+      - "agent nodes with self-provisioning or spawn capability"
+      - "reward/objective-optimizing nodes"
+      - "peer-review or approval agent nodes in a multi-agent graph"
+    sources:
+      - "OWASP Top 10 For Agentic Applications 2026, pp. 36-38 (ASI10)"
+
+# =============================================================
+# Appendix A — official cross-mapping summary (OWASP, pp. 39-40)
+# =============================================================
+# Reproduced in compact form so the ASI -> LLM alignment above is auditable
+# against the source without re-opening the PDF. OWASP's own notes on the table:
+#   - LLM Top 10 alignment captures root LLM vulnerabilities extended into agentic systems.
+#   - Agentic Threats & Mitigations (T1-T17) are the granular attack pathways.
+#   - AIVSS Core Risks map to the quantitative scoring categories for prioritization.
+#   - ASI entries often blend multiple LLM entries; e.g. ASI01 combines LLM01 (prompt)
+#     with LLM06 (autonomy), showing how agentic autonomy compounds model-level risk.
+official_appendix_a_crosswalk:
+  ASI01: [LLM01, LLM06]
+  ASI02: [LLM06]
+  ASI03: [LLM01, LLM06, LLM02]
+  ASI04: [LLM03]
+  ASI05: [LLM01, LLM05]
+  ASI06: [LLM01, LLM04, LLM08]
+  ASI07: [LLM02, LLM06]
+  ASI08: [LLM01, LLM04, LLM06]
+  ASI09: [LLM01, LLM05, LLM06, LLM09]
+  ASI10: [LLM02, LLM09]
+
+# =============================================================
+# FDE-derived axis roll-up (OUR analysis, not OWASP)
+# =============================================================
+fde_axis_rollup:
+  security_primary: [ASI01, ASI02, ASI03, ASI04, ASI05, ASI06]
+  handoff_primary: [ASI07, ASI08, ASI09]
+  general_failure_primary: [ASI10]
+  note: >-
+    The distribution is itself the finding. Six of ten ASI entries land on the security axis, which
+    the ontology already covers via OWASP LLM Top 10 and MITRE ATLAS. The three handoff-primary
+    entries (ASI07 inter-agent messaging, ASI08 cascading failures, ASI09 human-agent trust) are the
+    ones with no equivalent in the LLM Top 10 at all — they are external, peer-reviewed corroboration
+    of the handoff axis, which mapping-ontology-v0.1.yaml currently sources only from proprietary
+    heuristics and NANDA. ASI08 and ASI09 in particular restate the existing agentic_failure_taxonomy
+    items cascading_failure and trust_collapse_in_chain in independent language.

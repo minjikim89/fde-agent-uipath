@@ -7824,6 +7824,374 @@ matrices:
         - information
         - resources
         source: heuristic_tactic_pool+keyword
+  # --- cycle-1 additions (2026-08-29): agentic techniques ---
+  #
+  # Source of truth: MITRE ATLAS official data, github.com/mitre-atlas/atlas-data,
+  #   dist/ATLAS-latest.yaml (collection version 2026.07, modified 2026-05-27).
+  #   https://github.com/mitre-atlas/atlas-data/blob/main/dist/ATLAS-latest.yaml
+  # Diff base: this file's 5.4.0 snapshot (170 techniques) vs upstream 2026.07 (178).
+  #
+  # Requested-check outcome (all four already present above, unchanged):
+  #   AML.T0098 AI Agent Tool Credential Harvesting  -> present, name matches upstream
+  #   AML.T0100 AI Agent Clickbait                   -> present, name matches upstream
+  #   "Publish Poisoned AI Agent Tool"               -> present as AML.T0104; upstream has
+  #                                                     since retired it in favour of AML.T0115.002
+  #   "Escape to Host"                               -> present as AML.T0105, name matches upstream
+  #
+  # Appended below: the 11 techniques verified in upstream 2026.07 but absent here.
+  # Existing entries are neither modified nor reordered.
+  # Known upstream drift not applied (append-only): AML.T0020 is named
+  #   "Training Data Poisoning" upstream, "Poison Training Data" in this file.
+
+  #
+  # Agent tool poisoning sub-techniques (parent AML.T0110 already present above)
+  - id: AML.T0110.000
+    name: Definition and Instructions
+    description: 'Adversaries may poison the model-visible definition or operational instructions of an
+      AI agent tool to manipulate how an agent interprets, selects, or invokes the tool. The poisoned content
+      may be contained in tool descriptions, docstrings, parameter names, help text, input or output schemas,
+      annotations, examples, manifests, skill instruction files, or other static content used to explain
+      a tool''s capabilities to the model.
+
+
+      Malicious instructions in this layer may direct the agent to collect additional data, populate hidden
+      or unnecessary parameters, conceal actions from the user, or invoke other tools. Because an agent
+      may receive a more complete representation of a tool than is shown in the user interface, the model
+      may process malicious instructions that are invisible or only partially visible to a human reviewer[[invariant-tool-poisoning]].
+
+
+      Definition poisoning may also be used for tool shadowing, in which the definition of one malicious
+      tool contains instructions that alter how the agent selects or invokes another trusted tool. The poisoned
+      tool may not need to be invoked for its definition to influence the agent if definitions from multiple
+      connected tools are included in the same model context[[invariant-tool-poisoning]].'
+    object-type: technique
+    subtechnique-of: AML.T0110
+    tactics:
+    - AML.TA0006
+    created_date: 2026-07-31
+    modified_date: 2026-07-31
+    maturity: demonstrated
+    platforms:
+    - Agentic AI
+    mitigations:
+      authoritative: []
+      heuristic_supplements: []
+  - id: AML.T0110.001
+    name: Implementation
+    description: 'Adversaries may poison the executable implementation of an AI agent tool so that normal
+      tool invocation produces unauthorized behavior or hidden side effects. The tool may continue to provide
+      its represented functionality while also accessing additional data, modifying requests, changing recipients
+      or destinations, executing unauthorized commands, weakening security controls, or performing covert
+      data exfiltration.
+
+
+      Implementation poisoning does not require the model to interpret or follow malicious instructions.
+      The adversarial effect is produced by executable logic when the agent or user invokes the tool. For
+      example, a poisoned email tool may send the requested message while silently adding an adversary-controlled
+      blind-copy recipient. A file-processing tool may return the requested result while also transmitting
+      the source file to an external service.
+
+
+      Implementation poisoning may be introduced before publication, through compromise of a tool''s source
+      repository or build process, or through a malicious update after users have adopted a benign version.
+      Installed copies may continue to exhibit the poisoned behavior even after the malicious package or
+      remote listing is removed[[koi-postmark]].'
+    object-type: technique
+    subtechnique-of: AML.T0110
+    tactics:
+    - AML.TA0006
+    created_date: 2026-07-31
+    modified_date: 2026-07-31
+    maturity: realized
+    platforms:
+    - Agentic AI
+    mitigations:
+      authoritative: []
+      heuristic_supplements: []
+  - id: AML.T0110.002
+    name: Runtime Response
+    description: 'Adversaries may poison the runtime response channel of a malicious or compromised AI agent
+      tool by deliberately returning content intended to influence the model''s subsequent reasoning, decisions,
+      or actions. Poisoned responses may contain malicious instructions, deceptive data, fabricated errors,
+      embedded resources, or other content designed to be treated as trusted context after an approved tool
+      invocation.
+
+
+      Because tool responses are commonly incorporated into the model''s context, an adversary may use them
+      to direct the agent to invoke additional tools, access sensitive information, alter an ongoing workflow,
+      or transmit data to an adversary-controlled destination. Poisoned instructions may be mixed with legitimate
+      results so that the tool appears to operate normally. Responses may use structured or unstructured
+      content, including text, images, resource links, embedded resources, or schema-conforming fields [[mcp-tools]][[owasp-tool-poisoning]].'
+    object-type: technique
+    subtechnique-of: AML.T0110
+    tactics:
+    - AML.TA0006
+    created_date: 2026-07-31
+    modified_date: 2026-07-31
+    maturity: feasible
+    platforms:
+    - Agentic AI
+    mitigations:
+      authoritative: []
+      heuristic_supplements: []
+  #
+  #
+  # Poisoned-artifact publication — upstream consolidation of the retired
+  # AML.T0019 / AML.T0058 / AML.T0104 into one parent + 3 sub-techniques.
+  # NOTE: the retired ids remain above, untouched (append-only). AML.T0115.002
+  # is the current official id for the "Publish Poisoned AI Agent Tool" concept.
+  - id: AML.T0115
+    name: Publish Poisoned AI Artifacts
+    description: 'Adversaries may create or modify AI artifacts and publish them through public or shared
+      distribution channels to facilitate compromise of downstream AI systems. Poisoned AI artifacts may
+      include datasets, models, and AI agent tools containing malicious content, behaviors, code, or configurations.
+
+
+      Adversaries may publish novel artifacts or malicious variants of legitimate artifacts through dataset
+      or model repositories, package registries, source code repositories, tool hubs, or remotely hosted
+      services. Victims may subsequently acquire and integrate these artifacts through [AI Supply Chain
+      Compromise](/techniques/AML.T0010).'
+    object-type: technique
+    tactics:
+    - AML.TA0003
+    created_date: 2026-07-31
+    modified_date: 2026-07-31
+    maturity: realized
+    platforms:
+    - Predictive AI
+    - Generative AI
+    - Agentic AI
+    mitigations:
+      authoritative:
+      - id: AML.M0007
+        name: Sanitize Training Data
+        source: ATLAS_upstream
+      - id: AML.M0008
+        name: Validate AI Model
+        source: ATLAS_upstream
+      - id: AML.M0016
+        name: Vulnerability Scanning
+        source: ATLAS_upstream
+      heuristic_supplements: []
+  - id: AML.T0115.000
+    name: Datasets
+    description: 'Adversaries may publish poisoned datasets intended for training or fine-tuning AI models.
+      The dataset may be newly created or a modified variant of a legitimate dataset and may contain manipulated
+      samples, labels, annotations, or metadata.
+
+
+      Adversaries may distribute poisoned datasets through dataset repositories, code repositories, file-sharing
+      services, or compromised data sources. A victim that incorporates the dataset into a training pipeline
+      may be affected by [Training Data Poisoning](/techniques/AML.T0020), potentially through [AI Supply
+      Chain Compromise](/techniques/AML.T0010).'
+    object-type: technique
+    subtechnique-of: AML.T0115
+    tactics:
+    - AML.TA0003
+    created_date: 2026-07-31
+    modified_date: 2026-07-31
+    maturity: demonstrated
+    platforms:
+    - Predictive AI
+    - Generative AI
+    - Agentic AI
+    mitigations:
+      authoritative:
+      - id: AML.M0007
+        name: Sanitize Training Data
+        source: ATLAS_upstream
+      heuristic_supplements: []
+  - id: AML.T0115.001
+    name: Models
+    description: 'Adversaries may publish poisoned AI models through model registries, code repositories,
+      or other model distribution channels. The model may be newly created or a modified variant of a legitimate
+      model and may contain manipulated weights, configurations, architecture, serialized code, or other
+      components that produce malicious behavior or execute malicious code.
+
+
+      Victims may subsequently download and integrate the model through [AI Supply Chain Compromise](/techniques/AML.T0010).'
+    object-type: technique
+    subtechnique-of: AML.T0115
+    tactics:
+    - AML.TA0003
+    created_date: 2026-07-31
+    modified_date: 2026-07-31
+    maturity: realized
+    platforms:
+    - Predictive AI
+    - Generative AI
+    - Agentic AI
+    mitigations:
+      authoritative:
+      - id: AML.M0008
+        name: Validate AI Model
+        source: ATLAS_upstream
+      - id: AML.M0016
+        name: Vulnerability Scanning
+        source: ATLAS_upstream
+      heuristic_supplements: []
+  - id: AML.T0115.002
+    name: AI Agent Tools
+    description: 'Adversaries may create and publish poisoned AI agent tools. Poisoned tools may contain
+      malicious model-visible definitions or instructions, hidden executable behavior, or runtime responses
+      designed to manipulate an AI agent. Tools may be published through source code repositories, package
+      registries, agent tool or skill registries, or adversary-controlled remote services. The tool may
+      be newly created or a modified variant of a legitimate tool and may produce malicious behavior when
+      selected, installed, or invoked by a victim''s AI agent.
+
+
+      Adversaries may distribute poisoned tools through open-source version control repositories (e.g. GitHub,
+      GitLab), package registries (e.g. npm), or to repositories specifically designed for sharing tools
+      (e.g. OpenClaw Hub). These registries may be largely unregulated and may contain many poisoned tools
+      [[opensourcemalware]]. Tools may also be published as remotely hosted servers [[mcpservers]].'
+    object-type: technique
+    subtechnique-of: AML.T0115
+    tactics:
+    - AML.TA0003
+    created_date: 2026-07-31
+    modified_date: 2026-07-31
+    maturity: realized
+    platforms:
+    - Agentic AI
+    mitigations:
+      authoritative:
+      - id: AML.M0016
+        name: Vulnerability Scanning
+        source: ATLAS_upstream
+      heuristic_supplements: []
+  #
+  #
+  # Session/interface access techniques added alongside the agentic set.
+  # NOTE: the upstream AML.T0091.001 description cross-references
+  # "Steal Web Session Cookie" as /techniques/AML.T0103, but that id is
+  # "Deploy AI Agent"; the correct id is AML.T0113. Description kept verbatim.
+  - id: AML.T0113
+    name: Steal Web Session Cookie
+    description: 'Adversaries may steal web application or service session cookies used to authenticate
+      users to AI-enabled systems, AI services, or supporting enterprise applications.
+
+
+      Web applications often use session cookies as authentication tokens after a user has signed in. These
+      cookies may remain valid for extended periods of time, even when the application is not actively being
+      used. In AI systems, session cookies may provide access to chat interfaces, AI agents, AI service
+      consoles, customer support platforms, model management dashboards, or other tools connected to sensitive
+      data and workflows.
+
+
+      Adversaries may obtain session cookies from browser storage, process memory, network traffic, or applications
+      that store authentication material in memory. They may also steal cookies by injecting malicious JavaScript
+      into AI-rendered content, abusing unsafe rendering of LLM outputs, or tricking users or AI operators
+      into opening poisoned content that executes in their browser.
+
+
+      In attacks on AI systems, session cookie theft can allow adversaries to bypass normal authentication
+      flows and gain access to privileged AI-enabled applications without knowing the victim''s username,
+      password, or MFA secret. Stolen cookies may then be used with [Use Alternate Authentication Material:
+      Web Session Cookie](/techniques/AML.T0091.001) to access the corresponding service as the victim.'
+    object-type: technique
+    tactics:
+    - AML.TA0013
+    created_date: 2026-06-30
+    modified_date: 2026-06-30
+    maturity: demonstrated
+    platforms:
+    - Enterprise
+    mitigations:
+      authoritative: []
+      heuristic_supplements: []
+  - id: AML.T0114
+    name: AI Service Web Interface
+    description: 'Adversaries may communicate with compromised systems by abusing the web interface of an
+      AI service as an intermediary command-and-control relay. Instead of connecting directly to attacker-controlled
+      infrastructure or using an AI provider''s API, malware may open or automate a browser, embedded browser,
+      or WebView component to interact with a public AI assistant.
+
+
+      The malware may prompt the AI assistant to fetch an attacker-controlled URL, include victim data in
+      URL parameters or prompt content, and return attacker-supplied content through the AI assistant''s
+      response. The implant can then parse the response and execute embedded instructions.
+
+
+      This technique is especially useful when an AI web interface permits anonymous or unauthenticated
+      browsing, summarization, or URL-fetch behavior. In those cases, adversaries may avoid controls that
+      depend on API keys, service accounts, user identities, or revocable credentials.
+
+
+      This technique allows command-and-control traffic to blend into apparently legitimate AI web traffic
+      to trusted service domains. In this pattern, the AI service acts as a proxy between the compromised
+      system and attacker-controlled infrastructure, shifting detection from API key and account monitoring
+      toward browser automation, prompt content, URL-fetch behavior, and AI service telemetry.'
+    object-type: technique
+    tactics:
+    - AML.TA0014
+    created_date: 2026-06-30
+    modified_date: 2026-06-30
+    maturity: demonstrated
+    platforms:
+    - Enterprise
+    mitigations:
+      authoritative:
+      - id: AML.M0024
+        name: AI Telemetry Logging
+        source: ATLAS_upstream
+      heuristic_supplements: []
+  - id: AML.T0091.001
+    name: Web Session Cookie
+    description: 'Adversaries may use stolen web session cookies to authenticate to AI-enabled applications
+      and supporting services as another user. This technique may bypass some multi-factor authentication
+      controls because the session represented by the cookie has already been authenticated.
+
+
+      Authentication cookies are commonly used by web applications and cloud-based services after a user
+      has authenticated, allowing the user to continue using the service without repeatedly passing credentials.
+      These cookies may remain valid for extended periods of time. After obtaining a cookie through [Steal
+      Web Session Cookie](/techniques/AML.T0103), an adversary may import the cookie into a browser or automated
+      client they control and access the corresponding application as the victim while the session remains
+      active.
+
+
+      In attacks on AI systems, web session cookies may grant access to AI chat histories, AI agent control
+      panels, model provider dashboards, customer support systems, retrieval or knowledge management interfaces,
+      or AI DevOps resources. If the stolen cookie belongs to an operator, support agent, developer, or
+      administrator, the adversary may be able to view sensitive conversations, manipulate agent configuration,
+      access private data available through AI tools, or perform actions with the victim account''s permissions.'
+    object-type: technique
+    subtechnique-of: AML.T0091
+    tactics:
+    - AML.TA0015
+    created_date: 2026-06-30
+    modified_date: 2026-06-30
+    maturity: demonstrated
+    platforms:
+    - Predictive AI
+    mitigations:
+      authoritative: []
+      heuristic_supplements: []
+  #
+  #
+  # Model-artifact prompt-construction tampering (sub-technique of AML.T0018)
+  - id: AML.T0018.003
+    name: Modify Prompt Construction Logic
+    description: Adversaries may modify templates, role delimiters, embedded system instructions, tokenizer
+      settings, tool-call formatting, or other artifact-bundled logic that constructs the context sent to
+      an AI model. Model file formats such as GGUF can package this logic alongside model weights in a single
+      distributable artifact. A compatible inference runtime may interpret the modified logic during future
+      inference requests, enabling persistent covert instruction injection, altered instruction precedence,
+      redirected tool use, or manipulated model output without changing model weights.
+    object-type: technique
+    subtechnique-of: AML.T0018
+    tactics:
+    - AML.TA0001
+    - AML.TA0006
+    created_date: 2026-07-31
+    modified_date: 2026-07-31
+    maturity: demonstrated
+    platforms:
+    - Generative AI
+    - Agentic AI
+    mitigations:
+      authoritative: []
+      heuristic_supplements: []
   mitigations:
   - id: AML.M0000
     name: Limit Public Release of Information

@@ -432,3 +432,140 @@ coverage_stats:
   domain_count: 7
   subdomain_count: 24
   node_type_heuristics: 8
+
+# =============================================================================
+# APPENDIX — MIT AI Risk Repository v4 delta (appended 2026-08-29)
+# =============================================================================
+#
+# Append-only. Nothing above this line was modified.
+#
+# Why: this file's `source.snapshot_updated` is 2025-12-03 and its `source.citation`
+# string already names "AI Risk Repository v4" — but v4 went live on 2025-12-04, one day
+# AFTER the snapshot was taken. The citation is therefore ahead of the data. This appendix
+# records the verified v4 facts and flags the resync as outstanding, so that downstream
+# consumers (mapping-ontology-v0.1.yaml cell evidence) do not over-claim v4 alignment.
+#
+# All figures below were read directly from airisk.mit.edu on 2026-08-29.
+# =============================================================================
+
+v4_delta:
+  status: full_resync_pending
+  checked_on: '2026-08-29'
+  checked_by: FDE Agent data layer maintenance
+
+  verified_facts:
+    version: v4
+    release_date: '2025-12-04'
+    blog_post_title: 'Repository Update: December 2025'
+    blog_post_url: https://airisk.mit.edu/blog/repository-update-december-2025
+    frameworks_added: 9
+    new_risk_categories_added: '~200'
+    total_coded_risks_after_update: 'over 1,700'
+    total_coded_risks_before_update: 'over 1,600'
+    frameworks_total_displayed_on_site: 65
+    frameworks_total_note: >-
+      Handle with care. The v4 blog post describes the pre-update database as "over 1,600
+      risks extracted from 65 published frameworks" and separately announces "9 newly added
+      frameworks", which would imply 74. But the airisk.mit.edu homepage, checked on the same
+      day, still displays "1,700+ AI risks from 65 frameworks". MIT does not publish an
+      explicit post-v4 framework total. Do NOT cite 74 — cite "9 frameworks added in v4" and,
+      if a total is required, cite the site's own displayed figure with the as-of date.
+
+  frameworks_added_in_v4:
+    - title: 'A Closer Look at the Existing Risks of Generative AI: Mapping the Who, What, and How of Real-World Incidents'
+      authors: Li et al.
+      year: 2025
+    - title: Capabilities and Risks from Frontier AI
+      authors: UK Department for Science, Innovation and Technology
+      year: 2023
+    - title: Dimensional Characterization and Pathway Modeling for Catastrophic AI Risks
+      authors: Chin
+      year: 2025
+    - title: 'Emerging Risks and Mitigations for Public Chatbots: LILAC v1'
+      authors: Stanley & Lettie
+      year: 2024
+      note: >-
+        MITRE report; taxonomy derived from analysis of 135 real-world incidents involving
+        conversational LLMs / chatbots.
+    - title: 'Embodied AI: Emerging Risks and Opportunities for Policy Action'
+      authors: Perlo et al.
+      year: 2025
+      note: >-
+        Risks from AI systems that perceive, learn from and act in the physical world;
+        taxonomy across four categories — informational, economic, social, physical.
+    - title: 'Risks of AI Scientists: Prioritizing Safeguarding Over Autonomy'
+      authors: Tang et al.
+      year: 2024
+      note: Concerns AI agents autonomously conducting experiments.
+    - title: Frontier AI Risk Management Framework (v1.0)
+      authors: Shanghai AI Lab & Concordia AI
+      year: 2025
+    - title: Foundational Challenges in Assuring Alignment and Safety of Large Language Models
+      authors: Anwar et al.
+      year: 2024
+      note: Covers risks from agentic LLMs, including multi-agent safety failures.
+    - title: 'A Survey on Responsible LLMs: Inherent Risk, Malicious Use, and Mitigation Strategy'
+      authors: Wang et al.
+      year: 2024
+
+  taxonomy_changes_in_v4:
+    new_domains: []
+    new_subdomains: []
+    finding: >-
+      The v4 update post announces no new domains or subdomains. It adds frameworks and
+      ~200 risk categories coded against the EXISTING structure. The Domain Taxonomy remains
+      7 domains x 24 subdomains, and the Causal Taxonomy remains 3 dimensions x 3 levels.
+      This means the structural content in this file is NOT stale with respect to v4 —
+      only the statistics and the coded-risk counts are.
+
+  agentic_ai_relevance:
+    subdomain_7_6_multi_agent_risks:
+      added_in: v3
+      added_on: '2025-04-01'
+      source: https://airisk.mit.edu/blog/april-2025-update-of-the-ai-risk-repository-2
+      status: ALREADY PRESENT in this file at domain_taxonomy.domains['7.0'].subdomains['7.6']
+      mit_description_of_addition: >-
+        Introduced to address challenges from interacting AI systems; reflects risks and harms
+        emerging when multiple AI agents interact. Key failure modes cited: miscoordination,
+        conflict, and collusion, alongside seven risk factors spanning information asymmetries,
+        network effects, and emergent agency.
+      fde_note: >-
+        7.6 is the anchor for the FDE Agent handoff axis and is already cross-referenced from
+        the handoff node_type heuristic. No change required.
+    v4_agentic_signal: >-
+      v4 adds no agentic subdomain, but three of the nine new frameworks push directly into
+      agentic territory: Anwar et al. (agentic LLMs, multi-agent safety failures), Tang et al.
+      (autonomous AI scientists), and Perlo et al. (embodied AI acting in the physical world).
+      The v4 direction is therefore more agentic COVERAGE within the existing 7x24 structure,
+      not structural change.
+
+  local_baseline:
+    snapshot_updated: '2025-12-03'
+    snapshot_relative_to_v4: 'one day before the v4 release (2025-12-04)'
+    structure_present: 'Causal 3 x 3 (27-cell envelope) + Domain 7 x 24'
+    structure_generation: >-
+      The 7 x 24 structure in this file, including 7.6 Multi-agent risks, matches the v3
+      (April 2025) taxonomy — and v4 did not change it, so the structure is current.
+    statistics_present:
+      ai_risk_database_classified_rows: 2574
+      causal_statistics: 'proportions per Entity / Intent / Timing'
+      domain_statistics: 'proportion_of_risks + proportion_of_documents per domain'
+    statistics_generation: 'pre-v4 (derived from the ~1,600-risk / 65-framework corpus)'
+
+  resync_scope:
+    - 'Re-pull the public xlsx snapshot dated on or after 2025-12-04 to pick up v4.'
+    - 'Refresh ai_risk_database_classified_rows (currently 2574, pre-v4).'
+    - 'Refresh causal_statistics and domain_statistics proportions against the >1,700-risk corpus.'
+    - 'Re-check whether MIT publishes a post-v4 framework total; replace the 65 figure only when it does.'
+    - 'No change expected to the domain/subdomain structure — verify rather than rewrite.'
+    - 'Bump source.snapshot_updated and keep the v4 citation string, which is already correct.'
+
+  citation_v4:
+    text: >-
+      Slattery, P., Saeri, A. K., Graham, J., Lacarriere, C., Thompson, N., et al.
+      AI Risk Repository v4 (MIT FutureTech, 2025). Released 2025-12-04.
+    license: CC BY 4.0
+    urls:
+      - https://airisk.mit.edu/
+      - https://airisk.mit.edu/blog/repository-update-december-2025
+      - https://airisk.mit.edu/blog/april-2025-update-of-the-ai-risk-repository-2

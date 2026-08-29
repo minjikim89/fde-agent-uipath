@@ -1,0 +1,563 @@
+id: KOREA_AI_BASIC_ACT
+name: Korea AI Basic Act — High-Impact AI (고영향 인공지능)
+version: v0.1
+regulation_full_name_en: "Framework Act on the Development of Artificial Intelligence and Establishment of a Foundation for Trust"
+regulation_full_name_ko: "인공지능 발전과 신뢰 기반 조성 등에 관한 기본법"
+common_names: ["AI Basic Act", "AI Framework Act", "AI기본법", "인공지능기본법"]
+jurisdiction: "Republic of Korea"
+competent_authority_en: "Ministry of Science and ICT (MSIT)"
+competent_authority_ko: "과학기술정보통신부 (과기정통부)"
+
+promulgated_date: "2025-01-21"
+effective_date: "2026-01-22"      # Act and its Enforcement Decree (시행령) took effect the same day
+enforcement_decree:
+  name_ko: "인공지능 발전과 신뢰 기반 조성 등에 관한 기본법 시행령"
+  effective_date: "2026-01-22"
+  accompanying_instruments:
+    # MSIT released a supplementary package alongside the Decree.
+    - "Safety Assurance Notice (안전성 확보 고시)"
+    - "Business Operator Responsibilities Notice (사업자 책무 고시)"
+    - "Guidelines to Ensure AI Safety (인공지능 안전 확보 가이드라인)"
+    - "High-Impact AI Determination Guideline (고영향 인공지능 판단 가이드라인)"
+
+license: "Korean statute — public. English renderings below are working translations, not official text."
+last_updated: "2026-08-29"
+
+status: |
+  v0.1 — First pass. Scope: the high-impact AI (고영향 인공지능) regime and the operator duties
+  that map onto this repo's sample workflows. Built as the Korean counterpart to
+  eu-ai-act-annex-iii-v0.1.yaml (v0.2).
+  KEY TIMING CONTRAST: the EU Annex III high-risk obligations were deferred to 2027-12-02 by the
+  Digital Omnibus, but Korea's high-impact AI duties have been IN FORCE since 2026-01-22. For a
+  Korean financial institution the Korean regime is the binding near-term constraint, not the EU one.
+
+coverage: partial
+coverage_note: |
+  `coverage: partial` is deliberate. Verified and recorded here: effective dates, the Article 2(4)
+  high-impact definition and its enumerated domains, and the Article 31-36 duty structure.
+  NOT fully verified and therefore not asserted: Enforcement Decree article numbers, the exact
+  statutory sub-item lettering (가목~차목) of Article 2(4), the precise administrative fine
+  schedule, and the end date of the MSIT grace period. See `to_verify` at the bottom.
+
+sources:
+  # Verification policy: every substantive statement below was cross-checked against >= 2
+  # independent sources (law firm briefings + specialist/government-adjacent summaries).
+  # The authoritative Korean text is at law.go.kr; it was not machine-read in this pass.
+  official_reference:
+    - https://www.law.go.kr/   # 국가법령정보시스템 — authoritative Korean text (not parsed in v0.1)
+  english_translation:
+    - https://cset.georgetown.edu/publication/south-korea-ai-law-2025/
+    - https://cset.georgetown.edu/wp-content/uploads/t0625_south_korea_ai_law_EN.pdf
+  briefings:
+    - https://www.cooley.com/news/insight/2026/2026-01-27-south-koreas-ai-basic-act-overview-and-key-takeaways
+    - https://ourtake.bakerbotts.com/post/102low8/south-korean-ministry-of-science-and-ict-issues-package-of-regulations-to-supplem
+    - https://securiti.ai/south-korea-basic-act-on-development-of-ai/
+    - https://www.trade.gov/market-intelligence/south-korea-ai-basic-act
+    - https://www.law-lin.com/ko/newsletter/1348
+    - https://datalaw.kr/posts/ai-basic-law-business-duties/
+    - https://iapp.org/news/a/south-korea-s-ai-basic-act
+    - https://www.littler.com/news-analysis/asap/understanding-south-koreas-new-ai-law-key-considerations-multinational-employers
+
+# =============================================================
+# Regulatory Architecture — three tracks
+# =============================================================
+
+regulatory_architecture:
+  # Korea does not use the EU's 4-tier pyramid. It runs three parallel duty tracks.
+  track_1_transparency:
+    applies_to: "Generative AI and high-impact AI"
+    anchor_article: "Article 31"
+    status: in_force
+  track_2_safety:
+    applies_to: "High-performance / frontier AI above a compute threshold"
+    anchor_article: "Article 32"
+    status: in_force
+  track_3_high_impact_governance:
+    applies_to: "AI used in the enumerated high-impact domains"
+    anchor_articles: ["Article 33", "Article 34", "Article 35"]
+    status: in_force
+  comparison_to_eu: |
+    EU AI Act "high-risk" (Annex III) ~= Korea "high-impact AI" (고영향 인공지능, Art 2(4)).
+    Functionally analogous, NOT identical:
+      - Korea has no conformity-assessment / CE-marking / EU-database registration equivalent.
+      - Korea's fundamental-rights impact assessment (Art 35) is an effort/incentive duty tied to
+        public procurement preference, not a hard precondition like the EU FRIA (Art 27).
+      - Korea places a self-classification duty on the operator (Art 33) with an OPTIONAL
+        confirmation request to MSIT — the EU has no direct equivalent step.
+      - Korea's regime is enforceable NOW; the EU high-risk layer is deferred to 2027-12-02.
+
+# =============================================================
+# High-Impact AI (고영향 인공지능) — Article 2(4)
+# =============================================================
+
+high_impact_ai:
+
+  definition_en: |
+    AI used in an area that may have a significant impact on, or pose a risk to, human life,
+    physical safety, or fundamental rights.
+  definition_ko: |
+    사람의 생명·신체의 안전 및 기본권에 중대한 영향을 미치거나 위험을 초래할 우려가 있는
+    영역에서 활용되는 인공지능
+  statutory_basis: "Article 2, subparagraph 4 (제2조 제4호)"
+  verification: verified   # definition wording cross-confirmed: Securiti + CSET + trade.gov/IAPP summaries
+
+  domain_count:
+    enumerated_domains: 10
+    plus_catch_all: true
+    status: to_verify
+    note: |
+      Sources split between "10 domains" and "11 domains" depending on whether the residual
+      catch-all delegated to the Presidential Decree is counted as its own item. Listed below are
+      the 10 substantive domains plus the catch-all. Do not state a count in a client deliverable
+      without reading the statutory text at law.go.kr.
+
+  # Enumerated domains. Cross-confirmed across Securiti + CSET-derived summaries + the MSIT
+  # High-Impact AI Determination Guideline coverage reported by Baker Botts.
+  domains:
+
+    - id: HI-01
+      name_en: "Energy supply"
+      name_ko: "에너지 공급"
+      verification: verified
+      eu_analogue: "Annex III Point 2 — critical infrastructure"
+
+    - id: HI-02
+      name_en: "Production and management of drinking water"
+      name_ko: "먹는물 생산 및 관리"
+      verification: verified
+      eu_analogue: "Annex III Point 2 — critical infrastructure (water)"
+
+    - id: HI-03
+      name_en: "Provision of healthcare and operation of health/medical systems; development and use of medical devices"
+      name_ko: "보건의료 제공 및 의료기기 개발·이용"
+      verification: verified
+      eu_analogue: "Annex I (medical devices) + Annex III Point 5(d) triage"
+
+    - id: HI-04
+      name_en: "Safe management and operation of nuclear materials and nuclear facilities"
+      name_ko: "핵물질·원자력시설의 안전한 관리 및 운영"
+      verification: verified
+      eu_analogue: "No direct Annex III analogue — sector-specific to Korea"
+
+    - id: HI-05
+      name_en: "Analysis and use of biometric information for criminal investigation or arrest activity"
+      name_ko: "범죄 수사·체포 활동에서의 생체인식정보 분석·활용"
+      verification: verified
+      eu_analogue: "Annex III Point 1 (biometrics) + Point 6 (law enforcement)"
+      fde_note: |
+        Scoped to investigation/arrest by public authority. A commercial eKYC face-match is NOT
+        automatically inside HI-05 — see workflow_relevance.ekyc_identity_verification.
+
+    - id: HI-06
+      name_en: "Judgements or evaluations materially affecting individual rights and obligations, such as hiring decisions and loan screening"
+      name_ko: "채용·대출 심사 등 개인의 권리·의무에 중대한 영향을 미치는 판단 또는 평가"
+      verification: verified
+      ★_fde_priority: PRIMARY
+      eu_analogue: "Annex III Point 4 (employment) + Point 5(b) (creditworthiness)"
+      fde_note: |
+        ★ The single most important cell in this file for FDE Agent. Loan screening (대출 심사) is
+        named in the statute itself, so the Korean loan-underwriting sample BPMN sits squarely in
+        an enumerated high-impact domain — and unlike EU Annex III Point 5(b), the duties are
+        already enforceable (since 2026-01-22).
+
+    - id: HI-07
+      name_en: "Major operation and management of transportation systems and facilities"
+      name_ko: "교통 체계·시설의 주요 운영·관리"
+      verification: verified
+      eu_analogue: "Annex III Point 2(a) — road traffic safety components"
+
+    - id: HI-08
+      name_en: "Decision-making by the State, local governments and public institutions that may affect the public (including allocation of public services and taxation-related decisions)"
+      name_ko: "국가·지방자치단체·공공기관의 국민에게 영향을 미치는 의사결정"
+      verification: verified
+      eu_analogue: "Annex III Point 5(a) — public assistance benefits"
+
+    - id: HI-09
+      name_en: "Evaluation of students, from preschool through secondary education"
+      name_ko: "유아교육~중등교육 단계 학생 평가"
+      verification: verified
+      eu_analogue: "Annex III Point 3 — education and vocational training"
+
+    - id: HI-10
+      name_en: "Other areas prescribed by Presidential Decree as potentially having a significant impact on human life, physical safety or fundamental rights"
+      name_ko: "그 밖에 대통령령으로 정하는 영역"
+      verification: verified
+      type: catch_all
+      note: |
+        Residual delegation to the Enforcement Decree. The specific additional areas designated by
+        the Decree were not enumerated in this pass — status: to_verify.
+
+  domains_not_captured:
+    status: to_verify
+    note: |
+      Several briefings additionally describe "financial services" as a high-impact area. In this
+      file that is treated as covered by HI-06 (loan screening) rather than as a standalone
+      domain, because HI-06 is the wording that appears in the statutory enumeration across
+      sources. Confirm against law.go.kr before asserting a separate financial-services domain.
+
+# =============================================================
+# Operator Duties (사업자 책무) — Articles 31-36
+# =============================================================
+
+duty_bearers:
+  ai_developer_operator: "인공지능개발사업자 — develops and provides an AI system"
+  ai_using_operator: "인공지능이용사업자 — provides a product/service using AI"
+  note: "Both categories can be captured; Art 34 duties attach to whoever provides the high-impact product/service."
+
+operator_duties:
+
+  - # ---------------------------------------------------------
+    article: "Article 31"
+    name_ko: "투명성 확보 의무"
+    name_en: "Transparency obligations"
+    applies_to: ["high-impact AI", "generative AI"]
+    verification: verified   # Securiti + law-lin + datalaw.kr agree on article number and content
+    obligations:
+      - id: "31(1)"
+        en: "Notify the user in advance that the product or service is based on / operates using AI."
+        ko: "고영향 또는 생성형 인공지능 기반 제품·서비스 제공 시 사전 고지"
+      - id: "31(2)"
+        en: "Indicate/label that output is a product of generative AI."
+        ko: "생성형 인공지능의 생성물임을 표시"
+      - id: "31(3)"
+        en: |
+          For synthetic sound, image or video output that is difficult to distinguish from reality,
+          provide notification/marking in a machine-readable and detectable form. Where the output
+          is an artistic or creative work, the marking may be presented in a manner that does not
+          interfere with its exhibition or enjoyment.
+        ko: "실제와 구분하기 어려운 가상 음향·이미지·영상은 기계 판독 가능·탐지 가능한 형태로 표시"
+    eu_analogue: "EU AI Act Article 50 — and note both are LIVE (Korea 2026-01-22, EU 2026-08-02)."
+
+  - # ---------------------------------------------------------
+    article: "Article 32"
+    name_ko: "인공지능 안전성 확보 의무"
+    name_en: "Safety obligations for high-performance (frontier) AI"
+    applies_to: "AI trained above a cumulative compute threshold of approximately 10^26 FLOPs"
+    verification: verified   # threshold confirmed: Securiti + Baker Botts + law-lin + datalaw.kr
+    obligations:
+      - "Identify, assess and mitigate risk across the AI lifecycle."
+      - "Establish and operate a risk management system."
+      - "Report the results of implementation to the Minister of Science and ICT."
+    fde_note: |
+      Out of scope for this repo's samples — no client workflow here trains a frontier model.
+      Recorded for completeness; matters only if a client self-trains at frontier scale.
+
+  - # ---------------------------------------------------------
+    article: "Article 33"
+    name_ko: "고영향 인공지능 여부의 확인"
+    name_en: "Confirmation of high-impact AI status"
+    applies_to: "All AI business operators"
+    verification: verified   # Securiti + law-lin + datalaw.kr + Baker Botts all describe self-review + optional MSIT confirmation
+    obligations:
+      - id: "33 self-review"
+        en: |
+          The operator must review IN ADVANCE, on its own initiative, whether the AI it develops or
+          uses falls within the high-impact AI definition. This is a standing duty on every AI
+          business operator, not only on those who conclude they are high-impact.
+        ko: "인공지능사업자는 해당 인공지능이 고영향 인공지능에 해당하는지 사전 검토"
+      - id: "33 MSIT confirmation"
+        en: |
+          Where the determination is unclear, the operator MAY request confirmation from the
+          Minister of Science and ICT. Optional, not mandatory.
+        ko: "과학기술정보통신부장관에게 확인을 요청할 수 있음"
+    practice_notes:
+      determination_aid: |
+        MSIT's High-Impact AI Determination Guideline supplies sectoral criteria and worked
+        case examples for the self-assessment, plus a template for the confirmation request.
+        Expert committees may advise MSIT on determinations; courts resolve disputes.
+      lead_time:
+        value: "reported practice: request roughly 60 days (up to 90) before launch"
+        status: to_verify
+        note: "Single-source (law-lin newsletter) practitioner expectation, not a statutory deadline. Do not state as a legal requirement."
+    fde_note: |
+      ★ This is the natural commercial entry point for an FDE Agent diagnostic in Korea. Art 33
+      creates a documented artefact the client must produce anyway; a per-node BPMN risk diagnosis
+      is exactly the evidence base for it. No EU equivalent — this is Korea-specific wedge.
+
+  - # ---------------------------------------------------------
+    article: "Article 34"
+    name_ko: "고영향 인공지능 관련 사업자의 책무"
+    name_en: "Duties of operators providing high-impact AI"
+    applies_to: "Operators providing products/services using high-impact AI"
+    verification: verified   # duty list confirmed: Securiti + Cooley + trade.gov + law-lin + Korean practitioner sources
+    obligations:
+      - id: "34(1)-1"
+        en: "Establish and operate a risk management plan (위험관리방안) covering the AI lifecycle."
+        detail: |
+          Reported content of the plan: a written policy with assigned accountability;
+          multi-disciplinary review (technical, legal, ethics); structured hazard identification;
+          and standing mechanisms for updating controls from design through retirement.
+          The lifecycle risk cycle is described as identification -> analysis/assessment ->
+          mitigation/handling, applied continuously.
+        risk_cycle_wording:
+          status: to_verify
+          note: |
+            The four-step phrasing "식별 · 분석 · 평가 · 관리(대응)" is used in practitioner
+            commentary. Sources consulted here confirm identification / assessment / mitigation
+            across the lifecycle but did not confirm a verbatim four-step statutory formulation.
+            Verify against the Enforcement Decree and the Business Responsibilities Notice.
+      - id: "34(1)-2"
+        en: |
+          Establish and implement a plan to explain AI-generated outcomes, to the extent
+          technically feasible — including the key criteria used to derive the outcome and an
+          overview of the training data used.
+        ko: "인공지능의 최종결과 도출에 활용된 주요 기준 및 학습용데이터의 개요 등 설명 방안"
+      - id: "34(1)-3"
+        en: "Establish and implement user protection measures/procedures (이용자 보호 방안)."
+      - id: "34(1)-4"
+        en: "Establish a management system for human oversight and intervention (사람의 관리·감독)."
+      - id: "34(1)-5"
+        en: "Document the measures taken to secure safety and trustworthiness, and retain the documentation."
+        retention:
+          value: "5 years"
+          verification: single_source
+          note: |
+            5-year retention of the Art 34(1) evidentiary documentation is reported in Korean
+            practitioner commentary as an Enforcement Decree requirement. Treat as strong but
+            single-sourced in this pass.
+      - id: "34 disclosure"
+        en: |
+          Publish on the website (or equivalent) the main content of the risk management plan
+          (risk-management policy and organisational structure), the main criteria used to derive
+          AI outcomes, an overview of the training data, the user protection measures, and the
+          name and contact details of the person supervising the high-impact AI.
+        verification: single_source
+        note: "Reported as an Enforcement Decree disclosure duty; confirm the decree article before citing."
+    eu_analogue_mapping:
+      "34(1)-1": "EU AI Act Article 9 — risk management system"
+      "34(1)-2": "EU AI Act Articles 13 + 10 — transparency to deployers + data governance"
+      "34(1)-3": "EU AI Act Article 26 — deployer obligations"
+      "34(1)-4": "EU AI Act Article 14 — human oversight"
+      "34(1)-5": "EU AI Act Articles 11 + 12 — technical documentation + record-keeping"
+
+  - # ---------------------------------------------------------
+    article: "Article 35"
+    name_ko: "고영향 인공지능의 영향평가"
+    name_en: "Impact assessment on fundamental rights"
+    applies_to: "Operators using high-impact AI"
+    verification: verified   # Securiti + law-lin + datalaw.kr + Cooley
+    obligations:
+      - "Make efforts to assess, in advance, the impact of the high-impact AI on fundamental rights — identifying, analysing and remedying negative effects."
+    incentive: |
+      Completed impact assessments receive priority/preferential consideration in public
+      procurement. Framed as an effort duty plus an incentive rather than a hard gate.
+    designated_body:
+      name: "Korea Information Society Development Institute (KISDI, 정보통신정책연구원)"
+      verification: single_source
+    eu_analogue: "EU AI Act Article 27 FRIA — but the EU version is mandatory for listed deployers; the Korean version is an effort duty."
+
+  - # ---------------------------------------------------------
+    article: "Article 36"
+    name_ko: "국내대리인 지정"
+    name_en: "Designation of a domestic representative"
+    applies_to: "Foreign AI business operators without a Korean establishment, above size thresholds"
+    verification: verified   # Cooley + trade.gov/IAPP summaries agree on the three thresholds
+    thresholds_any_of:
+      - "Prior-year total revenue of at least KRW 1 trillion"
+      - "Prior-year AI-service revenue in Korea of at least KRW 10 billion"
+      - "At least 1,000,000 average daily domestic users over the preceding three months (as of year end)"
+    duties: "The domestic representative is responsible for responding to government inquiries and safety reports."
+    fde_note: "Relevant to non-Korean vendors embedded in a client workflow (e.g. a foreign LLM API provider), not to the Korean bank itself."
+
+# =============================================================
+# Enforcement
+# =============================================================
+
+enforcement:
+  grace_period:
+    exists: true
+    verification: verified   # trade.gov + multiple Korean press reports
+    description: |
+      MSIT is operating an administrative forbearance period (계도기간) of at least one year from
+      the 2026-01-22 effective date, during which administrative fines are generally deferred.
+      Exceptions are reserved for cases of serious social harm such as loss of life or human
+      rights violations. It is a policy/administrative posture, NOT a statutory suspension —
+      the duties themselves are legally in force today.
+    end_date:
+      value: "expected on or after 2027-01-22"
+      status: to_verify
+      note: |
+        Sources say "at least one year" and note MSIT has left open the possibility of extending it.
+        No confirmed termination date. Do not quote a specific end date to a client.
+  administrative_fines:
+    status: to_verify
+    conflicting_reports:
+      - "Cap of KRW 30,000,000 reported as the general maximum administrative fine under the Act."
+      - "Per-article amounts reported separately: KRW 5,000,000 for an Article 31 transparency violation (first instance); KRW 20,000,000 for an Article 36 domestic-representative violation."
+    note: |
+      These two accounts are not necessarily inconsistent (a general cap plus lower per-item
+      amounts), but the schedule was not reconciled against the statutory text in this pass.
+      Do not put a specific won figure in a client deliverable from this file.
+  other_measures:
+    - "Fact-finding investigation (사실조사) by MSIT."
+    - "Corrective orders, which may include suspension of a service posing a safety threat."
+
+# =============================================================
+# Korean regulatory stack — how this sits with the existing 4 frames
+# =============================================================
+
+korean_regulatory_stack:
+  note: |
+    The FDE Agent Korean loan-underwriting diagnostic previously ran a 4-frame overlay
+    (EU AI Act + Fair Lending Act + Credit Information Act + K-PIPA). The AI Basic Act is a
+    FIFTH frame, and it is the only one of the five that is both Korea-specific and newly
+    in force in 2026 — which makes it the strongest refresh hook for existing accounts.
+  frames:
+    - frame: "EU AI Act Annex III Point 5(b)"
+      binding_when: "Client serves EU customers or enters the EU market"
+      deadline: "2027-12-02 (deferred by the Digital Omnibus)"
+    - frame: "Korea AI Basic Act — high-impact AI (HI-06 loan screening)"
+      binding_when: "Client operates the AI in Korea"
+      deadline: "In force 2026-01-22 (fines under forbearance for >= 1 year)"
+    - frame: "Fair Lending Act (공정대출법 취지) — anti-discrimination in lending"
+      overlap: "AI Basic Act Art 34(1)-1 risk management + EU Art 9/15"
+    - frame: "Credit Information Act Art 36-2 — automated decision-making opt-out"
+      overlap: "AI Basic Act Art 34(1)-4 human oversight + EU Art 14"
+    - frame: "K-PIPA Art 22-2 — rights regarding automated decisions"
+      overlap: "AI Basic Act Art 34(1)-2 explanation duty + EU Art 13"
+  consulting_angle: |
+    A single per-node diagnosis can now be presented against five frames at once. The
+    discriminator versus Big 4 output is that the Korean AI Basic Act duties (Art 33 self-review,
+    Art 34 documented risk plan, Art 34(1)-2 explanation plan) attach to SPECIFIC BPMN NODES,
+    which is what the ontology already produces.
+
+# =============================================================
+# Workflow Relevance — CANDIDATE classifications, not legal conclusions
+# =============================================================
+
+workflow_relevance:
+
+  disclaimer: |
+    ★ EVERY ENTRY BELOW IS A CANDIDATE CLASSIFICATION FOR DIAGNOSTIC TRIAGE, NOT A LEGAL
+    CONCLUSION. High-impact status under the AI Basic Act is determined by the operator's own
+    Article 33 review of its actual system, purpose and deployment context, optionally confirmed
+    by MSIT. FDE Agent output must be framed as "likely in scope — verify under Art 33", never as
+    "this system is high-impact AI". No entry here has been confirmed by MSIT.
+
+  loan_underwriting_kr:
+    source_bpmn: "scripts/data/sample-workflows/loan-underwriting-kr-v0.1.md"
+    overall_candidate_status: "Strong high-impact AI candidate — HI-06 (loan screening, 대출 심사, named in the statute)"
+    nodes:
+
+      - node: "N2 — eKYC Identity Verification (face match + ID OCR)"
+        candidate_domain: "HI-05 (biometric analysis) — WEAK / likely out of scope"
+        reasoning: |
+          HI-05 as enumerated is scoped to biometric analysis and use in criminal investigation and
+          arrest activity by public authority. A commercial customer-onboarding face match does not
+          obviously fall inside that wording. However, N2 is a gating step inside a process that is
+          itself an HI-06 candidate, so it should be diagnosed as part of the high-impact system
+          boundary rather than as a standalone HI-05 item.
+        candidate_duties:
+          - "Art 31(1) — advance notification that identity verification is AI-based"
+          - "Art 34(1)-4 — human intervention path when the face match fails (false-reject harm)"
+          - "Art 34(1)-3 — user protection procedure for verification failure"
+        confidence: low_to_medium
+        also_governed_by: "K-PIPA biometric data as sensitive personal information; KISA / Korea Financial Security Institute non-face-to-face identity verification guidance"
+        ontology_cells: ["loan_N2_general_failure", "loan_N2_security", "loan_N2_handoff"]
+
+      - node: "N4 — Credit Scoring (traditional + ACS)"
+        candidate_domain: "HI-06 — STRONG"
+        reasoning: |
+          Credit scoring is the evaluative judgement that drives the loan-screening decision named
+          in HI-06. Of every node in this repo, this is the clearest high-impact candidate under
+          Korean law, and it is simultaneously the EU Annex III Point 5(b) anchor.
+        candidate_duties:
+          - "Art 33 — advance self-review; strongest candidate for an MSIT confirmation request"
+          - "Art 34(1)-1 — documented lifecycle risk management plan covering ACS proxy-discrimination risk"
+          - "Art 34(1)-2 — explanation plan: key scoring criteria + training data overview"
+          - "Art 34(1)-5 — documented evidence of the above, retained"
+          - "Art 35 — fundamental-rights impact assessment (effort duty)"
+        confidence: high
+        ontology_cells: ["loan_N4_general_failure", "loan_N4_security", "loan_N4_handoff"]
+
+      - node: "N6 — LLM Risk Analysis"
+        candidate_domain: "HI-06 (as a component of the screening judgement) + Art 31 generative AI transparency"
+        reasoning: |
+          Dual exposure. As an input to the underwriting judgement it sits inside the HI-06
+          candidate boundary; as a generative component it independently attracts Art 31.
+        candidate_duties:
+          - "Art 31(1)/(2) — generative AI notification and output marking"
+          - "Art 34(1)-2 — explanation of how the LLM narrative fed the outcome"
+          - "Art 34(1)-4 — human oversight of an LLM output entering a rights-affecting decision"
+        confidence: medium_to_high
+        ontology_cells: ["loan_N6_general_failure", "loan_N6_security", "loan_N6_handoff"]
+
+      - node: "N7 — Automated Underwriting Decision"
+        candidate_domain: "HI-06 — STRONG (the operative rights-affecting judgement)"
+        reasoning: |
+          HI-06 is worded around judgements/evaluations that materially affect individual rights and
+          obligations. N7 is that judgement. Fully automated execution raises the Art 34(1)-4 human
+          oversight duty and intersects Credit Information Act Art 36-2 opt-out rights.
+        candidate_duties:
+          - "Art 34(1)-4 — human intervention and supervision management system"
+          - "Art 34(1)-3 — user protection procedure (appeal / reconsideration)"
+          - "Art 34(1)-5 — decision-record documentation"
+        confidence: high
+        ontology_cells: ["loan_N7_general_failure", "loan_N7_security", "loan_N7_handoff"]
+
+      - node: "N9 — Rejection Notice Generation (LLM)"
+        candidate_domain: "Art 31 transparency + Art 34(1)-2 explanation duty"
+        reasoning: |
+          The adverse-outcome communication is where the Art 34(1)-2 explanation duty becomes
+          externally visible to the applicant, and the LLM authorship triggers Art 31 marking.
+          A hallucinated or non-substantive rejection rationale is a direct Art 34(1)-2 exposure.
+        candidate_duties:
+          - "Art 31(1)/(2) — generative AI notification and marking"
+          - "Art 34(1)-2 — the stated reason must reflect the key criteria actually used"
+        confidence: high
+        ontology_cells: ["loan_N9_general_failure", "loan_N9_security", "loan_N9_handoff"]
+
+      - node: "N11 — Audit Log & Reporting"
+        candidate_domain: "Art 34(1)-5 documentation and retention"
+        reasoning: "The evidentiary substrate for every other Art 34 duty. Reported 5-year retention expectation (to_verify)."
+        confidence: medium
+        ontology_cells: []
+
+  legal_contract_review:
+    source_bpmn: "scripts/data/sample-workflows/legal-contract-review-v0.1.md"
+    overall_candidate_status: "NOT a clear high-impact AI candidate under the Korean enumeration"
+    reasoning: |
+      Korea's Article 2(4) enumeration has no analogue to EU Annex III Point 8(a) (assisting a
+      judicial authority). Commercial contract review between businesses does not map onto any of
+      HI-01 through HI-09. Article 31 transparency duties still apply to its generative output.
+      Note the asymmetry: this workflow is EU-high-risk-adjacent but Korea-out-of-scope, the
+      mirror image of the loan workflow's Korean exposure — useful framing in client conversations.
+    candidate_duties:
+      - "Art 31(1)/(2) — generative AI notification and marking on drafted clauses / counterproposals"
+    confidence: medium
+    ontology_cells: ["N3_general_failure", "N6_general_failure"]
+
+# =============================================================
+# Open items
+# =============================================================
+
+to_verify:
+  - item: "Enforcement Decree (시행령) article numbers for each Art 34 implementing requirement"
+    status: to_verify
+  - item: "Verbatim statutory sub-item lettering (가목~차목) of Article 2(4) and whether the count is 10 or 11"
+    status: to_verify
+  - item: "Additional high-impact areas designated under the HI-10 Presidential Decree catch-all"
+    status: to_verify
+  - item: "Whether 'financial services' is a standalone enumerated domain or is subsumed in HI-06"
+    status: to_verify
+  - item: "Exact administrative fine schedule (KRW 30M cap vs per-article KRW 5M / 20M reports)"
+    status: to_verify
+  - item: "End date of the MSIT grace period (계도기간) and whether it has been extended"
+    status: to_verify
+  - item: "5-year retention period and the website disclosure duty — confirm decree provision"
+    status: to_verify
+  - item: "Art 33 MSIT confirmation request lead time (reported 60/90 days) — practitioner expectation, not statutory"
+    status: to_verify
+  - item: "Sector-specific financial regulator guidance (FSC/FSS) layered on top of the AI Basic Act for lending AI"
+    status: to_verify
+    note: "Not researched in v0.1. Likely material for any Korean bank engagement."
+
+changelog:
+  - version: v0.1
+    date: "2026-08-29"
+    summary: |
+      Initial creation. Korea AI Basic Act high-impact AI regime as the Korean counterpart to
+      eu-ai-act-annex-iii-v0.1.yaml v0.2. 10 enumerated high-impact domains + catch-all,
+      Articles 31-36 operator duties, enforcement posture, 5-frame Korean regulatory stack,
+      and candidate workflow classifications for the loan-underwriting and legal-contract-review
+      samples. coverage: partial — see to_verify.
